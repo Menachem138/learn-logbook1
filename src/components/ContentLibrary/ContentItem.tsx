@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
-import { Star, Trash2, Edit } from 'lucide-react'
+import { Star, Trash2, Edit, CheckCircle2, CloudOff } from 'lucide-react'
 import { ContentItem as ContentItemType } from '@/types/content'
+import { useState, useEffect } from 'react'
 
 interface ContentItemProps extends ContentItemType {
   onDelete: (id: string) => void;
@@ -19,8 +20,30 @@ export const ContentItem = ({
   onEdit,
   onImageClick
 }: ContentItemProps) => {
+  const [isSaved, setIsSaved] = useState(true);
+  const [showSaveStatus, setShowSaveStatus] = useState(true);
+
+  // Show save status for 3 seconds when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSaveStatus(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <li className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-sm">
+    <li className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-sm relative">
+      {showSaveStatus && (
+        <div className="absolute top-2 right-2 z-10">
+          {isSaved ? (
+            <CheckCircle2 className="text-green-500 h-6 w-6" />
+          ) : (
+            <CloudOff className="text-red-500 h-6 w-6" />
+          )}
+        </div>
+      )}
+      
       <div className="flex-grow mb-2">
         {type === 'image' && (
           <img 
