@@ -1,12 +1,8 @@
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Star, Trash2, Edit } from 'lucide-react'
+import { ContentItem as ContentItemType } from '@/types/content'
 
-interface ContentItemProps {
-  id: string;
-  type: 'link' | 'image' | 'whatsapp' | 'video' | 'note';
-  content: string;
-  starred: boolean;
+interface ContentItemProps extends ContentItemType {
   onDelete: (id: string) => void;
   onToggleStar: (id: string) => void;
   onEdit?: (id: string) => void;

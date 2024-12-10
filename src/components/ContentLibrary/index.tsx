@@ -8,16 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import { ContentItem } from './ContentItem'
+import { ContentItem } from '@/types/content'
 import { ContentInput } from './ContentInput'
 import { readFileAsDataURL } from '@/utils/fileHandlers'
-
-interface ContentItem {
-  id: string;
-  type: 'link' | 'image' | 'whatsapp' | 'video' | 'note';
-  content: string;
-  starred: boolean;
-}
 
 const ContentLibrary = () => {
   const [items, setItems] = useState<ContentItem[]>([]);
@@ -36,12 +29,12 @@ const ContentLibrary = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        toast.error('Error loading items');
+        toast.error('שגיאה בטעינת הפריטים');
         return;
       }
 
       if (data) {
-        setItems(data);
+        setItems(data as ContentItem[]);
       }
     };
 
@@ -56,7 +49,6 @@ const ContentLibrary = () => {
       type,
       content: newItem,
       starred: false,
-      user_id: (await supabase.auth.getUser()).data.user?.id
     };
 
     const { data, error } = await supabase
@@ -66,14 +58,14 @@ const ContentLibrary = () => {
       .single();
 
     if (error) {
-      toast.error('Error adding item');
+      toast.error('שגיאה בהוספת פריט');
       return;
     }
 
     if (data) {
-      setItems(prev => [data, ...prev]);
+      setItems(prev => [data as ContentItem, ...prev]);
       setNewItem('');
-      toast.success('Item added successfully');
+      toast.success('הפריט נוסף בהצלחה');
     }
   }, [newItem]);
 
@@ -84,7 +76,6 @@ const ContentLibrary = () => {
       type: 'note' as const,
       content: noteContent,
       starred: false,
-      user_id: (await supabase.auth.getUser()).data.user?.id
     };
 
     const { data, error } = await supabase
@@ -94,14 +85,14 @@ const ContentLibrary = () => {
       .single();
 
     if (error) {
-      toast.error('Error adding note');
+      toast.error('שגיאה בהוספת פתק');
       return;
     }
 
     if (data) {
-      setItems(prev => [data, ...prev]);
+      setItems(prev => [data as ContentItem, ...prev]);
       setNoteContent('');
-      toast.success('Note added successfully');
+      toast.success('הפתק נוסף בהצלחה');
     }
   }, [noteContent]);
 
@@ -112,12 +103,12 @@ const ContentLibrary = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error('Error deleting item');
+      toast.error('שגיאה במחיקת פריט');
       return;
     }
 
     setItems(prev => prev.filter(item => item.id !== id));
-    toast.success('Item deleted successfully');
+    toast.success('הפריט נמחק בהצלחה');
   }, []);
 
   const toggleStar = useCallback(async (id: string) => {
@@ -130,7 +121,7 @@ const ContentLibrary = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error('Error updating item');
+      toast.error('שגיאה בעדכון פריט');
       return;
     }
 
@@ -147,10 +138,9 @@ const ContentLibrary = () => {
     try {
       const content = await readFileAsDataURL(file);
       const newContentItem = {
-        type: file.type.startsWith('image/') ? 'image' : 'video' as const,
+        type: file.type.startsWith('image/') ? 'image' as const : 'video' as const,
         content,
         starred: false,
-        user_id: (await supabase.auth.getUser()).data.user?.id
       };
 
       const { data, error } = await supabase
@@ -160,16 +150,16 @@ const ContentLibrary = () => {
         .single();
 
       if (error) {
-        toast.error('Error uploading file');
+        toast.error('שגיאה בהעלאת קובץ');
         return;
       }
 
       if (data) {
-        setItems(prev => [data, ...prev]);
-        toast.success('File uploaded successfully');
+        setItems(prev => [data as ContentItem, ...prev]);
+        toast.success('הקובץ הועלה בהצלחה');
       }
     } catch (error) {
-      toast.error('Error processing file');
+      toast.error('שגיאה בעיבוד הקובץ');
     }
   }, []);
 
@@ -180,10 +170,9 @@ const ContentLibrary = () => {
     try {
       const content = await readFileAsDataURL(file);
       const newContentItem = {
-        type: file.type.startsWith('image/') ? 'image' : 'video' as const,
+        type: file.type.startsWith('image/') ? 'image' as const : 'video' as const,
         content,
         starred: false,
-        user_id: (await supabase.auth.getUser()).data.user?.id
       };
 
       const { data, error } = await supabase
@@ -193,16 +182,16 @@ const ContentLibrary = () => {
         .single();
 
       if (error) {
-        toast.error('Error uploading file');
+        toast.error('שגיאה בהעלאת קובץ');
         return;
       }
 
       if (data) {
-        setItems(prev => [data, ...prev]);
-        toast.success('File uploaded successfully');
+        setItems(prev => [data as ContentItem, ...prev]);
+        toast.success('הקובץ הועלה בהצלחה');
       }
     } catch (error) {
-      toast.error('Error processing file');
+      toast.error('שגיאה בעיבוד הקובץ');
     }
   }, []);
 
@@ -233,17 +222,47 @@ const ContentLibrary = () => {
 
         <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {items.map(item => (
-            <ContentItem
-              key={item.id}
-              {...item}
-              onDelete={removeItem}
-              onToggleStar={toggleStar}
-              onEdit={item.type === 'note' ? (id) => {
-                setEditingNote(id);
-                setNoteContent(item.content);
-              } : undefined}
-              onImageClick={setSelectedImage}
-            />
+            <li key={item.id} className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-sm">
+              <div className="flex-grow mb-2">
+                {item.type === 'image' && (
+                  <img 
+                    src={item.content} 
+                    alt="Uploaded content" 
+                    className="w-full h-40 object-cover rounded-md cursor-pointer" 
+                    onClick={() => setSelectedImage(item.content)}
+                  />
+                )}
+                {item.type === 'video' && (
+                  <video src={item.content} className="w-full h-40 object-cover rounded-md" controls />
+                )}
+                {item.type === 'note' && (
+                  <div className="w-full h-40 flex items-center justify-center bg-yellow-100 rounded-md p-4">
+                    <p className="text-gray-800 break-words overflow-auto">{item.content}</p>
+                  </div>
+                )}
+                {(item.type === 'link' || item.type === 'whatsapp') && (
+                  <div className="w-full h-40 flex items-center justify-center bg-gray-200 rounded-md">
+                    <span className="text-gray-600 text-sm break-all p-2">{item.content}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <Button variant="ghost" size="sm" onClick={() => toggleStar(item.id)}>
+                  <Star className={item.starred ? "fill-yellow-400" : ""} />
+                </Button>
+                {item.type === 'note' && (
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setEditingNote(item.id);
+                    setNoteContent(item.content);
+                  }}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => removeItem(item.id)}>
+                  <Trash2 />
+                </Button>
+              </div>
+            </li>
           ))}
         </ul>
 
@@ -280,7 +299,7 @@ const ContentLibrary = () => {
                   .eq('id', editingNote);
 
                 if (error) {
-                  toast.error('Error updating note');
+                  toast.error('שגיאה בעדכון פתק');
                   return;
                 }
 
@@ -288,7 +307,7 @@ const ContentLibrary = () => {
                   item.id === editingNote ? { ...item, content: noteContent } : item
                 ));
                 setEditingNote(null);
-                toast.success('Note updated successfully');
+                toast.success('הפתק עודכן בהצלחה');
               }}>
                 שמור שינויים
               </Button>
