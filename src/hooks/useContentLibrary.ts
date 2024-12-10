@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType } from '@/types/content';
+import { ContentItem, ContentItemType, isContentItemType } from '@/types/content';
 import { toast } from "sonner";
 
 export const useContentLibrary = () => {
@@ -27,7 +27,12 @@ export const useContentLibrary = () => {
         return;
       }
 
-      setItems(data || []);
+      // Validate and transform the data to ensure correct types
+      const validItems = data?.filter((item): item is ContentItem => {
+        return isContentItemType(item.type);
+      }) || [];
+
+      setItems(validItems);
     } catch (error) {
       console.error('Error:', error);
       toast.error('שגיאה בטעינת הפריטים');
@@ -61,9 +66,20 @@ export const useContentLibrary = () => {
         return null;
       }
 
-      setItems(prev => [data, ...prev]);
-      toast.success('הפריט נוסף בהצלחה');
-      return data;
+      if (data && isContentItemType(data.type)) {
+        const newItem: ContentItem = {
+          id: data.id,
+          type: data.type,
+          content: data.content,
+          starred: data.starred || false,
+          user_id: data.user_id,
+          created_at: data.created_at
+        };
+        setItems(prev => [newItem, ...prev]);
+        toast.success('הפריט נוסף בהצלחה');
+        return newItem;
+      }
+      return null;
     } catch (error) {
       console.error('Error:', error);
       toast.error('שגיאה בהוספת פריט');

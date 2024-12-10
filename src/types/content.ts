@@ -6,7 +6,7 @@ export interface ContentItem {
   content: string;
   starred: boolean;
   user_id: string;
-  created_at: string; // Changed from optional to required to match DB
+  created_at: string;
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
