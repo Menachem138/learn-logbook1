@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentItem } from '@/types/content';
 import { toast } from "sonner";
-import { readFileAsDataURL } from '@/utils/fileHandlers';
+import { uploadFileToStorage } from '@/utils/fileStorage';
 
 export const useContentLibrary = () => {
   const [items, setItems] = useState<ContentItem[]>([]);
@@ -19,11 +19,12 @@ export const useContentLibrary = () => {
       const { data, error } = await supabase
         .from('content_items')
         .select('*')
+        .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setItems(data as ContentItem[]);
+      setItems(data || []);
     } catch (error) {
       console.error('Error loading items:', error);
       toast.error('שגיאה בטעינת הפריטים');
@@ -53,12 +54,9 @@ export const useContentLibrary = () => {
 
       if (error) throw error;
 
-      if (data) {
-        setItems(prev => [data as ContentItem, ...prev]);
-        toast.success('הפריט נוסף בהצלחה');
-        return data as ContentItem;
-      }
-      return null;
+      setItems(prev => [data as ContentItem, ...prev]);
+      toast.success('הפריט נוסף בהצלחה');
+      return data as ContentItem;
     } catch (error) {
       console.error('Error adding item:', error);
       toast.error('שגיאה בהוספת פריט');
@@ -68,16 +66,14 @@ export const useContentLibrary = () => {
 
   const addFile = useCallback(async (file: File) => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        toast.error('יש להתחבר כדי להעלות קבצים');
+      const publicUrl = await uploadFileToStorage(file);
+      if (!publicUrl) {
+        toast.error('שגיאה בהעלאת הקובץ');
         return null;
       }
 
-      const content = await readFileAsDataURL(file);
       const type = file.type.startsWith('image/') ? 'image' : 'video';
-
-      return await addItem(content, type);
+      return await addItem(publicUrl, type);
     } catch (error) {
       console.error('Error uploading file:', error);
       toast.error('שגיאה בהעלאת קובץ');
@@ -103,10 +99,10 @@ export const useContentLibrary = () => {
   }, []);
 
   const toggleStar = useCallback(async (id: string) => {
-    const item = items.find(item => item.id === id);
-    if (!item) return;
-
     try {
+      const item = items.find(item => item.id === id);
+      if (!item) return;
+
       const { error } = await supabase
         .from('content_items')
         .update({ starred: !item.starred })
@@ -117,6 +113,7 @@ export const useContentLibrary = () => {
       setItems(prev => prev.map(item => 
         item.id === id ? { ...item, starred: !item.starred } : item
       ));
+      toast.success('הפריט עודכן בהצלחה');
     } catch (error) {
       console.error('Error updating star:', error);
       toast.error('שגיאה בעדכון פריט');
