@@ -1,6 +1,8 @@
+export type ContentItemType = 'link' | 'image' | 'whatsapp' | 'video' | 'note';
+
 export interface ContentItem {
   id: string;
-  type: 'link' | 'image' | 'whatsapp' | 'video' | 'note';
+  type: ContentItemType;
   content: string;
   starred: boolean;
   created_at?: string;
@@ -8,5 +10,3 @@ export interface ContentItem {
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
-
-export type FileContent = string | ArrayBuffer | null;

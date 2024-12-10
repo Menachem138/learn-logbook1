@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem } from '@/types/content';
+import { ContentItem, ContentItemType } from '@/types/content';
 import { toast } from "sonner";
 import { uploadFileToStorage } from '@/utils/fileStorage';
 
@@ -24,7 +24,13 @@ export const useContentLibrary = () => {
 
       if (error) throw error;
 
-      setItems(data || []);
+      // Type assertion to ensure the data matches our ContentItem type
+      const typedData = (data || []).map(item => ({
+        ...item,
+        type: item.type as ContentItemType // Ensure type is one of our allowed types
+      })) as ContentItem[];
+
+      setItems(typedData);
     } catch (error) {
       console.error('Error loading items:', error);
       toast.error('שגיאה בטעינת הפריטים');
@@ -33,7 +39,7 @@ export const useContentLibrary = () => {
     }
   }, []);
 
-  const addItem = useCallback(async (content: string, type: ContentItem['type']) => {
+  const addItem = useCallback(async (content: string, type: ContentItemType) => {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
@@ -54,9 +60,10 @@ export const useContentLibrary = () => {
 
       if (error) throw error;
 
-      setItems(prev => [data as ContentItem, ...prev]);
+      const newItem = { ...data, type: data.type as ContentItemType } as ContentItem;
+      setItems(prev => [newItem, ...prev]);
       toast.success('הפריט נוסף בהצלחה');
-      return data as ContentItem;
+      return newItem;
     } catch (error) {
       console.error('Error adding item:', error);
       toast.error('שגיאה בהוספת פריט');
@@ -73,7 +80,7 @@ export const useContentLibrary = () => {
       }
 
       const type = file.type.startsWith('image/') ? 'image' : 'video';
-      return await addItem(publicUrl, type);
+      return await addItem(publicUrl, type as ContentItemType);
     } catch (error) {
       console.error('Error uploading file:', error);
       toast.error('שגיאה בהעלאת קובץ');
