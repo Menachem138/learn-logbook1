@@ -6,7 +6,7 @@ export interface ContentItem {
   content: string;
   starred: boolean;
   user_id: string;
-  created_at?: string;
+  created_at: string; // Changed from optional to required to match DB
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
@@ -24,6 +24,7 @@ export function isValidContentItem(item: any): item is ContentItem {
     typeof item.content === 'string' &&
     typeof item.user_id === 'string' &&
     typeof item.starred === 'boolean' &&
+    typeof item.created_at === 'string' &&
     isContentItemType(item.type)
   );
 }
