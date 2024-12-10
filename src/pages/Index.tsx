@@ -1,9 +1,8 @@
 import React from "react";
 import Timer from "@/components/Timer";
-import ProgressTracker from "@/components/ProgressTracker";
 import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
-import { ContentLibrary } from "@/components/ContentLibrary";
+import ContentLibrary from "@/components/ContentLibrary";
 import LearningJournal from "@/components/LearningJournal";
 import CourseSchedule from "@/components/CourseSchedule";
 
