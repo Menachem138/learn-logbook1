@@ -20,7 +20,7 @@ export function isContentItemType(type: string): type is ContentItemType {
   return ['link', 'image', 'whatsapp', 'video', 'note'].includes(type);
 }
 
-// Type guard to validate raw data from database
+// Raw data type from database
 export interface RawContentItem {
   id: string;
   type: string;

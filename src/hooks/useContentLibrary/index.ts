@@ -35,10 +35,8 @@ export const useContentLibrary = () => {
 
     try {
       const newItem = await queries.insertItem(user.id, type, content);
-      if (newItem) {
-        setItems(prev => [newItem, ...prev]);
-        toast.success('הפריט נוסף בהצלחה');
-      }
+      setItems(prev => [newItem, ...prev]);
+      toast.success('הפריט נוסף בהצלחה');
       return newItem;
     } catch (error) {
       console.error('Error:', error);
@@ -64,10 +62,8 @@ export const useContentLibrary = () => {
         mimeType: file.type
       });
 
-      if (newItem) {
-        setItems(prev => [newItem, ...prev]);
-        toast.success('הקובץ הועלה בהצלחה');
-      }
+      setItems(prev => [newItem, ...prev]);
+      toast.success('הקובץ הועלה בהצלחה');
       return newItem;
     } catch (error) {
       console.error('Error:', error);

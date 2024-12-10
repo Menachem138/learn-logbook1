@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, RawContentItem, transformToContentItems } from '@/types/content';
+import { ContentItem, ContentItemType, RawContentItem, transformToContentItem, transformToContentItems } from '@/types/content';
 
 export const fetchUserItems = async (userId: string): Promise<ContentItem[]> => {
   console.log('Fetching items for user:', userId);
