@@ -36,17 +36,20 @@ export const insertItem = async (userId: string, content: string, type: ContentI
     throw error;
   }
 
+  console.log('Item inserted successfully:', data);
   return data;
 };
 
 export const uploadFile = async (userId: string, file: File) => {
-  console.log('Processing file upload:', file.name);
+  console.log('Processing file upload:', { fileName: file.name, userId });
   
   const publicUrl = await uploadFileToStorage(file, userId);
   if (!publicUrl) {
+    console.error('Failed to get public URL for uploaded file');
     throw new Error('Failed to upload file');
   }
 
+  console.log('File uploaded successfully, public URL:', publicUrl);
   const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
   return await insertItem(userId, publicUrl, type);
 };

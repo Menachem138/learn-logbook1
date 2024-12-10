@@ -18,11 +18,13 @@ export const useContentLibrary = (): UseContentLibraryReturn => {
     }
 
     try {
+      console.log('Loading items for user:', user.id);
       const data = await queries.fetchUserItems(user.id);
       const validItems = data?.filter((item): item is ContentItem => {
         return isContentItemType(item.type);
       }) || [];
 
+      console.log('Items loaded:', validItems.length);
       setItems(validItems);
     } catch (error) {
       console.error('Error:', error);
@@ -34,11 +36,13 @@ export const useContentLibrary = (): UseContentLibraryReturn => {
 
   const addItem = useCallback(async (content: string, type: ContentItemType) => {
     if (!user?.id) {
+      console.log('No user found');
       toast.error('יש להתחבר כדי להוסיף פריטים');
       return null;
     }
 
     try {
+      console.log('Adding new item:', { content, type });
       const data = await queries.insertItem(user.id, content, type);
       
       if (data && isContentItemType(data.type)) {
@@ -64,12 +68,15 @@ export const useContentLibrary = (): UseContentLibraryReturn => {
 
   const addFile = useCallback(async (file: File) => {
     if (!user?.id) {
+      console.log('No user found');
       toast.error('יש להתחבר כדי להעלות קבצים');
       return null;
     }
 
     try {
+      console.log('Processing file upload:', file.name);
       const data = await queries.uploadFile(user.id, file);
+      
       if (data && isContentItemType(data.type)) {
         const newItem: ContentItem = {
           id: data.id,
