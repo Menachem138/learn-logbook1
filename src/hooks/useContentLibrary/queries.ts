@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, isValidContentItem } from '@/types/content';
+import { ContentItem, ContentItemType, RawContentItem, transformToContentItems } from '@/types/content';
 
-export const fetchUserItems = async (userId: string) => {
+export const fetchUserItems = async (userId: string): Promise<ContentItem[]> => {
   console.log('Fetching items for user:', userId);
   
   const { data, error } = await supabase
@@ -15,9 +15,7 @@ export const fetchUserItems = async (userId: string) => {
     throw error;
   }
 
-  // Validate and transform the data
-  const validItems = data?.filter(isValidContentItem) || [];
-  return validItems;
+  return transformToContentItems(data as RawContentItem[]);
 };
 
 export const insertItem = async (
@@ -30,7 +28,7 @@ export const insertItem = async (
     fileSize?: number;
     mimeType?: string;
   }
-) => {
+): Promise<ContentItem> => {
   console.log('Inserting item:', { userId, type, content, fileDetails });
   
   const { data, error } = await supabase
@@ -53,11 +51,12 @@ export const insertItem = async (
     throw error;
   }
 
-  if (!isValidContentItem(data)) {
+  const contentItem = transformToContentItem(data as RawContentItem);
+  if (!contentItem) {
     throw new Error('Invalid content type returned from database');
   }
 
-  return data;
+  return contentItem;
 };
 
 export const deleteItem = async (id: string) => {

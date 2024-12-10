@@ -4,7 +4,7 @@ export interface ContentItem {
   id: string;
   type: ContentItemType;
   content: string;
-  starred: boolean;
+  starred: boolean | null;
   user_id: string;
   created_at: string;
   file_path?: string | null;
@@ -20,20 +20,44 @@ export function isContentItemType(type: string): type is ContentItemType {
   return ['link', 'image', 'whatsapp', 'video', 'note'].includes(type);
 }
 
-// Type guard to validate ContentItem from database
-export function isValidContentItem(item: any): item is ContentItem {
-  return (
-    typeof item === 'object' &&
-    typeof item.id === 'string' &&
-    typeof item.content === 'string' &&
-    typeof item.user_id === 'string' &&
-    typeof item.created_at === 'string' &&
-    typeof item.type === 'string' &&
-    isContentItemType(item.type) &&
-    (item.starred === null || typeof item.starred === 'boolean') &&
-    (item.file_path === null || typeof item.file_path === 'string' || item.file_path === undefined) &&
-    (item.file_name === null || typeof item.file_name === 'string' || item.file_name === undefined) &&
-    (item.file_size === null || typeof item.file_size === 'number' || item.file_size === undefined) &&
-    (item.mime_type === null || typeof item.mime_type === 'string' || item.mime_type === undefined)
-  );
+// Type guard to validate raw data from database
+export interface RawContentItem {
+  id: string;
+  type: string;
+  content: string;
+  starred: boolean | null;
+  user_id: string;
+  created_at: string;
+  file_path: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  mime_type: string | null;
+}
+
+// Function to validate and transform raw data into ContentItem
+export function transformToContentItem(item: RawContentItem): ContentItem | null {
+  if (!isContentItemType(item.type)) {
+    console.error('Invalid content type:', item.type);
+    return null;
+  }
+
+  return {
+    id: item.id,
+    type: item.type,
+    content: item.content,
+    starred: item.starred,
+    user_id: item.user_id,
+    created_at: item.created_at,
+    file_path: item.file_path,
+    file_name: item.file_name,
+    file_size: item.file_size,
+    mime_type: item.mime_type
+  };
+}
+
+// Function to validate an array of raw items
+export function transformToContentItems(items: RawContentItem[]): ContentItem[] {
+  return items
+    .map(transformToContentItem)
+    .filter((item): item is ContentItem => item !== null);
 }
