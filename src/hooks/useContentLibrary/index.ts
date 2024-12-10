@@ -1,102 +1,77 @@
 import { useState, useCallback } from 'react';
 import { toast } from "sonner";
-import { useAuth } from '@/components/auth/AuthProvider';
-import { ContentItem, ContentItemType, isContentItemType } from '@/types/content';
+import { ContentItem, ContentItemType } from '@/types/content';
+import { uploadFileToStorage } from '@/utils/fileStorage';
 import * as queries from './queries';
-import type { UseContentLibraryReturn } from './types';
 
-export const useContentLibrary = (): UseContentLibraryReturn => {
+export const useContentLibrary = () => {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
-  const loadItems = useCallback(async () => {
-    if (!user?.id) {
-      console.error('No user found');
-      setLoading(false);
+  const loadItems = useCallback(async (userId: string) => {
+    if (!userId) {
+      console.error('No user ID provided');
       return;
     }
 
     try {
-      console.log('Loading items for user:', user.id);
-      const data = await queries.fetchUserItems(user.id);
-      const validItems = data?.filter((item): item is ContentItem => {
-        return isContentItemType(item.type);
-      }) || [];
-
-      console.log('Items loaded:', validItems.length);
-      setItems(validItems);
+      setLoading(true);
+      const data = await queries.fetchUserItems(userId);
+      setItems(data);
     } catch (error) {
       console.error('Error:', error);
       toast.error('שגיאה בטעינת הפריטים');
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
-  const addItem = useCallback(async (content: string, type: ContentItemType) => {
-    if (!user?.id) {
-      console.log('No user found');
+  const addItem = useCallback(async (userId: string, content: string, type: ContentItemType) => {
+    if (!userId) {
+      console.error('No user ID provided');
       toast.error('יש להתחבר כדי להוסיף פריטים');
       return null;
     }
 
     try {
-      console.log('Adding new item:', { content, type });
-      const data = await queries.insertItem(user.id, content, type);
-      
-      if (data && isContentItemType(data.type)) {
-        const newItem: ContentItem = {
-          id: data.id,
-          type: data.type,
-          content: data.content,
-          starred: data.starred || false,
-          user_id: data.user_id,
-          created_at: data.created_at
-        };
-        setItems(prev => [newItem, ...prev]);
-        toast.success('הפריט נוסף בהצלחה');
-        return newItem;
-      }
-      return null;
+      const newItem = await queries.insertItem(userId, type, content);
+      setItems(prev => [newItem, ...prev]);
+      toast.success('הפריט נוסף בהצלחה');
+      return newItem;
     } catch (error) {
       console.error('Error:', error);
       toast.error('שגיאה בהוספת פריט');
       return null;
     }
-  }, [user?.id]);
+  }, []);
 
-  const addFile = useCallback(async (file: File) => {
-    if (!user?.id) {
-      console.log('No user found');
+  const addFile = useCallback(async (userId: string, file: File) => {
+    if (!userId) {
+      console.error('No user ID provided');
       toast.error('יש להתחבר כדי להעלות קבצים');
       return null;
     }
 
     try {
-      console.log('Processing file upload:', file.name);
-      const data = await queries.uploadFile(user.id, file);
+      const fileDetails = await uploadFileToStorage(file, userId);
+      const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
       
-      if (data && isContentItemType(data.type)) {
-        const newItem: ContentItem = {
-          id: data.id,
-          type: data.type,
-          content: data.content,
-          starred: data.starred || false,
-          user_id: data.user_id,
-          created_at: data.created_at
-        };
-        setItems(prev => [newItem, ...prev]);
-        toast.success('הקובץ הועלה בהצלחה');
-        return newItem;
-      }
-      return null;
+      const newItem = await queries.insertItem(userId, type, fileDetails.publicUrl, {
+        filePath: fileDetails.filePath,
+        fileName: fileDetails.fileName,
+        fileSize: fileDetails.fileSize,
+        mimeType: fileDetails.mimeType
+      });
+
+      setItems(prev => [newItem, ...prev]);
+      toast.success('הקובץ הועלה בהצלחה');
+      return newItem;
     } catch (error) {
       console.error('Error:', error);
       toast.error('שגיאה בהעלאת קובץ');
       return null;
     }
-  }, [user?.id]);
+  }, []);
 
   const removeItem = useCallback(async (id: string) => {
     try {

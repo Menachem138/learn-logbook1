@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ContentItem, ContentItemType } from '@/types/content';
-import { uploadFileToStorage } from '@/utils/fileStorage';
 
 export const fetchUserItems = async (userId: string) => {
   console.log('Fetching items for user:', userId);
@@ -15,18 +14,32 @@ export const fetchUserItems = async (userId: string) => {
     throw error;
   }
 
-  return data;
+  return data as ContentItem[];
 };
 
-export const insertItem = async (userId: string, content: string, type: ContentItemType) => {
-  console.log('Inserting item:', { userId, content, type });
+export const insertItem = async (
+  userId: string,
+  type: ContentItemType,
+  content: string,
+  fileDetails?: {
+    filePath?: string;
+    fileName?: string;
+    fileSize?: number;
+    mimeType?: string;
+  }
+) => {
+  console.log('Inserting item:', { userId, type, content, fileDetails });
+  
   const { data, error } = await supabase
     .from('content_items')
     .insert([{
+      user_id: userId,
       type,
       content,
-      user_id: userId,
-      starred: false
+      file_path: fileDetails?.filePath,
+      file_name: fileDetails?.fileName,
+      file_size: fileDetails?.fileSize,
+      mime_type: fileDetails?.mimeType
     }])
     .select()
     .single();
@@ -37,21 +50,7 @@ export const insertItem = async (userId: string, content: string, type: ContentI
   }
 
   console.log('Item inserted successfully:', data);
-  return data;
-};
-
-export const uploadFile = async (userId: string, file: File) => {
-  console.log('Processing file upload:', { fileName: file.name, userId });
-  
-  const publicUrl = await uploadFileToStorage(file, userId);
-  if (!publicUrl) {
-    console.error('Failed to get public URL for uploaded file');
-    throw new Error('Failed to upload file');
-  }
-
-  console.log('File uploaded successfully, public URL:', publicUrl);
-  const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
-  return await insertItem(userId, publicUrl, type);
+  return data as ContentItem;
 };
 
 export const deleteItem = async (id: string) => {

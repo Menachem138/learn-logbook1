@@ -2,15 +2,13 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { X } from 'lucide-react'
-import { Textarea } from "@/components/ui/textarea"
 import { ContentInput } from './ContentInput'
 import { ContentList } from './ContentList'
+import { ImagePreview } from './ImagePreview'
+import { NoteEditor } from './NoteEditor'
+import { DropZone } from './DropZone'
 import { useContentLibrary } from '@/hooks/useContentLibrary'
 import { useAuth } from '@/components/auth/AuthProvider'
-import { toast } from 'sonner'
 
 const ContentLibrary = () => {
   const { user } = useAuth();
@@ -34,63 +32,45 @@ const ContentLibrary = () => {
   useEffect(() => {
     if (user?.id) {
       console.log('Loading items for user:', user.id);
-      loadItems();
+      loadItems(user.id);
     }
   }, [user?.id, loadItems]);
 
   const handleAddItem = useCallback(async () => {
-    if (!user?.id) {
-      console.log('No user found');
-      toast.error('יש להתחבר כדי להוסיף פריטים');
-      return;
-    }
-    if (!newItem) return;
+    if (!user?.id || !newItem) return;
     
     console.log('Adding new item:', newItem);
     const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
-    await addItem(newItem, type);
+    await addItem(user.id, newItem, type);
     setNewItem('');
   }, [newItem, addItem, user?.id]);
 
   const handleAddNote = useCallback(async () => {
-    if (!user?.id) {
-      console.log('No user found');
-      toast.error('יש להתחבר כדי להוסיף פתקים');
-      return;
-    }
-    if (!noteContent) return;
+    if (!user?.id || !noteContent) return;
     
     console.log('Adding new note:', noteContent);
-    await addItem(noteContent, 'note');
+    await addItem(user.id, noteContent, 'note');
     setNoteContent('');
   }, [noteContent, addItem, user?.id]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user?.id) {
-      console.log('No user found');
-      toast.error('יש להתחבר כדי להעלות קבצים');
-      return;
-    }
+    if (!user?.id) return;
     
     const file = e.target.files?.[0];
     if (file) {
       console.log('Uploading file:', file.name);
-      await addFile(file);
+      await addFile(user.id, file);
     }
   }, [addFile, user?.id]);
 
   const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    if (!user?.id) {
-      console.log('No user found');
-      toast.error('יש להתחבר כדי להעלות קבצים');
-      return;
-    }
+    if (!user?.id) return;
     
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
       console.log('Uploading dropped file:', file.name);
-      await addFile(file);
+      await addFile(user.id, file);
     }
   }, [addFile, user?.id]);
 
@@ -121,13 +101,7 @@ const ContentLibrary = () => {
               fileInputRef={fileInputRef}
             />
 
-            <div 
-              className="border-2 border-dashed border-gray-300 p-4 text-center mb-4 mt-4 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-            >
-              גרור ושחרר תמונות או סרטונים כאן
-            </div>
+            <DropZone onDrop={handleDrop} />
 
             <ContentList
               items={items}
@@ -143,45 +117,22 @@ const ContentLibrary = () => {
               onImageClick={setSelectedImage}
             />
 
-            <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-              <DialogContent className="max-w-4xl">
-                <DialogTitle>תצוגה מקדימה</DialogTitle>
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => setSelectedImage(null)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <img src={selectedImage || ''} alt="Preview" className="w-full h-auto" />
-                </div>
-              </DialogContent>
-            </Dialog>
+            <ImagePreview
+              imageUrl={selectedImage}
+              onClose={() => setSelectedImage(null)}
+            />
 
-            <Dialog open={!!editingNote} onOpenChange={() => setEditingNote(null)}>
-              <DialogContent>
-                <DialogTitle>עריכת פתק</DialogTitle>
-                <Textarea
-                  value={noteContent}
-                  onChange={(e) => setNoteContent(e.target.value)}
-                  className="min-h-[200px]"
-                />
-                <div className="flex justify-end space-x-2 mt-4">
-                  <Button onClick={async () => {
-                    if (!editingNote) return;
-                    await updateNote(editingNote, noteContent);
-                    setEditingNote(null);
-                  }}>
-                    שמור שינויים
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditingNote(null)}>
-                    ביטול
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <NoteEditor
+              isOpen={!!editingNote}
+              noteContent={noteContent}
+              onContentChange={setNoteContent}
+              onSave={async () => {
+                if (!editingNote) return;
+                await updateNote(editingNote, noteContent);
+                setEditingNote(null);
+              }}
+              onClose={() => setEditingNote(null)}
+            />
           </>
         )}
       </CardContent>
