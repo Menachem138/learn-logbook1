@@ -7,14 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Star, Trash2, Upload, Edit, X } from 'lucide-react'
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-
-interface ContentItem {
-  id: string;
-  type: 'link' | 'image' | 'whatsapp' | 'video' | 'note';
-  content: string;
-  starred: boolean;
-  note?: string;
-}
+import { ContentItem } from '@/types/content'
+import { readFileAsDataURL } from '@/utils/fileHandlers'
 
 const ContentLibrary = () => {
   const [items, setItems] = useState<ContentItem[]>([]);
@@ -27,7 +21,13 @@ const ContentLibrary = () => {
   const addItem = useCallback(() => {
     if (newItem) {
       const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
-      setItems(prev => [...prev, { id: Date.now().toString(), type, content: newItem, starred: false }]);
+      setItems(prev => [...prev, { 
+        id: Date.now().toString(), 
+        type, 
+        content: newItem, 
+        starred: false,
+        user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
+      }]);
       setNewItem('');
     }
   }, [newItem]);
@@ -37,11 +37,49 @@ const ContentLibrary = () => {
       id: Date.now().toString(), 
       type: 'note', 
       content: noteContent, 
-      starred: false 
+      starred: false,
+      user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
     }]);
     setNoteContent('');
     setEditingNote(null);
   }, [noteContent]);
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      try {
+        const content = await readFileAsDataURL(file);
+        setItems(prev => [...prev, { 
+          id: Date.now().toString(), 
+          type: file.type.startsWith('image/') ? 'image' : 'video', 
+          content, 
+          starred: false,
+          user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
+        }]);
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
+    }
+  }, []);
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const content = await readFileAsDataURL(file);
+        setItems(prev => [...prev, { 
+          id: Date.now().toString(), 
+          type: file.type.startsWith('image/') ? 'image' : 'video', 
+          content, 
+          starred: false,
+          user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
+        }]);
+      } catch (error) {
+        console.error('Error reading file:', error);
+      }
+    }
+  }, []);
 
   const removeItem = useCallback((id: string) => {
     setItems(prev => prev.filter(item => item.id !== id));
@@ -51,43 +89,6 @@ const ContentLibrary = () => {
     setItems(prev => prev.map(item => 
       item.id === id ? { ...item, starred: !item.starred } : item
     ));
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === 'string') {
-          setItems(prev => [...prev, { 
-            id: Date.now().toString(), 
-            type: file.type.startsWith('image/') ? 'image' : 'video', 
-            content: event.target.result, 
-            starred: false 
-          }]);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  }, []);
-
-  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === 'string') {
-          setItems(prev => [...prev, { 
-            id: Date.now().toString(), 
-            type: file.type.startsWith('image/') ? 'image' : 'video', 
-            content: event.target.result, 
-            starred: false 
-          }]);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
   }, []);
 
   return (

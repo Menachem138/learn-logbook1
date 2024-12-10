@@ -8,3 +8,5 @@ export interface ContentItem {
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
+
+export type FileContent = string | ArrayBuffer | null;

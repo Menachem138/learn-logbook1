@@ -32,6 +32,7 @@ const ContentLibrary = () => {
       const { data, error } = await supabase
         .from('content_items')
         .select('*')
+        .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
