@@ -55,7 +55,11 @@ export const useContentLibrary = () => {
           type,
           content,
           user_id: session.session.user.id,
-          starred: false
+          starred: null,
+          file_path: null,
+          file_name: null,
+          file_size: null,
+          mime_type: null
         }])
         .select()
         .single();
@@ -71,9 +75,13 @@ export const useContentLibrary = () => {
           id: data.id,
           type: data.type,
           content: data.content,
-          starred: data.starred || false,
+          starred: data.starred,
           user_id: data.user_id,
-          created_at: data.created_at
+          created_at: data.created_at,
+          file_path: data.file_path,
+          file_name: data.file_name,
+          file_size: data.file_size,
+          mime_type: data.mime_type
         };
         setItems(prev => [newItem, ...prev]);
         toast.success('הפריט נוסף בהצלחה');

@@ -22,9 +22,13 @@ const ContentLibrary = () => {
     id: Date.now().toString(),
     type,
     content,
-    starred: false,
-    user_id: 'temp', // This will be replaced with actual user_id when integrated with Supabase
-    created_at: new Date().toISOString()
+    starred: null,
+    user_id: 'temp',
+    created_at: new Date().toISOString(),
+    file_path: null,
+    file_name: null,
+    file_size: null,
+    mime_type: null
   });
 
   const addItem = useCallback(() => {
