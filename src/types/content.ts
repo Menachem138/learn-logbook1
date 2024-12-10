@@ -27,8 +27,13 @@ export function isValidContentItem(item: any): item is ContentItem {
     typeof item.id === 'string' &&
     typeof item.content === 'string' &&
     typeof item.user_id === 'string' &&
-    typeof item.starred === 'boolean' &&
     typeof item.created_at === 'string' &&
-    isContentItemType(item.type)
+    typeof item.type === 'string' &&
+    isContentItemType(item.type) &&
+    (item.starred === null || typeof item.starred === 'boolean') &&
+    (item.file_path === null || typeof item.file_path === 'string' || item.file_path === undefined) &&
+    (item.file_name === null || typeof item.file_name === 'string' || item.file_name === undefined) &&
+    (item.file_size === null || typeof item.file_size === 'number' || item.file_size === undefined) &&
+    (item.mime_type === null || typeof item.mime_type === 'string' || item.mime_type === undefined)
   );
 }
