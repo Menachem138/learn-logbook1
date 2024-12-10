@@ -3,12 +3,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { X } from 'lucide-react'
+import { Star, Trash2, Edit, X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import { ContentItem } from '@/types/content'
+import { ContentItem, NewContentItem } from '@/types/content'
 import { ContentInput } from './ContentInput'
 import { readFileAsDataURL } from '@/utils/fileHandlers'
 
@@ -23,6 +23,12 @@ const ContentLibrary = () => {
   // Load items from Supabase on component mount
   useEffect(() => {
     const loadItems = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error('יש להתחבר כדי לצפות בפריטים');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('content_items')
         .select('*')
@@ -44,11 +50,17 @@ const ContentLibrary = () => {
   const addItem = useCallback(async () => {
     if (!newItem) return;
 
-    const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
-    const newContentItem = {
-      type,
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user?.id) {
+      toast.error('יש להתחבר כדי להוסיף פריטים');
+      return;
+    }
+
+    const newContentItem: NewContentItem = {
+      type: newItem.startsWith('http') ? 'link' : 'whatsapp',
       content: newItem,
       starred: false,
+      user_id: session.session.user.id
     };
 
     const { data, error } = await supabase
@@ -72,10 +84,17 @@ const ContentLibrary = () => {
   const addNote = useCallback(async () => {
     if (!noteContent) return;
 
-    const newContentItem = {
-      type: 'note' as const,
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user?.id) {
+      toast.error('יש להתחבר כדי להוסיף פתקים');
+      return;
+    }
+
+    const newContentItem: NewContentItem = {
+      type: 'note',
       content: noteContent,
       starred: false,
+      user_id: session.session.user.id
     };
 
     const { data, error } = await supabase
@@ -95,6 +114,85 @@ const ContentLibrary = () => {
       toast.success('הפתק נוסף בהצלחה');
     }
   }, [noteContent]);
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user?.id) {
+      toast.error('יש להתחבר כדי להעלות קבצים');
+      return;
+    }
+
+    try {
+      const content = await readFileAsDataURL(file);
+      const newContentItem: NewContentItem = {
+        type: file.type.startsWith('image/') ? 'image' : 'video',
+        content,
+        starred: false,
+        user_id: session.session.user.id
+      };
+
+      const { data, error } = await supabase
+        .from('content_items')
+        .insert([newContentItem])
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בהעלאת קובץ');
+        return;
+      }
+
+      if (data) {
+        setItems(prev => [data as ContentItem, ...prev]);
+        toast.success('הקובץ הועלה בהצלחה');
+      }
+    } catch (error) {
+      toast.error('שגיאה בעיבוד הקובץ');
+    }
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user?.id) {
+      toast.error('יש להתחבר כדי להעלות קבצים');
+      return;
+    }
+
+    try {
+      const content = await readFileAsDataURL(file);
+      const newContentItem: NewContentItem = {
+        type: file.type.startsWith('image/') ? 'image' : 'video',
+        content,
+        starred: false,
+        user_id: session.session.user.id
+      };
+
+      const { data, error } = await supabase
+        .from('content_items')
+        .insert([newContentItem])
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('שגיאה בהעלאת קובץ');
+        return;
+      }
+
+      if (data) {
+        setItems(prev => [data as ContentItem, ...prev]);
+        toast.success('הקובץ הועלה בהצלחה');
+      }
+    } catch (error) {
+      toast.error('שגיאה בעיבוד הקובץ');
+    }
+  }, []);
 
   const removeItem = useCallback(async (id: string) => {
     const { error } = await supabase
@@ -129,71 +227,6 @@ const ContentLibrary = () => {
       item.id === id ? { ...item, starred: !item.starred } : item
     ));
   }, [items]);
-
-  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-
-    try {
-      const content = await readFileAsDataURL(file);
-      const newContentItem = {
-        type: file.type.startsWith('image/') ? 'image' as const : 'video' as const,
-        content,
-        starred: false,
-      };
-
-      const { data, error } = await supabase
-        .from('content_items')
-        .insert([newContentItem])
-        .select()
-        .single();
-
-      if (error) {
-        toast.error('שגיאה בהעלאת קובץ');
-        return;
-      }
-
-      if (data) {
-        setItems(prev => [data as ContentItem, ...prev]);
-        toast.success('הקובץ הועלה בהצלחה');
-      }
-    } catch (error) {
-      toast.error('שגיאה בעיבוד הקובץ');
-    }
-  }, []);
-
-  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const content = await readFileAsDataURL(file);
-      const newContentItem = {
-        type: file.type.startsWith('image/') ? 'image' as const : 'video' as const,
-        content,
-        starred: false,
-      };
-
-      const { data, error } = await supabase
-        .from('content_items')
-        .insert([newContentItem])
-        .select()
-        .single();
-
-      if (error) {
-        toast.error('שגיאה בהעלאת קובץ');
-        return;
-      }
-
-      if (data) {
-        setItems(prev => [data as ContentItem, ...prev]);
-        toast.success('הקובץ הועלה בהצלחה');
-      }
-    } catch (error) {
-      toast.error('שגיאה בעיבוד הקובץ');
-    }
-  }, []);
 
   return (
     <Card className="mt-6">

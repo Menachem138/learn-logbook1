@@ -4,5 +4,7 @@ export interface ContentItem {
   content: string;
   starred: boolean;
   created_at?: string;
-  user_id?: string;
+  user_id: string;
 }
+
+export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
