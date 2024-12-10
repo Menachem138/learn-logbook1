@@ -31,7 +31,7 @@ export const useContentLibrary = () => {
       console.log('Loaded items:', data);
 
       // Validate and transform the data
-      const validItems = (data || []).filter(isValidContentItem);
+      const validItems = data?.filter(isValidContentItem) ?? [];
       setItems(validItems);
     } catch (error) {
       console.error('Error loading items:', error);
@@ -68,7 +68,7 @@ export const useContentLibrary = () => {
         throw error;
       }
 
-      if (data && isValidContentItem(data)) {
+      if (isValidContentItem(data)) {
         console.log('Item added successfully:', data);
         setItems(prev => [data, ...prev]);
         toast.success('הפריט נוסף בהצלחה');
