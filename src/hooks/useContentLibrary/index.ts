@@ -10,7 +10,7 @@ export const useContentLibrary = () => {
 
   const loadItems = useCallback(async () => {
     try {
-      const { data: session } = await queries.getSession();
+      const session = await queries.getSession();
       if (!session?.user?.id) {
         console.error('No user session found');
         return;
@@ -28,15 +28,17 @@ export const useContentLibrary = () => {
 
   const addItem = useCallback(async (content: string, type: ContentItemType) => {
     try {
-      const { data: session } = await queries.getSession();
+      const session = await queries.getSession();
       if (!session?.user?.id) {
         toast.error('יש להתחבר כדי להוסיף פריטים');
         return null;
       }
 
       const newItem = await queries.insertItem(session.user.id, type, content);
-      setItems(prev => [newItem, ...prev]);
-      toast.success('הפריט נוסף בהצלחה');
+      if (newItem) {
+        setItems(prev => [newItem, ...prev]);
+        toast.success('הפריט נוסף בהצלחה');
+      }
       return newItem;
     } catch (error) {
       console.error('Error:', error);
@@ -47,7 +49,7 @@ export const useContentLibrary = () => {
 
   const addFile = useCallback(async (file: File) => {
     try {
-      const { data: session } = await queries.getSession();
+      const session = await queries.getSession();
       if (!session?.user?.id) {
         toast.error('יש להתחבר כדי להעלות קבצים');
         return null;
@@ -63,8 +65,10 @@ export const useContentLibrary = () => {
         mimeType: fileDetails.mimeType
       });
 
-      setItems(prev => [newItem, ...prev]);
-      toast.success('הקובץ הועלה בהצלחה');
+      if (newItem) {
+        setItems(prev => [newItem, ...prev]);
+        toast.success('הקובץ הועלה בהצלחה');
+      }
       return newItem;
     } catch (error) {
       console.error('Error:', error);

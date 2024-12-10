@@ -1,8 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, isContentItemType } from '@/types/content';
+import { ContentItem, ContentItemType, isContentItemType, isValidContentItem } from '@/types/content';
 
 export const getSession = async () => {
-  return await supabase.auth.getSession();
+  const { data } = await supabase.auth.getSession();
+  return data.session;
 };
 
 export const fetchUserItems = async (userId: string) => {
@@ -19,10 +20,7 @@ export const fetchUserItems = async (userId: string) => {
   }
 
   // Validate and transform the data
-  const validItems = data?.filter((item): item is ContentItem => {
-    return isContentItemType(item.type);
-  }) || [];
-
+  const validItems = data?.filter(isValidContentItem) || [];
   return validItems;
 };
 
@@ -58,11 +56,11 @@ export const insertItem = async (
     throw error;
   }
 
-  if (!isContentItemType(data.type)) {
+  if (!isValidContentItem(data)) {
     throw new Error('Invalid content type returned from database');
   }
 
-  return data as ContentItem;
+  return data;
 };
 
 export const deleteItem = async (id: string) => {
