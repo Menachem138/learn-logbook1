@@ -11,8 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 interface JournalEntry {
   id: string;
   content: string;
-  created_at: Date;
+  created_at: string; // Changed from Date to string to match Supabase
   is_important: boolean;
+  user_id: string;
 }
 
 export default function LearningJournal() {

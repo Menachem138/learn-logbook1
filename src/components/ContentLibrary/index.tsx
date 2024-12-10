@@ -41,13 +41,30 @@ const ContentLibrary = () => {
 
       if (error) throw error;
 
-      setItems(data || []);
+      // Validate and transform the type field
+      const validatedData = (data || []).map(item => ({
+        ...item,
+        type: validateContentType(item.type)
+      }));
+
+      setItems(validatedData);
     } catch (error) {
       console.error('Error loading items:', error);
       toast.error('שגיאה בטעינת הפריטים');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Add type validation helper
+  const validateContentType = (type: string): ContentItem['type'] => {
+    const validTypes: ContentItem['type'][] = ['link', 'image', 'whatsapp', 'video', 'note'];
+    if (validTypes.includes(type as ContentItem['type'])) {
+      return type as ContentItem['type'];
+    }
+    // Default to 'link' if invalid type is encountered
+    console.warn(`Invalid content type encountered: ${type}`);
+    return 'link';
   };
 
   const addItem = useCallback(async () => {
