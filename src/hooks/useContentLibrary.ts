@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, isValidContentItem, isContentItemType } from '@/types/content';
+import { ContentItem, ContentItemType, isValidContentItem } from '@/types/content';
 import { toast } from "sonner";
 
 export const useContentLibrary = () => {
@@ -30,15 +30,13 @@ export const useContentLibrary = () => {
 
       console.log('Loaded items:', data);
 
-      // Validate and transform the data
-      const validItems = (data || [])
-        .filter((item): item is ContentItem => {
-          const isValid = isValidContentItem(item);
-          if (!isValid) {
-            console.warn('Invalid item found:', item);
-          }
-          return isValid;
-        });
+      const validItems = data?.filter((item): item is ContentItem => {
+        if (!isValidContentItem(item)) {
+          console.warn('Invalid item found:', item);
+          return false;
+        }
+        return true;
+      }) ?? [];
 
       setItems(validItems);
     } catch (error) {
@@ -102,12 +100,14 @@ export const useContentLibrary = () => {
 
       console.log('Uploading file:', file.name);
 
+      // First upload the file to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${session.session.user.id}/${fileName}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('content_library')
-        .upload(fileName, file);
+        .upload(filePath, file);
 
       if (uploadError) {
         console.error('Error uploading file:', uploadError);
@@ -116,12 +116,14 @@ export const useContentLibrary = () => {
 
       console.log('File uploaded successfully:', uploadData);
 
+      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('content_library')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       console.log('Public URL:', publicUrl);
 
+      // Add the content item with the file URL
       const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
       return await addItem(publicUrl, type);
     } catch (error) {

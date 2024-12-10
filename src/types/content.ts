@@ -5,8 +5,8 @@ export interface ContentItem {
   type: ContentItemType;
   content: string;
   starred: boolean;
-  created_at?: string;
   user_id: string;
+  created_at?: string;
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
