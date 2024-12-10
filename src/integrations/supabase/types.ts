@@ -96,6 +96,39 @@ export type Database = {
         }
         Relationships: []
       }
+      library_items: {
+        Row: {
+          content: string
+          created_at: string
+          file_details: Json | null
+          id: string
+          is_starred: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          file_details?: Json | null
+          id?: string
+          is_starred?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_details?: Json | null
+          id?: string
+          is_starred?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
