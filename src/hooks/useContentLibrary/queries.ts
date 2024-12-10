@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ContentItem, ContentItemType } from '@/types/content';
+import { uploadFileToStorage } from '@/utils/fileStorage';
 
 export const fetchUserItems = async (userId: string) => {
   console.log('Fetching items for user:', userId);
@@ -39,25 +40,15 @@ export const insertItem = async (userId: string, content: string, type: ContentI
 };
 
 export const uploadFile = async (userId: string, file: File) => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${crypto.randomUUID()}.${fileExt}`;
-  const filePath = `${userId}/${fileName}`;
-
-  console.log('Uploading file:', filePath);
-  const { error: uploadError } = await supabase.storage
-    .from('content_library')
-    .upload(filePath, file);
-
-  if (uploadError) {
-    console.error('Error uploading file:', uploadError);
-    throw uploadError;
+  console.log('Processing file upload:', file.name);
+  
+  const publicUrl = await uploadFileToStorage(file, userId);
+  if (!publicUrl) {
+    throw new Error('Failed to upload file');
   }
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('content_library')
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+  const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
+  return await insertItem(userId, publicUrl, type);
 };
 
 export const deleteItem = async (id: string) => {

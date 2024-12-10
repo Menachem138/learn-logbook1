@@ -69,15 +69,27 @@ export const useContentLibrary = (): UseContentLibraryReturn => {
     }
 
     try {
-      const publicUrl = await queries.uploadFile(user.id, file);
-      const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
-      return await addItem(publicUrl, type);
+      const data = await queries.uploadFile(user.id, file);
+      if (data && isContentItemType(data.type)) {
+        const newItem: ContentItem = {
+          id: data.id,
+          type: data.type,
+          content: data.content,
+          starred: data.starred || false,
+          user_id: data.user_id,
+          created_at: data.created_at
+        };
+        setItems(prev => [newItem, ...prev]);
+        toast.success('הקובץ הועלה בהצלחה');
+        return newItem;
+      }
+      return null;
     } catch (error) {
       console.error('Error:', error);
       toast.error('שגיאה בהעלאת קובץ');
       return null;
     }
-  }, [user?.id, addItem]);
+  }, [user?.id]);
 
   const removeItem = useCallback(async (id: string) => {
     try {

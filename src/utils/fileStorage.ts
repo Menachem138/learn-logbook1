@@ -1,18 +1,20 @@
 import { supabase } from '@/integrations/supabase/client';
 
-export const uploadFileToStorage = async (file: File): Promise<string | null> => {
+export const uploadFileToStorage = async (file: File, userId: string): Promise<string | null> => {
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = `${userId}/${fileName}`;
 
-    const { data, error } = await supabase.storage
+    console.log('Uploading file to storage:', filePath);
+    
+    const { error: uploadError } = await supabase.storage
       .from('content_library')
       .upload(filePath, file);
 
-    if (error) {
-      console.error('Error uploading file:', error);
-      return null;
+    if (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      throw uploadError;
     }
 
     const { data: { publicUrl } } = supabase.storage
