@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { LibraryItem, CreateLibraryItemInput } from '@/types/library';
+import { LibraryItem, CreateLibraryItemInput, transformToLibraryItem } from '@/types/library';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export function useLibrary() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>('');
 
@@ -22,20 +24,27 @@ export function useLibrary() {
         throw error;
       }
 
-      return data as LibraryItem[];
+      return (data?.map(transformToLibraryItem).filter(Boolean) as LibraryItem[]) || [];
     }
   });
 
   const createItem = useMutation({
     mutationFn: async (input: CreateLibraryItemInput) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const itemWithUserId = {
+        ...input,
+        user_id: user.id
+      };
+
       const { data, error } = await supabase
         .from('library_items')
-        .insert([input])
+        .insert([itemWithUserId])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return transformToLibraryItem(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['library-items'] });

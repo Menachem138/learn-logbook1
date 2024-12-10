@@ -4,13 +4,13 @@ export interface ContentItem {
   id: string;
   type: ContentItemType;
   content: string;
-  starred: boolean;
+  starred: boolean | null;
   user_id: string;
   created_at: string;
-  file_path?: string | null;
-  file_name?: string | null;
-  file_size?: number | null;
-  mime_type?: string | null;
+  file_path: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  mime_type: string | null;
 }
 
 export interface RawContentItem {
@@ -40,7 +40,7 @@ export function transformToContentItem(raw: RawContentItem): ContentItem | null 
     id: raw.id,
     type: raw.type,
     content: raw.content,
-    starred: raw.starred ?? false,
+    starred: raw.starred,
     user_id: raw.user_id,
     created_at: raw.created_at,
     file_path: raw.file_path,
