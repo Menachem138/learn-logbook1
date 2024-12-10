@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -64,43 +63,72 @@ const weeklySchedule = [
 const weeklyTopics = [
   {
     week: 1,
+    title: "יסודות הקריפטו",
     topics: [
-      "היכרות עם עולם הקריפטו",
-      "פתיחת ארנק דיגיטלי",
-      "היכרות בסיסית עם בורסות מסחר",
+      "יסודות הקריפטו",
+      "מסחר בסיסי",
+      "ניתוח טכני ראשוני"
     ]
   },
   {
     week: 2,
+    title: "פלטפורמות ואינדיקטורים",
     topics: [
-      "הבנת טכנולוגיית הבלוקצ'יין",
-      "הכרת סוגי מטבעות דיגיטליים",
-      "הבנת מסחר במטבעות דיגיטליים",
+      "תפעול פלטפורמות",
+      "עבודה עם ארנקים",
+      "אינדיקטורים",
+      "יישום בסיסי בשוק"
     ]
   },
   {
     week: 3,
+    title: "אסטרטגיות מתקדמות",
     topics: [
-      "הבנת ניהול סיכונים",
-      "אסטרטגיות מסחר",
-      "הכנת תיק השקעות",
+      "אסטרטגיות מתקדמות",
+      "וייקוף",
+      "מבנה שוק",
+      "המשקפיים של חי טל",
+      "תוכנית עבודה וניהול סיכונים"
     ]
   },
   {
     week: 4,
+    title: "מסחר מעשי",
     topics: [
-      "הבנת רגולציה בתחום הקריפטו",
-      "הכרת פלטפורמות מסחר",
-      "הבנת ניתוח טכני",
+      "נזילות",
+      "היצע/ביקוש",
+      "מסחר בספוט",
+      "כלים מנטליים",
+      "סקירות שוק מעשיות"
     ]
-  },
+  }
+];
+
+const backupBlocks = [
+  {
+    title: "בלוק גיבוי",
+    sessions: [
+      "שלישי בערב (20:30–21:30): זמן להשלמות",
+      "שישי אחה"צ (14:00–15:00): סשן חירום להשלמת חומר"
+    ]
+  }
+];
+
+const importantRules = [
+  {
+    title: "כללים חשובים",
+    rules: [
+      "שגרת הכנה: סידור המקום והכנה מנטלית בכל תחילת סשן",
+      "הפסקות מובנות: כל 50 דקות לימוד, 10 דקות הפסקה",
+      "מעקב יומי: רשום במחברת מה למדת ומה דורש העמקה",
+      "תגמולים ועונשים: תגמל את עצמך על התמדה, הענש את עצמך בעדינות במקרה של התחמקות ללא סיבה"
+    ]
+  }
 ];
 
 export default function CourseSchedule() {
-  const [activeDay, setActiveDay] = useState(weeklySchedule[0].day);
-
   return (
-    <Card className="mt-6 max-w-6xl mx-auto">
+    <Card className="mt-6">
       <CardHeader>
         <CardTitle>לוח זמנים לקורס הקריפטו</CardTitle>
       </CardHeader>
@@ -111,33 +139,84 @@ export default function CourseSchedule() {
             <TabsTrigger value="topics">נושאים שבועיים</TabsTrigger>
           </TabsList>
           <TabsContent value="schedule">
-            {weeklySchedule.map((day) => (
-              <div key={day.day} className="mb-4">
-                <h3 className="text-lg font-semibold">{day.day}</h3>
-                <ul>
-                  {day.schedule.map((item, index) => (
-                    <li key={index} className="flex justify-between">
-                      <span>{item.time}</span>
-                      <span>{item.activity}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <div className="space-y-6">
+              {weeklySchedule.map((day, index) => (
+                <Card key={index} className="overflow-hidden">
+                  <CardHeader className="bg-muted">
+                    <CardTitle className="text-lg">{day.day}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <ul className="space-y-2">
+                      {day.schedule.map((item, itemIndex) => (
+                        <li key={itemIndex} className="flex justify-between items-center py-2 border-b last:border-0">
+                          <Badge variant="outline">{item.time}</Badge>
+                          <span>{item.activity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {backupBlocks.map((block, index) => (
+                <Card key={index} className="bg-muted/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{block.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {block.sessions.map((session, sessionIndex) => (
+                        <li key={sessionIndex} className="flex items-center py-2">
+                          <Badge variant="secondary" className="mr-2">גיבוי</Badge>
+                          <span>{session}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {importantRules.map((block, index) => (
+                <Card key={index} className="border-2 border-primary/20">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{block.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 list-disc list-inside">
+                      {block.rules.map((rule, ruleIndex) => (
+                        <li key={ruleIndex} className="text-muted-foreground">
+                          {rule}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
+          
           <TabsContent value="topics">
-            {weeklyTopics.map((week) => (
-              <div key={week.week} className="mb-4">
-                <h3 className="text-lg font-semibold">שבוע {week.week}</h3>
-                <ul>
-                  {week.topics.map((topic, index) => (
-                    <li key={index} className="flex justify-between">
-                      <span>{topic}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <div className="grid gap-6">
+              {weeklyTopics.map((week) => (
+                <Card key={week.week} className="overflow-hidden">
+                  <CardHeader className="bg-muted">
+                    <CardTitle className="text-lg">
+                      שבוע {week.week}: {week.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <ul className="space-y-2">
+                      {week.topics.map((topic, topicIndex) => (
+                        <li key={topicIndex} className="flex items-center py-2 border-b last:border-0">
+                          <Badge variant="outline" className="mr-2">{topicIndex + 1}</Badge>
+                          <span>{topic}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>

@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 const ProgressTracker = () => {
-  const [progress, setProgress] = React.useState(0);
-  const [currentWeek, setCurrentWeek] = React.useState(1);
+  const totalWeeks = 4;
+  const currentWeek = 1;
+  const progress = (currentWeek / totalWeeks) * 100;
 
   return (
     <Card>
@@ -13,8 +14,8 @@ const ProgressTracker = () => {
       </CardHeader>
       <CardContent>
         <Progress value={progress} className="w-full" />
-        <p className="text-center mt-2">{progress.toFixed(2)}% הושלמו</p>
-        <p className="text-center">שבוע נוכחי: {currentWeek}</p>
+        <p className="text-center mt-2">{progress}% הושלמו</p>
+        <p className="text-center">שבוע נוכחי: {currentWeek} מתוך {totalWeeks}</p>
       </CardContent>
     </Card>
   );
