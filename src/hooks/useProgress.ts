@@ -5,7 +5,7 @@ interface ProgressState {
   setProgress: (progress: number) => void;
 }
 
-export const useProgress = create<ProgressState>((set) => ({
+export const useProgress = create<ProgressState>()((set) => ({
   progress: 0,
   setProgress: (progress) => set({ progress }),
 }));

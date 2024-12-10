@@ -16,7 +16,7 @@ interface ContentItem {
   note?: string;
 }
 
-export function ContentLibrary() {
+const ContentLibrary = () => {
   const [items, setItems] = useState<ContentItem[]>([]);
   const [newItem, setNewItem] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -226,3 +226,5 @@ export function ContentLibrary() {
     </Card>
   );
 }
+
+export default ContentLibrary;
