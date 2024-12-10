@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType } from '@/types/content';
+import { ContentItem, ContentItemType, isValidContentItem, isContentItemType } from '@/types/content';
 import { toast } from "sonner";
 
 export const useContentLibrary = () => {
@@ -30,7 +30,9 @@ export const useContentLibrary = () => {
 
       console.log('Loaded items:', data);
 
-      setItems(data || []);
+      // Validate and transform the data
+      const validItems = (data || []).filter(isValidContentItem);
+      setItems(validItems);
     } catch (error) {
       console.error('Error loading items:', error);
       toast.error('שגיאה בטעינת הפריטים');
@@ -55,7 +57,8 @@ export const useContentLibrary = () => {
         .insert([{
           type,
           content,
-          user_id: session.session.user.id
+          user_id: session.session.user.id,
+          starred: false
         }])
         .select()
         .single();
@@ -65,11 +68,14 @@ export const useContentLibrary = () => {
         throw error;
       }
 
-      console.log('Item added successfully:', data);
-
-      setItems(prev => [data, ...prev]);
-      toast.success('הפריט נוסף בהצלחה');
-      return data;
+      if (data && isValidContentItem(data)) {
+        console.log('Item added successfully:', data);
+        setItems(prev => [data, ...prev]);
+        toast.success('הפריט נוסף בהצלחה');
+        return data;
+      } else {
+        throw new Error('Invalid item data received from server');
+      }
     } catch (error) {
       console.error('Error adding item:', error);
       toast.error('שגיאה בהוספת פריט');
@@ -108,7 +114,7 @@ export const useContentLibrary = () => {
 
       console.log('Public URL:', publicUrl);
 
-      const type = file.type.startsWith('image/') ? 'image' : 'video';
+      const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
       return await addItem(publicUrl, type);
     } catch (error) {
       console.error('Error uploading file:', error);
