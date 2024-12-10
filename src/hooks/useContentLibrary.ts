@@ -15,6 +15,8 @@ export const useContentLibrary = () => {
         return;
       }
 
+      console.log('Loading items for user:', session.session.user.id);
+
       const { data, error } = await supabase
         .from('content_items')
         .select('*')
@@ -26,12 +28,9 @@ export const useContentLibrary = () => {
         throw error;
       }
 
-      const typedData = (data || []).map(item => ({
-        ...item,
-        type: item.type as ContentItemType
-      })) as ContentItem[];
+      console.log('Loaded items:', data);
 
-      setItems(typedData);
+      setItems(data || []);
     } catch (error) {
       console.error('Error loading items:', error);
       toast.error('שגיאה בטעינת הפריטים');
@@ -56,7 +55,6 @@ export const useContentLibrary = () => {
         .insert([{
           type,
           content,
-          starred: false,
           user_id: session.session.user.id
         }])
         .select()
@@ -69,10 +67,9 @@ export const useContentLibrary = () => {
 
       console.log('Item added successfully:', data);
 
-      const newItem = { ...data, type: data.type as ContentItemType } as ContentItem;
-      setItems(prev => [newItem, ...prev]);
+      setItems(prev => [data, ...prev]);
       toast.success('הפריט נוסף בהצלחה');
-      return newItem;
+      return data;
     } catch (error) {
       console.error('Error adding item:', error);
       toast.error('שגיאה בהוספת פריט');
@@ -112,7 +109,7 @@ export const useContentLibrary = () => {
       console.log('Public URL:', publicUrl);
 
       const type = file.type.startsWith('image/') ? 'image' : 'video';
-      return await addItem(publicUrl, type as ContentItemType);
+      return await addItem(publicUrl, type);
     } catch (error) {
       console.error('Error uploading file:', error);
       toast.error('שגיאה בהעלאת קובץ');

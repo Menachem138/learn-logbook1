@@ -13,7 +13,7 @@ import { useAuth } from '@/components/auth/AuthProvider'
 import { toast } from 'sonner'
 
 const ContentLibrary = () => {
-  const auth = useAuth();
+  const { user } = useAuth();
   const {
     items,
     loading,
@@ -32,14 +32,14 @@ const ContentLibrary = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (auth?.user?.id) {
-      console.log('Loading items for user:', auth.user.id);
+    if (user?.id) {
+      console.log('Loading items for user:', user.id);
       loadItems();
     }
-  }, [auth?.user?.id, loadItems]);
+  }, [user?.id, loadItems]);
 
   const handleAddItem = useCallback(async () => {
-    if (!auth?.user?.id) {
+    if (!user?.id) {
       console.log('No user found');
       toast.error('יש להתחבר כדי להוסיף פריטים');
       return;
@@ -50,10 +50,10 @@ const ContentLibrary = () => {
     const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
     await addItem(newItem, type);
     setNewItem('');
-  }, [newItem, addItem, auth?.user?.id]);
+  }, [newItem, addItem, user?.id]);
 
   const handleAddNote = useCallback(async () => {
-    if (!auth?.user?.id) {
+    if (!user?.id) {
       console.log('No user found');
       toast.error('יש להתחבר כדי להוסיף פתקים');
       return;
@@ -63,10 +63,10 @@ const ContentLibrary = () => {
     console.log('Adding new note:', noteContent);
     await addItem(noteContent, 'note');
     setNoteContent('');
-  }, [noteContent, addItem, auth?.user?.id]);
+  }, [noteContent, addItem, user?.id]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!auth?.user?.id) {
+    if (!user?.id) {
       console.log('No user found');
       toast.error('יש להתחבר כדי להעלות קבצים');
       return;
@@ -77,10 +77,10 @@ const ContentLibrary = () => {
       console.log('Uploading file:', file.name);
       await addFile(file);
     }
-  }, [addFile, auth?.user?.id]);
+  }, [addFile, user?.id]);
 
   const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    if (!auth?.user?.id) {
+    if (!user?.id) {
       console.log('No user found');
       toast.error('יש להתחבר כדי להעלות קבצים');
       return;
@@ -92,9 +92,7 @@ const ContentLibrary = () => {
       console.log('Uploading dropped file:', file.name);
       await addFile(file);
     }
-  }, [addFile, auth?.user?.id]);
-
-  // ... keep existing code (render logic)
+  }, [addFile, user?.id]);
 
   return (
     <Card className="mt-6">
@@ -102,7 +100,7 @@ const ContentLibrary = () => {
         <CardTitle>ספריית תוכן</CardTitle>
       </CardHeader>
       <CardContent>
-        {!auth?.user?.id ? (
+        {!user?.id ? (
           <div className="text-center py-8">
             <p className="text-gray-500">יש להתחבר כדי להשתמש בספריית התוכן</p>
           </div>
