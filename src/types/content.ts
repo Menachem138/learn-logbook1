@@ -7,6 +7,10 @@ export interface ContentItem {
   starred: boolean;
   user_id: string;
   created_at: string;
+  file_path?: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
+  mime_type?: string | null;
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;

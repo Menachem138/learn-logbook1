@@ -30,49 +30,45 @@ const ContentLibrary = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user) {
       console.log('Loading items for user:', user.id);
-      loadItems(user.id);
+      loadItems();
     }
-  }, [user?.id, loadItems]);
+  }, [user, loadItems]);
 
   const handleAddItem = useCallback(async () => {
-    if (!user?.id || !newItem) return;
+    if (!newItem) return;
     
     console.log('Adding new item:', newItem);
     const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
-    await addItem(user.id, newItem, type);
+    await addItem(newItem, type);
     setNewItem('');
-  }, [newItem, addItem, user?.id]);
+  }, [newItem, addItem]);
 
   const handleAddNote = useCallback(async () => {
-    if (!user?.id || !noteContent) return;
+    if (!noteContent) return;
     
     console.log('Adding new note:', noteContent);
-    await addItem(user.id, noteContent, 'note');
+    await addItem(noteContent, 'note');
     setNoteContent('');
-  }, [noteContent, addItem, user?.id]);
+  }, [noteContent, addItem]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user?.id) return;
-    
     const file = e.target.files?.[0];
     if (file) {
       console.log('Uploading file:', file.name);
-      await addFile(user.id, file);
+      await addFile(file);
     }
-  }, [addFile, user?.id]);
+  }, [addFile]);
 
   const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    if (!user?.id) return;
-    
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
       console.log('Uploading dropped file:', file.name);
-      await addFile(user.id, file);
+      await addFile(file);
     }
-  }, [addFile, user?.id]);
+  }, [addFile]);
 
   return (
     <Card className="mt-6">
@@ -80,7 +76,7 @@ const ContentLibrary = () => {
         <CardTitle>ספריית תוכן</CardTitle>
       </CardHeader>
       <CardContent>
-        {!user?.id ? (
+        {!user ? (
           <div className="text-center py-8">
             <p className="text-gray-500">יש להתחבר כדי להשתמש בספריית התוכן</p>
           </div>
