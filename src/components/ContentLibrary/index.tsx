@@ -3,13 +3,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Star, Trash2, Edit, X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { X } from 'lucide-react'
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import { ContentItem, NewContentItem } from '@/types/content'
+import { ContentItem } from '@/types/content'
 import { ContentInput } from './ContentInput'
+import { ContentList } from './ContentList'
 import { readFileAsDataURL } from '@/utils/fileHandlers'
 
 const ContentLibrary = () => {
@@ -18,11 +19,15 @@ const ContentLibrary = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteContent, setNoteContent] = useState('');
+  const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load items from Supabase on component mount
   useEffect(() => {
-    const loadItems = async () => {
+    loadItems();
+  }, []);
+
+  const loadItems = async () => {
+    try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
         toast.error('יש להתחבר כדי לצפות בפריטים');
@@ -32,87 +37,84 @@ const ContentLibrary = () => {
       const { data, error } = await supabase
         .from('content_items')
         .select('*')
-        .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        toast.error('שגיאה בטעינת הפריטים');
-        return;
-      }
+      if (error) throw error;
 
-      if (data) {
-        setItems(data as ContentItem[]);
-      }
-    };
-
-    loadItems();
-  }, []);
+      setItems(data || []);
+    } catch (error) {
+      console.error('Error loading items:', error);
+      toast.error('שגיאה בטעינת הפריטים');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addItem = useCallback(async () => {
     if (!newItem) return;
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user?.id) {
-      toast.error('יש להתחבר כדי להוסיף פריטים');
-      return;
-    }
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error('יש להתחבר כדי להוסיף פריטים');
+        return;
+      }
 
-    const newContentItem: NewContentItem = {
-      type: newItem.startsWith('http') ? 'link' : 'whatsapp',
-      content: newItem,
-      starred: false,
-      user_id: session.session.user.id
-    };
+      const { data, error } = await supabase
+        .from('content_items')
+        .insert([{
+          type: newItem.startsWith('http') ? 'link' : 'whatsapp',
+          content: newItem,
+          starred: false,
+          user_id: session.session.user.id
+        }])
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from('content_items')
-      .insert([newContentItem])
-      .select()
-      .single();
+      if (error) throw error;
 
-    if (error) {
+      if (data) {
+        setItems(prev => [data as ContentItem, ...prev]);
+        setNewItem('');
+        toast.success('הפריט נוסף בהצלחה');
+      }
+    } catch (error) {
+      console.error('Error adding item:', error);
       toast.error('שגיאה בהוספת פריט');
-      return;
-    }
-
-    if (data) {
-      setItems(prev => [data as ContentItem, ...prev]);
-      setNewItem('');
-      toast.success('הפריט נוסף בהצלחה');
     }
   }, [newItem]);
 
   const addNote = useCallback(async () => {
     if (!noteContent) return;
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user?.id) {
-      toast.error('יש להתחבר כדי להוסיף פתקים');
-      return;
-    }
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error('יש להתחבר כדי להוסיף פתקים');
+        return;
+      }
 
-    const newContentItem: NewContentItem = {
-      type: 'note',
-      content: noteContent,
-      starred: false,
-      user_id: session.session.user.id
-    };
+      const { data, error } = await supabase
+        .from('content_items')
+        .insert([{
+          type: 'note',
+          content: noteContent,
+          starred: false,
+          user_id: session.session.user.id
+        }])
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from('content_items')
-      .insert([newContentItem])
-      .select()
-      .single();
+      if (error) throw error;
 
-    if (error) {
+      if (data) {
+        setItems(prev => [data as ContentItem, ...prev]);
+        setNoteContent('');
+        toast.success('הפתק נוסף בהצלחה');
+      }
+    } catch (error) {
+      console.error('Error adding note:', error);
       toast.error('שגיאה בהוספת פתק');
-      return;
-    }
-
-    if (data) {
-      setItems(prev => [data as ContentItem, ...prev]);
-      setNoteContent('');
-      toast.success('הפתק נוסף בהצלחה');
     }
   }, [noteContent]);
 
@@ -120,38 +122,34 @@ const ContentLibrary = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user?.id) {
-      toast.error('יש להתחבר כדי להעלות קבצים');
-      return;
-    }
-
     try {
-      const content = await readFileAsDataURL(file);
-      const newContentItem: NewContentItem = {
-        type: file.type.startsWith('image/') ? 'image' : 'video',
-        content,
-        starred: false,
-        user_id: session.session.user.id
-      };
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error('יש להתחבר כדי להעלות קבצים');
+        return;
+      }
 
+      const content = await readFileAsDataURL(file);
       const { data, error } = await supabase
         .from('content_items')
-        .insert([newContentItem])
+        .insert([{
+          type: file.type.startsWith('image/') ? 'image' : 'video',
+          content,
+          starred: false,
+          user_id: session.session.user.id
+        }])
         .select()
         .single();
 
-      if (error) {
-        toast.error('שגיאה בהעלאת קובץ');
-        return;
-      }
+      if (error) throw error;
 
       if (data) {
         setItems(prev => [data as ContentItem, ...prev]);
         toast.success('הקובץ הועלה בהצלחה');
       }
     } catch (error) {
-      toast.error('שגיאה בעיבוד הקובץ');
+      console.error('Error uploading file:', error);
+      toast.error('שגיאה בהעלאת קובץ');
     }
   }, []);
 
@@ -160,74 +158,78 @@ const ContentLibrary = () => {
     const file = e.dataTransfer.files[0];
     if (!file) return;
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user?.id) {
-      toast.error('יש להתחבר כדי להעלות קבצים');
-      return;
-    }
-
     try {
-      const content = await readFileAsDataURL(file);
-      const newContentItem: NewContentItem = {
-        type: file.type.startsWith('image/') ? 'image' : 'video',
-        content,
-        starred: false,
-        user_id: session.session.user.id
-      };
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error('יש להתחבר כדי להעלות קבצים');
+        return;
+      }
 
+      const content = await readFileAsDataURL(file);
       const { data, error } = await supabase
         .from('content_items')
-        .insert([newContentItem])
+        .insert([{
+          type: file.type.startsWith('image/') ? 'image' : 'video',
+          content,
+          starred: false,
+          user_id: session.session.user.id
+        }])
         .select()
         .single();
 
-      if (error) {
-        toast.error('שגיאה בהעלאת קובץ');
-        return;
-      }
+      if (error) throw error;
 
       if (data) {
         setItems(prev => [data as ContentItem, ...prev]);
         toast.success('הקובץ הועלה בהצלחה');
       }
     } catch (error) {
-      toast.error('שגיאה בעיבוד הקובץ');
+      console.error('Error uploading file:', error);
+      toast.error('שגיאה בהעלאת קובץ');
     }
   }, []);
 
   const removeItem = useCallback(async (id: string) => {
-    const { error } = await supabase
-      .from('content_items')
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('content_items')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
+      if (error) throw error;
+
+      setItems(prev => prev.filter(item => item.id !== id));
+      toast.success('הפריט נמחק בהצלחה');
+    } catch (error) {
+      console.error('Error removing item:', error);
       toast.error('שגיאה במחיקת פריט');
-      return;
     }
-
-    setItems(prev => prev.filter(item => item.id !== id));
-    toast.success('הפריט נמחק בהצלחה');
   }, []);
 
   const toggleStar = useCallback(async (id: string) => {
     const item = items.find(item => item.id === id);
     if (!item) return;
 
-    const { error } = await supabase
-      .from('content_items')
-      .update({ starred: !item.starred })
-      .eq('id', id);
+    try {
+      const { error } = await supabase
+        .from('content_items')
+        .update({ starred: !item.starred })
+        .eq('id', id);
 
-    if (error) {
+      if (error) throw error;
+
+      setItems(prev => prev.map(item => 
+        item.id === id ? { ...item, starred: !item.starred } : item
+      ));
+    } catch (error) {
+      console.error('Error updating star:', error);
       toast.error('שגיאה בעדכון פריט');
-      return;
     }
-
-    setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, starred: !item.starred } : item
-    ));
   }, [items]);
+
+  if (loading) {
+    return <div>טוען...</div>;
+  }
 
   return (
     <Card className="mt-6">
@@ -254,51 +256,19 @@ const ContentLibrary = () => {
           גרור ושחרר תמונות או סרטונים כאן
         </div>
 
-        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {items.map(item => (
-            <li key={item.id} className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-sm">
-              <div className="flex-grow mb-2">
-                {item.type === 'image' && (
-                  <img 
-                    src={item.content} 
-                    alt="Uploaded content" 
-                    className="w-full h-40 object-cover rounded-md cursor-pointer" 
-                    onClick={() => setSelectedImage(item.content)}
-                  />
-                )}
-                {item.type === 'video' && (
-                  <video src={item.content} className="w-full h-40 object-cover rounded-md" controls />
-                )}
-                {item.type === 'note' && (
-                  <div className="w-full h-40 flex items-center justify-center bg-yellow-100 rounded-md p-4">
-                    <p className="text-gray-800 break-words overflow-auto">{item.content}</p>
-                  </div>
-                )}
-                {(item.type === 'link' || item.type === 'whatsapp') && (
-                  <div className="w-full h-40 flex items-center justify-center bg-gray-200 rounded-md">
-                    <span className="text-gray-600 text-sm break-all p-2">{item.content}</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-between items-center">
-                <Button variant="ghost" size="sm" onClick={() => toggleStar(item.id)}>
-                  <Star className={item.starred ? "fill-yellow-400" : ""} />
-                </Button>
-                {item.type === 'note' && (
-                  <Button variant="ghost" size="sm" onClick={() => {
-                    setEditingNote(item.id);
-                    setNoteContent(item.content);
-                  }}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => removeItem(item.id)}>
-                  <Trash2 />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <ContentList
+          items={items}
+          onDelete={removeItem}
+          onToggleStar={toggleStar}
+          onEdit={(id) => {
+            const item = items.find(item => item.id === id);
+            if (item) {
+              setEditingNote(id);
+              setNoteContent(item.content);
+            }
+          }}
+          onImageClick={setSelectedImage}
+        />
 
         <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
           <DialogContent className="max-w-4xl">
@@ -327,21 +297,23 @@ const ContentLibrary = () => {
               <Button onClick={async () => {
                 if (!editingNote) return;
 
-                const { error } = await supabase
-                  .from('content_items')
-                  .update({ content: noteContent })
-                  .eq('id', editingNote);
+                try {
+                  const { error } = await supabase
+                    .from('content_items')
+                    .update({ content: noteContent })
+                    .eq('id', editingNote);
 
-                if (error) {
+                  if (error) throw error;
+
+                  setItems(prev => prev.map(item =>
+                    item.id === editingNote ? { ...item, content: noteContent } : item
+                  ));
+                  setEditingNote(null);
+                  toast.success('הפתק עודכן בהצלחה');
+                } catch (error) {
+                  console.error('Error updating note:', error);
                   toast.error('שגיאה בעדכון פתק');
-                  return;
                 }
-
-                setItems(prev => prev.map(item =>
-                  item.id === editingNote ? { ...item, content: noteContent } : item
-                ));
-                setEditingNote(null);
-                toast.success('הפתק עודכן בהצלחה');
               }}>
                 שמור שינויים
               </Button>
