@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, isValidContentItem } from '@/types/content';
+import { ContentItem, ContentItemType } from '@/types/content';
 import { toast } from "sonner";
 
 export const useContentLibrary = () => {
@@ -15,8 +15,6 @@ export const useContentLibrary = () => {
         return;
       }
 
-      console.log('Loading items for user:', session.session.user.id);
-
       const { data, error } = await supabase
         .from('content_items')
         .select('*')
@@ -25,22 +23,13 @@ export const useContentLibrary = () => {
 
       if (error) {
         console.error('Error loading items:', error);
-        throw error;
+        toast.error('שגיאה בטעינת הפריטים');
+        return;
       }
 
-      console.log('Loaded items:', data);
-
-      const validItems = data?.filter((item): item is ContentItem => {
-        if (!isValidContentItem(item)) {
-          console.warn('Invalid item found:', item);
-          return false;
-        }
-        return true;
-      }) ?? [];
-
-      setItems(validItems);
+      setItems(data || []);
     } catch (error) {
-      console.error('Error loading items:', error);
+      console.error('Error:', error);
       toast.error('שגיאה בטעינת הפריטים');
     } finally {
       setLoading(false);
@@ -51,12 +40,9 @@ export const useContentLibrary = () => {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
-        console.error('No user session found');
         toast.error('יש להתחבר כדי להוסיף פריטים');
         return null;
       }
-
-      console.log('Adding item:', { content, type, user_id: session.session.user.id });
 
       const { data, error } = await supabase
         .from('content_items')
@@ -71,19 +57,15 @@ export const useContentLibrary = () => {
 
       if (error) {
         console.error('Error adding item:', error);
-        throw error;
+        toast.error('שגיאה בהוספת פריט');
+        return null;
       }
 
-      if (data && isValidContentItem(data)) {
-        console.log('Item added successfully:', data);
-        setItems(prev => [data, ...prev]);
-        toast.success('הפריט נוסף בהצלחה');
-        return data;
-      } else {
-        throw new Error('Invalid item data received from server');
-      }
+      setItems(prev => [data, ...prev]);
+      toast.success('הפריט נוסף בהצלחה');
+      return data;
     } catch (error) {
-      console.error('Error adding item:', error);
+      console.error('Error:', error);
       toast.error('שגיאה בהוספת פריט');
       return null;
     }
@@ -93,41 +75,32 @@ export const useContentLibrary = () => {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
-        console.error('No user session found');
         toast.error('יש להתחבר כדי להעלות קבצים');
         return null;
       }
 
-      console.log('Uploading file:', file.name);
-
-      // First upload the file to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${session.session.user.id}/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('content_library')
         .upload(filePath, file);
 
       if (uploadError) {
         console.error('Error uploading file:', uploadError);
-        throw uploadError;
+        toast.error('שגיאה בהעלאת קובץ');
+        return null;
       }
 
-      console.log('File uploaded successfully:', uploadData);
-
-      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('content_library')
         .getPublicUrl(filePath);
 
-      console.log('Public URL:', publicUrl);
-
-      // Add the content item with the file URL
       const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
       return await addItem(publicUrl, type);
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error('Error:', error);
       toast.error('שגיאה בהעלאת קובץ');
       return null;
     }
@@ -142,13 +115,14 @@ export const useContentLibrary = () => {
 
       if (error) {
         console.error('Error removing item:', error);
-        throw error;
+        toast.error('שגיאה במחיקת פריט');
+        return;
       }
 
       setItems(prev => prev.filter(item => item.id !== id));
       toast.success('הפריט נמחק בהצלחה');
     } catch (error) {
-      console.error('Error removing item:', error);
+      console.error('Error:', error);
       toast.error('שגיאה במחיקת פריט');
     }
   }, []);
@@ -156,10 +130,7 @@ export const useContentLibrary = () => {
   const toggleStar = useCallback(async (id: string) => {
     try {
       const item = items.find(item => item.id === id);
-      if (!item) {
-        console.error('Item not found:', id);
-        return;
-      }
+      if (!item) return;
 
       const { error } = await supabase
         .from('content_items')
@@ -168,7 +139,8 @@ export const useContentLibrary = () => {
 
       if (error) {
         console.error('Error updating star:', error);
-        throw error;
+        toast.error('שגיאה בעדכון פריט');
+        return;
       }
 
       setItems(prev => prev.map(item => 
@@ -176,7 +148,7 @@ export const useContentLibrary = () => {
       ));
       toast.success('הפריט עודכן בהצלחה');
     } catch (error) {
-      console.error('Error updating star:', error);
+      console.error('Error:', error);
       toast.error('שגיאה בעדכון פריט');
     }
   }, [items]);
@@ -190,7 +162,8 @@ export const useContentLibrary = () => {
 
       if (error) {
         console.error('Error updating note:', error);
-        throw error;
+        toast.error('שגיאה בעדכון פתק');
+        return;
       }
 
       setItems(prev => prev.map(item =>
@@ -198,7 +171,7 @@ export const useContentLibrary = () => {
       ));
       toast.success('הפתק עודכן בהצלחה');
     } catch (error) {
-      console.error('Error updating note:', error);
+      console.error('Error:', error);
       toast.error('שגיאה בעדכון פתק');
     }
   }, []);
