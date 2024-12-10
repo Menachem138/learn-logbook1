@@ -4,7 +4,7 @@ export interface ContentItem {
   id: string;
   type: ContentItemType;
   content: string;
-  starred: boolean | null;
+  starred: boolean;
   user_id: string;
   created_at: string;
   file_path?: string | null;
@@ -14,11 +14,6 @@ export interface ContentItem {
 }
 
 export type NewContentItem = Omit<ContentItem, 'id' | 'created_at'>;
-
-// Type guard to check if a string is a valid ContentItemType
-export function isContentItemType(type: string): type is ContentItemType {
-  return ['link', 'image', 'whatsapp', 'video', 'note'].includes(type);
-}
 
 // Raw data type from database
 export interface RawContentItem {
@@ -34,24 +29,29 @@ export interface RawContentItem {
   mime_type: string | null;
 }
 
+// Type guard to check if a string is a valid ContentItemType
+export function isContentItemType(type: string): type is ContentItemType {
+  return ['link', 'image', 'whatsapp', 'video', 'note'].includes(type);
+}
+
 // Function to validate and transform raw data into ContentItem
-export function transformToContentItem(item: RawContentItem): ContentItem | null {
-  if (!isContentItemType(item.type)) {
-    console.error('Invalid content type:', item.type);
+export function transformToContentItem(raw: RawContentItem): ContentItem | null {
+  if (!isContentItemType(raw.type)) {
+    console.error('Invalid content type:', raw.type);
     return null;
   }
 
   return {
-    id: item.id,
-    type: item.type,
-    content: item.content,
-    starred: item.starred,
-    user_id: item.user_id,
-    created_at: item.created_at,
-    file_path: item.file_path,
-    file_name: item.file_name,
-    file_size: item.file_size,
-    mime_type: item.mime_type
+    id: raw.id,
+    type: raw.type,
+    content: raw.content,
+    starred: raw.starred ?? false,
+    user_id: raw.user_id,
+    created_at: raw.created_at,
+    file_path: raw.file_path,
+    file_name: raw.file_name,
+    file_size: raw.file_size,
+    mime_type: raw.mime_type
   };
 }
 
