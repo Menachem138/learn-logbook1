@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ContentInput } from './ContentInput'
 import { ContentList } from './ContentList'
 import { useContentLibrary } from '@/hooks/useContentLibrary'
-import { useAuth } from '@supabase/auth-helpers-react'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { toast } from 'sonner'
 
 const ContentLibrary = () => {
