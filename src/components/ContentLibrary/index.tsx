@@ -9,8 +9,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { ContentInput } from './ContentInput'
 import { ContentList } from './ContentList'
 import { useContentLibrary } from '@/hooks/useContentLibrary'
+import { useAuth } from '@supabase/auth-helpers-react'
+import { toast } from 'sonner'
 
 const ContentLibrary = () => {
+  const auth = useAuth();
   const {
     items,
     loading,
@@ -29,39 +32,87 @@ const ContentLibrary = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+    if (auth?.user?.id) {
+      loadItems();
+    }
+  }, [auth?.user?.id, loadItems]);
 
   const handleAddItem = useCallback(async () => {
+    if (!auth?.user?.id) {
+      toast.error('יש להתחבר כדי להוסיף פריטים');
+      return;
+    }
     if (!newItem) return;
+    
     const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
     await addItem(newItem, type);
     setNewItem('');
-  }, [newItem, addItem]);
+  }, [newItem, addItem, auth?.user?.id]);
 
   const handleAddNote = useCallback(async () => {
+    if (!auth?.user?.id) {
+      toast.error('יש להתחבר כדי להוסיף פתקים');
+      return;
+    }
     if (!noteContent) return;
+    
     await addItem(noteContent, 'note');
     setNoteContent('');
-  }, [noteContent, addItem]);
+  }, [noteContent, addItem, auth?.user?.id]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!auth?.user?.id) {
+      toast.error('יש להתחבר כדי להעלות קבצים');
+      return;
+    }
+    
     const file = e.target.files?.[0];
     if (file) {
       await addFile(file);
     }
-  }, [addFile]);
+  }, [addFile, auth?.user?.id]);
 
   const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    if (!auth?.user?.id) {
+      toast.error('יש להתחבר כדי להעלות קבצים');
+      return;
+    }
+    
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
       await addFile(file);
     }
-  }, [addFile]);
+  }, [addFile, auth?.user?.id]);
+
+  if (!auth?.user?.id) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>ספריית תוכן</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-gray-500">יש להתחבר כדי להשתמש בספריית התוכן</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (loading) {
-    return <div>טוען...</div>;
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>ספריית תוכן</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-gray-500">טוען...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

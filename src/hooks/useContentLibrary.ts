@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentItem, ContentItemType } from '@/types/content';
 import { toast } from "sonner";
-import { uploadFileToStorage } from '@/utils/fileStorage';
 
 export const useContentLibrary = () => {
   const [items, setItems] = useState<ContentItem[]>([]);
@@ -24,10 +23,9 @@ export const useContentLibrary = () => {
 
       if (error) throw error;
 
-      // Type assertion to ensure the data matches our ContentItem type
       const typedData = (data || []).map(item => ({
         ...item,
-        type: item.type as ContentItemType // Ensure type is one of our allowed types
+        type: item.type as ContentItemType
       })) as ContentItem[];
 
       setItems(typedData);
@@ -73,11 +71,24 @@ export const useContentLibrary = () => {
 
   const addFile = useCallback(async (file: File) => {
     try {
-      const publicUrl = await uploadFileToStorage(file);
-      if (!publicUrl) {
-        toast.error('שגיאה בהעלאת הקובץ');
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error('יש להתחבר כדי להעלות קבצים');
         return null;
       }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('content_library')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('content_library')
+        .getPublicUrl(fileName);
 
       const type = file.type.startsWith('image/') ? 'image' : 'video';
       return await addItem(publicUrl, type as ContentItemType);
