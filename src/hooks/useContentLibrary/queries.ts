@@ -1,13 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, isContentItemType, isValidContentItem } from '@/types/content';
-
-export const getSession = async () => {
-  const { data } = await supabase.auth.getSession();
-  return data.session;
-};
+import { ContentItem, ContentItemType, isValidContentItem } from '@/types/content';
 
 export const fetchUserItems = async (userId: string) => {
   console.log('Fetching items for user:', userId);
+  
   const { data, error } = await supabase
     .from('content_items')
     .select('*')
@@ -46,7 +42,8 @@ export const insertItem = async (
       file_path: fileDetails?.filePath,
       file_name: fileDetails?.fileName,
       file_size: fileDetails?.fileSize,
-      mime_type: fileDetails?.mimeType
+      mime_type: fileDetails?.mimeType,
+      starred: false
     }])
     .select()
     .single();

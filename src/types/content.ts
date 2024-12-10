@@ -20,7 +20,7 @@ export function isContentItemType(type: string): type is ContentItemType {
   return ['link', 'image', 'whatsapp', 'video', 'note'].includes(type);
 }
 
-// Type guard to validate ContentItem
+// Type guard to validate ContentItem from database
 export function isValidContentItem(item: any): item is ContentItem {
   return (
     typeof item === 'object' &&

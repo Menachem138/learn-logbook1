@@ -3,20 +3,21 @@ import { toast } from "sonner";
 import { ContentItem, ContentItemType } from '@/types/content';
 import { uploadFileToStorage } from '@/utils/fileStorage';
 import * as queries from './queries';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 export const useContentLibrary = () => {
+  const { user } = useAuth();
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadItems = useCallback(async () => {
-    try {
-      const session = await queries.getSession();
-      if (!session?.user?.id) {
-        console.error('No user session found');
-        return;
-      }
+    if (!user?.id) {
+      console.error('No user found');
+      return;
+    }
 
-      const data = await queries.fetchUserItems(session.user.id);
+    try {
+      const data = await queries.fetchUserItems(user.id);
       setItems(data);
     } catch (error) {
       console.error('Error:', error);
@@ -24,17 +25,16 @@ export const useContentLibrary = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const addItem = useCallback(async (content: string, type: ContentItemType) => {
-    try {
-      const session = await queries.getSession();
-      if (!session?.user?.id) {
-        toast.error('יש להתחבר כדי להוסיף פריטים');
-        return null;
-      }
+    if (!user?.id) {
+      toast.error('יש להתחבר כדי להוסיף פריטים');
+      return null;
+    }
 
-      const newItem = await queries.insertItem(session.user.id, type, content);
+    try {
+      const newItem = await queries.insertItem(user.id, type, content);
       if (newItem) {
         setItems(prev => [newItem, ...prev]);
         toast.success('הפריט נוסף בהצלחה');
@@ -45,24 +45,23 @@ export const useContentLibrary = () => {
       toast.error('שגיאה בהוספת פריט');
       return null;
     }
-  }, []);
+  }, [user]);
 
   const addFile = useCallback(async (file: File) => {
-    try {
-      const session = await queries.getSession();
-      if (!session?.user?.id) {
-        toast.error('יש להתחבר כדי להעלות קבצים');
-        return null;
-      }
+    if (!user?.id) {
+      toast.error('יש להתחבר כדי להעלות קבצים');
+      return null;
+    }
 
-      const fileDetails = await uploadFileToStorage(file, session.user.id);
+    try {
+      const fileDetails = await uploadFileToStorage(file, user.id);
       const type: ContentItemType = file.type.startsWith('image/') ? 'image' : 'video';
       
-      const newItem = await queries.insertItem(session.user.id, type, fileDetails.publicUrl, {
+      const newItem = await queries.insertItem(user.id, type, fileDetails.publicUrl, {
         filePath: fileDetails.filePath,
-        fileName: fileDetails.fileName,
-        fileSize: fileDetails.fileSize,
-        mimeType: fileDetails.mimeType
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type
       });
 
       if (newItem) {
@@ -75,7 +74,7 @@ export const useContentLibrary = () => {
       toast.error('שגיאה בהעלאת קובץ');
       return null;
     }
-  }, []);
+  }, [user]);
 
   const removeItem = useCallback(async (id: string) => {
     try {
