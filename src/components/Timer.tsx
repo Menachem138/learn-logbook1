@@ -11,19 +11,20 @@ interface TimerEntry {
 
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [time, setTime] = useState(0);
   const [timerType, setTimerType] = useState<"study" | "break">("study");
   const [timerLog, setTimerLog] = useState<TimerEntry[]>([]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRunning) {
+    if (isRunning && !isPaused) {
       interval = setInterval(() => {
         setTime((prevTime) => prevTime + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, isPaused]);
 
   const startTimer = (type: "study" | "break") => {
     if (isRunning) {
@@ -40,6 +41,7 @@ export default function Timer() {
     }
     setTimerType(type);
     setIsRunning(true);
+    setIsPaused(false);
     toast.success(
       type === "study" ? "התחלת זמן למידה!" : "התחלת זמן הפסקה!"
     );
@@ -47,6 +49,7 @@ export default function Timer() {
 
   const stopTimer = () => {
     setIsRunning(false);
+    setIsPaused(false);
     setTimerLog((prev) => [
       ...prev,
       {
@@ -59,6 +62,11 @@ export default function Timer() {
     toast.info("הטיימר נעצר!");
   };
 
+  const pauseTimer = () => {
+    setIsPaused(!isPaused);
+    toast.info(isPaused ? "הטיימר ממשיך!" : "הטיימר מושהה!");
+  };
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -69,11 +77,11 @@ export default function Timer() {
   };
 
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="p-6 space-y-4 w-full">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">טיימר</h2>
         <div className="text-4xl font-mono mb-6">{formatTime(time)}</div>
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center flex-wrap">
           <Button
             onClick={() => startTimer("study")}
             variant={timerType === "study" && isRunning ? "secondary" : "default"}
@@ -86,6 +94,11 @@ export default function Timer() {
           >
             זמן הפסקה
           </Button>
+          {isRunning && (
+            <Button onClick={pauseTimer} variant="outline">
+              {isPaused ? "המשך" : "השהה"}
+            </Button>
+          )}
           <Button onClick={stopTimer} variant="destructive">
             עצור
           </Button>
