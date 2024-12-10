@@ -18,28 +18,25 @@ const ContentLibrary = () => {
   const [noteContent, setNoteContent] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const createContentItem = (type: ContentItem['type'], content: string): ContentItem => ({
+    id: Date.now().toString(),
+    type,
+    content,
+    starred: false,
+    user_id: 'temp', // This will be replaced with actual user_id when integrated with Supabase
+    created_at: new Date().toISOString()
+  });
+
   const addItem = useCallback(() => {
     if (newItem) {
       const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
-      setItems(prev => [...prev, { 
-        id: Date.now().toString(), 
-        type, 
-        content: newItem, 
-        starred: false,
-        user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
-      }]);
+      setItems(prev => [...prev, createContentItem(type, newItem)]);
       setNewItem('');
     }
   }, [newItem]);
 
   const addNote = useCallback(() => {
-    setItems(prev => [...prev, { 
-      id: Date.now().toString(), 
-      type: 'note', 
-      content: noteContent, 
-      starred: false,
-      user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
-    }]);
+    setItems(prev => [...prev, createContentItem('note', noteContent)]);
     setNoteContent('');
     setEditingNote(null);
   }, [noteContent]);
@@ -50,13 +47,10 @@ const ContentLibrary = () => {
     if (file) {
       try {
         const content = await readFileAsDataURL(file);
-        setItems(prev => [...prev, { 
-          id: Date.now().toString(), 
-          type: file.type.startsWith('image/') ? 'image' : 'video', 
-          content, 
-          starred: false,
-          user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
-        }]);
+        setItems(prev => [...prev, createContentItem(
+          file.type.startsWith('image/') ? 'image' : 'video',
+          content
+        )]);
       } catch (error) {
         console.error('Error reading file:', error);
       }
@@ -68,13 +62,10 @@ const ContentLibrary = () => {
     if (file) {
       try {
         const content = await readFileAsDataURL(file);
-        setItems(prev => [...prev, { 
-          id: Date.now().toString(), 
-          type: file.type.startsWith('image/') ? 'image' : 'video', 
-          content, 
-          starred: false,
-          user_id: 'temp' // This will be replaced with actual user_id when integrated with Supabase
-        }]);
+        setItems(prev => [...prev, createContentItem(
+          file.type.startsWith('image/') ? 'image' : 'video',
+          content
+        )]);
       } catch (error) {
         console.error('Error reading file:', error);
       }
