@@ -11,7 +11,7 @@ export const useContentLibrary = () => {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
-        toast.error('יש להתחבר כדי לצפות בפריטים');
+        console.error('No user session found');
         return;
       }
 
@@ -21,7 +21,10 @@ export const useContentLibrary = () => {
         .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading items:', error);
+        throw error;
+      }
 
       const typedData = (data || []).map(item => ({
         ...item,
@@ -41,9 +44,12 @@ export const useContentLibrary = () => {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
+        console.error('No user session found');
         toast.error('יש להתחבר כדי להוסיף פריטים');
         return null;
       }
+
+      console.log('Adding item:', { content, type, user_id: session.session.user.id });
 
       const { data, error } = await supabase
         .from('content_items')
@@ -56,7 +62,12 @@ export const useContentLibrary = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding item:', error);
+        throw error;
+      }
+
+      console.log('Item added successfully:', data);
 
       const newItem = { ...data, type: data.type as ContentItemType } as ContentItem;
       setItems(prev => [newItem, ...prev]);
@@ -73,9 +84,12 @@ export const useContentLibrary = () => {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
+        console.error('No user session found');
         toast.error('יש להתחבר כדי להעלות קבצים');
         return null;
       }
+
+      console.log('Uploading file:', file.name);
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -84,11 +98,18 @@ export const useContentLibrary = () => {
         .from('content_library')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('File uploaded successfully:', uploadData);
 
       const { data: { publicUrl } } = supabase.storage
         .from('content_library')
         .getPublicUrl(fileName);
+
+      console.log('Public URL:', publicUrl);
 
       const type = file.type.startsWith('image/') ? 'image' : 'video';
       return await addItem(publicUrl, type as ContentItemType);
@@ -106,7 +127,10 @@ export const useContentLibrary = () => {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing item:', error);
+        throw error;
+      }
 
       setItems(prev => prev.filter(item => item.id !== id));
       toast.success('הפריט נמחק בהצלחה');
@@ -119,14 +143,20 @@ export const useContentLibrary = () => {
   const toggleStar = useCallback(async (id: string) => {
     try {
       const item = items.find(item => item.id === id);
-      if (!item) return;
+      if (!item) {
+        console.error('Item not found:', id);
+        return;
+      }
 
       const { error } = await supabase
         .from('content_items')
         .update({ starred: !item.starred })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating star:', error);
+        throw error;
+      }
 
       setItems(prev => prev.map(item => 
         item.id === id ? { ...item, starred: !item.starred } : item
@@ -145,7 +175,10 @@ export const useContentLibrary = () => {
         .update({ content })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating note:', error);
+        throw error;
+      }
 
       setItems(prev => prev.map(item =>
         item.id === id ? { ...item, content } : item
