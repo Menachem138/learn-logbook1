@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLibraryQuery } from './library/useLibraryQuery';
 import { useLibraryMutations } from './library/useLibraryMutations';
 import { useQueryClient } from '@tanstack/react-query';
+import { LibraryItem } from '@/types/library';
 
 export const useLibrary = () => {
   const [filter, setFilter] = useState('');
@@ -15,32 +16,32 @@ export const useLibrary = () => {
     ...mutations,
     addItem: {
       ...mutations.addItem,
-      mutate: async (...args) => {
-        const result = await mutations.addItem.mutateAsync(...args);
+      mutate: async (data: Parameters<typeof mutations.addItem.mutateAsync>[0]) => {
+        const result = await mutations.addItem.mutateAsync(data);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
         return result;
       }
     },
     updateItem: {
       ...mutations.updateItem,
-      mutate: async (...args) => {
-        const result = await mutations.updateItem.mutateAsync(...args);
+      mutate: async (data: Parameters<typeof mutations.updateItem.mutateAsync>[0]) => {
+        const result = await mutations.updateItem.mutateAsync(data);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
         return result;
       }
     },
     deleteItem: {
       ...mutations.deleteItem,
-      mutate: async (...args) => {
-        const result = await mutations.deleteItem.mutateAsync(...args);
+      mutate: async (data: Parameters<typeof mutations.deleteItem.mutateAsync>[0]) => {
+        const result = await mutations.deleteItem.mutateAsync(data);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
         return result;
       }
     },
     toggleStar: {
       ...mutations.toggleStar,
-      mutate: async (...args) => {
-        const result = await mutations.toggleStar.mutateAsync(...args);
+      mutate: async (data: Parameters<typeof mutations.toggleStar.mutateAsync>[0]) => {
+        const result = await mutations.toggleStar.mutateAsync(data);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
         return result;
       }
