@@ -15,38 +15,34 @@ export const useLibrary = () => {
     ...mutations,
     addItem: {
       ...mutations.addItem,
-      onSuccess: async (data: any) => {
+      mutate: async (...args) => {
+        const result = await mutations.addItem.mutateAsync(...args);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
-        if (mutations.addItem.onSuccess) {
-          mutations.addItem.onSuccess(data);
-        }
+        return result;
       }
     },
     updateItem: {
       ...mutations.updateItem,
-      onSuccess: async (data: any) => {
+      mutate: async (...args) => {
+        const result = await mutations.updateItem.mutateAsync(...args);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
-        if (mutations.updateItem.onSuccess) {
-          mutations.updateItem.onSuccess(data);
-        }
+        return result;
       }
     },
     deleteItem: {
       ...mutations.deleteItem,
-      onSuccess: async (data: any) => {
+      mutate: async (...args) => {
+        const result = await mutations.deleteItem.mutateAsync(...args);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
-        if (mutations.deleteItem.onSuccess) {
-          mutations.deleteItem.onSuccess(data);
-        }
+        return result;
       }
     },
     toggleStar: {
       ...mutations.toggleStar,
-      onSuccess: async (data: any) => {
+      mutate: async (...args) => {
+        const result = await mutations.toggleStar.mutateAsync(...args);
         await queryClient.invalidateQueries({ queryKey: ['library-items'] });
-        if (mutations.toggleStar.onSuccess) {
-          mutations.toggleStar.onSuccess(data);
-        }
+        return result;
       }
     }
   };

@@ -44,17 +44,22 @@ export const useLibraryQuery = (filter: string) => {
         id: item.id,
         title: item.title,
         content: item.content,
-        type: item.type,
+        type: item.type as LibraryItem['type'],
         is_starred: item.is_starred || false,
-        file_details: item.file_details,
+        file_details: item.file_details ? {
+          path: item.file_details.path as string,
+          name: item.file_details.name as string,
+          size: item.file_details.size as number,
+          type: item.file_details.type as string,
+        } : null,
         created_at: item.created_at
       }));
 
       return transformedData;
     },
     staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-    cacheTime: 1000 * 60 * 30, // Cache is kept for 30 minutes
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnMount: true, // Refetch when component mounts
+    gcTime: 1000 * 60 * 30, // Cache is kept for 30 minutes (replaces cacheTime)
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
