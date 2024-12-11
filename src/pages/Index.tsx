@@ -4,6 +4,7 @@ import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
 import LearningJournal from "@/components/LearningJournal";
 import CourseSchedule from "@/components/CourseSchedule";
+import Library from "@/components/Library";
 
 const Index = () => {
   return (
@@ -21,6 +22,10 @@ const Index = () => {
 
       <div className="mb-6">
         <CourseSchedule />
+      </div>
+
+      <div className="mb-6">
+        <Library />
       </div>
 
       <div className="mb-6">
