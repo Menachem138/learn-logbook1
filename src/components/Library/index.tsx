@@ -22,6 +22,8 @@ const getIcon = (type: LibraryItemType) => {
       return <Video className="w-4 h-4" />;
     case 'whatsapp':
       return <MessageCircle className="w-4 h-4" />;
+    case 'pdf':
+      return <FileText className="w-4 h-4 text-red-500" />;
   }
 };
 
@@ -117,10 +119,10 @@ const Library = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600 mb-3">{item.content}</p>
-            {item.file_details?.path && (item.type === 'image' || item.type === 'video') && (
+            {item.file_details?.path && (item.type === 'image' || item.type === 'video' || item.type === 'pdf') && (
               <div className="mt-2">
                 <MediaCard
-                  type={item.type as "image" | "video"}
+                  type={item.type as "image" | "video" | "pdf"}
                   src={item.file_details.path}
                   title={item.title}
                 />
