@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LibraryItem } from '@/types/library';
 import { useToast } from '@/hooks/use-toast';
@@ -12,13 +12,9 @@ export const useLibrary = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Get the current user's ID
-  const user = supabase.auth.getUser();
-
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['library-items', filter],
     queryFn: async () => {
-      // Check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         navigate('/login');
@@ -57,7 +53,6 @@ export const useLibrary = () => {
       type: string;
       file?: File;
     }) => {
-      // Check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
@@ -82,7 +77,7 @@ export const useLibrary = () => {
           content,
           type,
           file_details: fileDetails,
-          user_id: user.id, // Add the user_id here
+          user_id: user.id,
         });
 
       if (error) throw error;
@@ -97,6 +92,59 @@ export const useLibrary = () => {
       console.error('Error adding item:', error);
       toast({
         title: "שגיאה בהוספת הפריט",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateItem = useMutation({
+    mutationFn: async ({ id, title, content, type, file }: {
+      id: string;
+      title: string;
+      content: string;
+      type: string;
+      file?: File;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      let fileDetails = null;
+
+      if (file) {
+        const { publicUrl, filePath, fileName, fileSize, mimeType } = await uploadFileToStorage(file, user.id);
+        fileDetails = {
+          path: publicUrl,
+          name: fileName,
+          size: fileSize,
+          type: mimeType,
+        };
+      }
+
+      const { error } = await supabase
+        .from('library_items')
+        .update({
+          title,
+          content,
+          type,
+          ...(fileDetails && { file_details: fileDetails }),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['library-items'] });
+      toast({
+        title: "הפריט עודכן בהצלחה",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating item:', error);
+      toast({
+        title: "שגיאה בעדכון הפריט",
         description: error.message,
         variant: "destructive",
       });
@@ -158,5 +206,6 @@ export const useLibrary = () => {
     addItem,
     deleteItem,
     toggleStar,
+    updateItem,
   };
 };
