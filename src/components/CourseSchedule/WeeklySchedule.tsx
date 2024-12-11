@@ -7,11 +7,18 @@ import { DaySchedule as DayScheduleType } from "./scheduleData";
 interface WeeklyScheduleProps {
   schedule: DayScheduleType[];
   onUpdateDay: (dayIndex: number, newSchedule: any[]) => void;
+  onUpdateDayName: (dayIndex: number, newName: string) => void;
   onAddDay: () => void;
   onDeleteDay: (dayIndex: number) => void;
 }
 
-export function WeeklySchedule({ schedule, onUpdateDay, onAddDay, onDeleteDay }: WeeklyScheduleProps) {
+export function WeeklySchedule({ 
+  schedule, 
+  onUpdateDay, 
+  onUpdateDayName,
+  onAddDay, 
+  onDeleteDay 
+}: WeeklyScheduleProps) {
   return (
     <div className="space-y-6">
       {schedule.map((day, index) => (
@@ -20,6 +27,7 @@ export function WeeklySchedule({ schedule, onUpdateDay, onAddDay, onDeleteDay }:
           day={day.day}
           schedule={day.schedule}
           onUpdateSchedule={(newSchedule) => onUpdateDay(index, newSchedule)}
+          onUpdateDayName={(newName) => onUpdateDayName(index, newName)}
           onDeleteDay={() => onDeleteDay(index)}
         />
       ))}

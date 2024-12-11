@@ -10,12 +10,15 @@ interface DayScheduleProps {
   day: string;
   schedule: ScheduleItem[];
   onUpdateSchedule: (schedule: ScheduleItem[]) => void;
+  onUpdateDayName: (newName: string) => void;
   onDeleteDay: () => void;
 }
 
-export function DaySchedule({ day, schedule, onUpdateSchedule, onDeleteDay }: DayScheduleProps) {
+export function DaySchedule({ day, schedule, onUpdateSchedule, onUpdateDayName, onDeleteDay }: DayScheduleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSchedule, setEditedSchedule] = useState<ScheduleItem[]>(schedule);
+  const [editedDayName, setEditedDayName] = useState(day);
+  const [isEditingDayName, setIsEditingDayName] = useState(false);
 
   const handleTimeChange = (index: number, value: string) => {
     const newSchedule = [...editedSchedule];
@@ -39,10 +42,43 @@ export function DaySchedule({ day, schedule, onUpdateSchedule, onDeleteDay }: Da
     setIsEditing(false);
   };
 
+  const handleSaveDayName = () => {
+    onUpdateDayName(editedDayName);
+    setIsEditingDayName(false);
+  };
+
+  const handleCancelDayName = () => {
+    setEditedDayName(day);
+    setIsEditingDayName(false);
+  };
+
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <CardHeader className="bg-muted/50 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-bold">{day}</CardTitle>
+        <div className="flex items-center gap-2">
+          {isEditingDayName ? (
+            <div className="flex gap-2">
+              <Input
+                value={editedDayName}
+                onChange={(e) => setEditedDayName(e.target.value)}
+                className="w-32"
+              />
+              <Button variant="ghost" size="sm" onClick={handleSaveDayName}>
+                <Save className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleCancelDayName}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <CardTitle className="text-lg font-bold">{day}</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => setIsEditingDayName(true)}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
         <div className="flex gap-2">
           {isEditing ? (
             <>

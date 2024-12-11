@@ -90,6 +90,20 @@ export default function CourseSchedule() {
     });
   };
 
+  const handleUpdateDayName = (dayIndex: number, newName: string) => {
+    const updatedSchedule = [...weeklySchedule];
+    updatedSchedule[dayIndex] = {
+      ...updatedSchedule[dayIndex],
+      day: newName
+    };
+    setWeeklySchedule(updatedSchedule);
+    
+    toast({
+      title: "שם היום עודכן",
+      description: "השינויים נשמרו בהצלחה",
+    });
+  };
+
   const handleAddDay = () => {
     const newDay = {
       day: `יום ${weeklySchedule.length + 1}`,
@@ -126,47 +140,52 @@ export default function CourseSchedule() {
             <TabsTrigger value="topics">נושאים שבועיים</TabsTrigger>
           </TabsList>
           <TabsContent value="schedule">
-            <WeeklySchedule
-              schedule={weeklySchedule}
-              onUpdateDay={handleUpdateDay}
-              onAddDay={handleAddDay}
-              onDeleteDay={handleDeleteDay}
-            />
-            
-              {backupBlocks.map((block, index) => (
-                <Card key={index} className="bg-muted/50">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{block.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {block.sessions.map((session, sessionIndex) => (
-                        <li key={sessionIndex} className="flex items-center py-2">
-                          <Badge variant="secondary" className="mr-2">גיבוי</Badge>
-                          <span>{session}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-8">
+              <WeeklySchedule
+                schedule={weeklySchedule}
+                onUpdateDay={handleUpdateDay}
+                onUpdateDayName={handleUpdateDayName}
+                onAddDay={handleAddDay}
+                onDeleteDay={handleDeleteDay}
+              />
+              
+              <div className="space-y-8">
+                {backupBlocks.map((block, index) => (
+                  <Card key={index} className="bg-muted/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{block.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {block.sessions.map((session, sessionIndex) => (
+                          <li key={sessionIndex} className="flex items-center py-2">
+                            <Badge variant="secondary" className="mr-2">גיבוי</Badge>
+                            <span>{session}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ))}
 
-              {importantRules.map((block, index) => (
-                <Card key={index} className="border-2 border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{block.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 list-disc list-inside">
-                      {block.rules.map((rule, ruleIndex) => (
-                        <li key={ruleIndex} className="text-muted-foreground">
-                          {rule}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
+                {importantRules.map((block, index) => (
+                  <Card key={index} className="border-2 border-primary/20">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{block.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2 list-disc list-inside">
+                        {block.rules.map((rule, ruleIndex) => (
+                          <li key={ruleIndex} className="text-muted-foreground">
+                            {rule}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="topics">
