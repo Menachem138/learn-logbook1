@@ -2,7 +2,6 @@ import React from "react";
 import Timer from "@/components/Timer";
 import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
-import ContentLibrary from "@/components/ContentLibrary";
 import LearningJournal from "@/components/LearningJournal";
 import CourseSchedule from "@/components/CourseSchedule";
 
@@ -22,10 +21,6 @@ const Index = () => {
 
       <div className="mb-6">
         <CourseSchedule />
-      </div>
-
-      <div className="mb-6">
-        <ContentLibrary />
       </div>
 
       <div className="mb-6">
