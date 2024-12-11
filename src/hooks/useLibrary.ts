@@ -4,15 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { LibraryItem } from '@/types/library';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFileToStorage } from '@/utils/fileStorage';
+import { useNavigate } from 'react-router-dom';
 
 export const useLibrary = () => {
   const [filter, setFilter] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Get the current user's ID
+  const user = supabase.auth.getUser();
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['library-items', filter],
     queryFn: async () => {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return [];
+      }
+
       let query = supabase
         .from('library_items')
         .select('*')
@@ -45,10 +57,16 @@ export const useLibrary = () => {
       type: string;
       file?: File;
     }) => {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       let fileDetails = null;
 
       if (file) {
-        const { publicUrl, filePath, fileName, fileSize, mimeType } = await uploadFileToStorage(file, 'user123');
+        const { publicUrl, filePath, fileName, fileSize, mimeType } = await uploadFileToStorage(file, user.id);
         fileDetails = {
           path: publicUrl,
           name: fileName,
@@ -64,6 +82,7 @@ export const useLibrary = () => {
           content,
           type,
           file_details: fileDetails,
+          user_id: user.id, // Add the user_id here
         });
 
       if (error) throw error;
