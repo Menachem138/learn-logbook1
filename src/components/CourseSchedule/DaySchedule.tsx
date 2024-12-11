@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit2, Save, X, Trash2 } from "lucide-react";
+import { Edit2, Save, X, Trash2, Plus } from "lucide-react";
 import { ScheduleItem } from "./scheduleData";
 
 interface DayScheduleProps {
@@ -29,6 +29,21 @@ export function DaySchedule({ day, schedule, onUpdateSchedule, onUpdateDayName, 
   const handleActivityChange = (index: number, value: string) => {
     const newSchedule = [...editedSchedule];
     newSchedule[index] = { ...newSchedule[index], activity: value };
+    setEditedSchedule(newSchedule);
+  };
+
+  const handleAddTask = () => {
+    const newTask: ScheduleItem = {
+      time: "00:00–00:00",
+      activity: "משימה חדשה"
+    };
+    const newSchedule = [...editedSchedule, newTask];
+    setEditedSchedule(newSchedule);
+    setIsEditing(true);
+  };
+
+  const handleDeleteTask = (index: number) => {
+    const newSchedule = editedSchedule.filter((_, i) => i !== index);
     setEditedSchedule(newSchedule);
   };
 
@@ -117,6 +132,14 @@ export function DaySchedule({ day, schedule, onUpdateSchedule, onUpdateDayName, 
                     onChange={(e) => handleActivityChange(itemIndex, e.target.value)}
                     className="flex-1 mx-2"
                   />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleDeleteTask(itemIndex)}
+                    className="hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </>
               ) : (
                 <>
@@ -127,6 +150,15 @@ export function DaySchedule({ day, schedule, onUpdateSchedule, onUpdateDayName, 
             </li>
           ))}
         </ul>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleAddTask}
+          className="w-full mt-4 border-dashed"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          הוסף משימה חדשה
+        </Button>
       </CardContent>
     </Card>
   );
