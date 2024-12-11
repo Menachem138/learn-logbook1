@@ -18,7 +18,7 @@ export function MediaCard({ type, src, title }: MediaCardProps) {
           rel="noopener noreferrer"
           className="text-blue-500 hover:underline"
         >
-          צפה ב-PDF
+          {title}
         </a>
       </Card>
     );
