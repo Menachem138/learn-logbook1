@@ -1,8 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WeeklySchedule } from "./CourseSchedule/WeeklySchedule";
+import { useToast } from "@/hooks/use-toast";
 
-const weeklySchedule = [
+const initialWeeklySchedule = [
   {
     day: "יום שני",
     schedule: [
@@ -46,18 +48,7 @@ const weeklySchedule = [
       { time: "18:00–18:10", activity: "הפסקה קצרה נוספת" },
       { time: "18:10–19:00", activity: "חזרה על החומר וכתיבת שאלות פתוחות" },
     ]
-  },
-  {
-    day: "יום שישי",
-    schedule: [
-      { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
-      { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
-      { time: "17:00–17:10", activity: "הפסקת ריענון קצרה" },
-      { time: "17:10–18:00", activity: "תרגול מעשי" },
-      { time: "18:00–18:10", activity: "הפסקה קצרה נוספת" },
-      { time: "18:10–19:00", activity: "חזרה על החומר וכתיבת שאלות פתוחות" },
-    ]
-  },
+  }
 ];
 
 const weeklyTopics = [
@@ -127,6 +118,23 @@ const importantRules = [
 ];
 
 export default function CourseSchedule() {
+  const [weeklySchedule, setWeeklySchedule] = useState(initialWeeklySchedule);
+  const { toast } = useToast();
+
+  const handleUpdateDay = (dayIndex: number, newSchedule: any[]) => {
+    const updatedSchedule = [...weeklySchedule];
+    updatedSchedule[dayIndex] = {
+      ...updatedSchedule[dayIndex],
+      schedule: newSchedule
+    };
+    setWeeklySchedule(updatedSchedule);
+    
+    toast({
+      title: "לוח הזמנים עודכן",
+      description: "השינויים נשמרו בהצלחה",
+    });
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -139,25 +147,11 @@ export default function CourseSchedule() {
             <TabsTrigger value="topics">נושאים שבועיים</TabsTrigger>
           </TabsList>
           <TabsContent value="schedule">
-            <div className="space-y-6">
-              {weeklySchedule.map((day, index) => (
-                <Card key={index} className="overflow-hidden">
-                  <CardHeader className="bg-muted">
-                    <CardTitle className="text-lg">{day.day}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <ul className="space-y-2">
-                      {day.schedule.map((item, itemIndex) => (
-                        <li key={itemIndex} className="flex justify-between items-center py-2 border-b last:border-0">
-                          <Badge variant="outline">{item.time}</Badge>
-                          <span>{item.activity}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
-              
+            <WeeklySchedule
+              schedule={weeklySchedule}
+              onUpdateDay={handleUpdateDay}
+            />
+            
               {backupBlocks.map((block, index) => (
                 <Card key={index} className="bg-muted/50">
                   <CardHeader>
@@ -192,7 +186,6 @@ export default function CourseSchedule() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
           </TabsContent>
           
           <TabsContent value="topics">
