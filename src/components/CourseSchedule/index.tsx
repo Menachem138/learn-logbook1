@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { DayCard } from "./DayCard";
 import { WeeklyTopicCard } from "./WeeklyTopicCard";
 import { weeklySchedule, weeklyTopics, backupBlocks, importantRules } from "./data";

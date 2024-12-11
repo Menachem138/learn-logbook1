@@ -47,7 +47,7 @@ export const weeklySchedule: DaySchedule[] = [
   }
 ];
 
-const weeklyTopics = [
+export const weeklyTopics = [
   {
     week: 1,
     title: "יסודות הקריפטו",
@@ -91,7 +91,7 @@ const weeklyTopics = [
   }
 ];
 
-const backupBlocks = [
+export const backupBlocks = [
   {
     title: "בלוק גיבוי",
     sessions: [
@@ -101,7 +101,7 @@ const backupBlocks = [
   }
 ];
 
-const importantRules = [
+export const importantRules = [
   {
     title: "כללים חשובים",
     rules: [
