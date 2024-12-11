@@ -29,6 +29,7 @@ const ContentLibrary = () => {
   const [noteContent, setNoteContent] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Load items when user is authenticated
   useEffect(() => {
     if (user) {
       console.log('Loading items for user:', user.id);
@@ -38,7 +39,6 @@ const ContentLibrary = () => {
 
   const handleAddItem = useCallback(async () => {
     if (!newItem) return;
-    
     console.log('Adding new item:', newItem);
     const type = newItem.startsWith('http') ? 'link' : 'whatsapp';
     await addItem(newItem, type);
@@ -47,7 +47,6 @@ const ContentLibrary = () => {
 
   const handleAddNote = useCallback(async () => {
     if (!noteContent) return;
-    
     console.log('Adding new note:', noteContent);
     await addItem(noteContent, 'note');
     setNoteContent('');
