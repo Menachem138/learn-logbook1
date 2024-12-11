@@ -25,7 +25,7 @@ export default function CourseContent() {
 
   return (
     <Card className="p-6">
-      <div className="mb-6">
+      <div className="mb-10">
         <h2 className="text-2xl font-bold mb-4">התקדמות בקורס</h2>
         <Progress value={progress} className="h-2" />
         <p className="text-sm text-muted-foreground mt-2 text-center">
