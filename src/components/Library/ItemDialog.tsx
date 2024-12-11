@@ -5,16 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { LibraryItem, LibraryItemType } from "@/types/library";
+import { Upload } from "lucide-react";
 
 interface ItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Partial<LibraryItem>) => void;
+  onSubmit: (data: Partial<LibraryItem> & { file?: File }) => void;
   initialData?: LibraryItem | null;
 }
 
 export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialogProps) {
-  const { register, handleSubmit, reset } = useForm({
+  const { register, handleSubmit, reset, watch } = useForm({
     defaultValues: initialData || {
       title: "",
       content: "",
@@ -22,9 +23,24 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
     },
   });
 
+  const selectedType = watch("type");
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+
   const onSubmitForm = (data: any) => {
-    onSubmit(data);
+    const formData = {
+      ...data,
+      file: selectedFile,
+    };
+    onSubmit(formData);
+    setSelectedFile(null);
     reset();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
   };
 
   return (
@@ -58,6 +74,28 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
               {...register("content", { required: true })}
             />
           </div>
+
+          {(selectedType === "image" || selectedType === "video") && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                {selectedType === "image" ? "העלה תמונה" : "העלה וידאו"}
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept={selectedType === "image" ? "image/*" : "video/*"}
+                  onChange={handleFileChange}
+                  className="flex-1"
+                />
+                {selectedFile && (
+                  <span className="text-sm text-gray-500">
+                    {selectedFile.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               ביטול
