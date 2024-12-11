@@ -38,7 +38,23 @@ export const useLibraryQuery = (filter: string) => {
         return [];
       }
 
-      return data as LibraryItem[];
+      // Transform the data to ensure all fields are properly typed
+      const transformedData = data.map((item): LibraryItem => ({
+        ...item,
+        id: item.id,
+        title: item.title,
+        content: item.content,
+        type: item.type,
+        is_starred: item.is_starred || false,
+        file_details: item.file_details,
+        created_at: item.created_at
+      }));
+
+      return transformedData;
     },
+    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Cache is kept for 30 minutes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Refetch when component mounts
   });
 };
