@@ -4,13 +4,6 @@ import { LibraryItem } from '@/types/library';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-interface FileDetails {
-  path: string;
-  name: string;
-  size: number;
-  type: string;
-}
-
 export const useLibraryQuery = (filter: string) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,28 +38,7 @@ export const useLibraryQuery = (filter: string) => {
         return [];
       }
 
-      // Transform the data to ensure all fields are properly typed
-      const transformedData = data.map((item): LibraryItem => ({
-        ...item,
-        id: item.id,
-        title: item.title,
-        content: item.content,
-        type: item.type as LibraryItem['type'],
-        is_starred: item.is_starred || false,
-        file_details: item.file_details ? {
-          path: (item.file_details as FileDetails).path,
-          name: (item.file_details as FileDetails).name,
-          size: (item.file_details as FileDetails).size,
-          type: (item.file_details as FileDetails).type,
-        } : null,
-        created_at: item.created_at
-      }));
-
-      return transformedData;
+      return data as LibraryItem[];
     },
-    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-    gcTime: 1000 * 60 * 30, // Cache is kept for 30 minutes (replaces cacheTime)
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
   });
 };
