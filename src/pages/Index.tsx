@@ -2,7 +2,7 @@ import React from "react";
 import Timer from "@/components/Timer";
 import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
-import Library from "@/components/Library";
+import ContentLibrary from "@/components/ContentLibrary";
 import LearningJournal from "@/components/LearningJournal";
 import CourseSchedule from "@/components/CourseSchedule";
 
@@ -25,7 +25,7 @@ const Index = () => {
       </div>
 
       <div className="mb-6">
-        <Library />
+        <ContentLibrary />
       </div>
 
       <div className="mb-6">
