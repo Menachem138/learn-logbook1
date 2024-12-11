@@ -3,20 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit2, Save, X } from "lucide-react";
-
-interface ScheduleItem {
-  time: string;
-  activity: string;
-}
+import { Edit2, Save, X, Trash2 } from "lucide-react";
+import { ScheduleItem } from "./scheduleData";
 
 interface DayScheduleProps {
   day: string;
   schedule: ScheduleItem[];
   onUpdateSchedule: (schedule: ScheduleItem[]) => void;
+  onDeleteDay: () => void;
 }
 
-export function DaySchedule({ day, schedule, onUpdateSchedule }: DayScheduleProps) {
+export function DaySchedule({ day, schedule, onUpdateSchedule, onDeleteDay }: DayScheduleProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSchedule, setEditedSchedule] = useState<ScheduleItem[]>(schedule);
 
@@ -43,23 +40,30 @@ export function DaySchedule({ day, schedule, onUpdateSchedule }: DayScheduleProp
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="bg-muted flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">{day}</CardTitle>
-        {isEditing ? (
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleCancel}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        )}
+    <Card className="overflow-hidden transition-all hover:shadow-md">
+      <CardHeader className="bg-muted/50 flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-bold">{day}</CardTitle>
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={handleSave}>
+                <Save className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleCancel}>
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onDeleteDay} className="hover:text-red-500">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="pt-4">
         <ul className="space-y-2">
@@ -80,8 +84,8 @@ export function DaySchedule({ day, schedule, onUpdateSchedule }: DayScheduleProp
                 </>
               ) : (
                 <>
-                  <Badge variant="outline">{item.time}</Badge>
-                  <span>{item.activity}</span>
+                  <Badge variant="outline" className="bg-primary/5">{item.time}</Badge>
+                  <span className="flex-1 text-right mr-4">{item.activity}</span>
                 </>
               )}
             </li>

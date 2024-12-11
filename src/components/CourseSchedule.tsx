@@ -4,53 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { WeeklySchedule } from "./CourseSchedule/WeeklySchedule";
 import { useToast } from "@/hooks/use-toast";
-
-const initialWeeklySchedule = [
-  {
-    day: "יום שני",
-    schedule: [
-      { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
-      { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
-      { time: "17:00–17:10", activity: "הפסקת ריענון קצרה" },
-      { time: "17:10–18:00", activity: "תרגול מעשי" },
-      { time: "18:00–18:10", activity: "הפסקה קצרה נוספת" },
-      { time: "18:10–19:00", activity: "חזרה על החומר וכתיבת שאלות פתוחות" },
-    ]
-  },
-  {
-    day: "יום שלישי",
-    schedule: [
-      { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
-      { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
-      { time: "17:00–17:10", activity: "הפסקת ריענון קצרה" },
-      { time: "17:10–18:00", activity: "תרגול מעשי" },
-      { time: "18:00–18:10", activity: "הפסקה קצרה נוספת" },
-      { time: "18:10–19:00", activity: "חזרה על החומר וכתיבת שאלות פתוחות" },
-    ]
-  },
-  {
-    day: "יום רביעי",
-    schedule: [
-      { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
-      { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
-      { time: "17:00–17:10", activity: "הפסקת ריענון קצרה" },
-      { time: "17:10–18:00", activity: "תרגול מעשי" },
-      { time: "18:00–18:10", activity: "הפסקה קצרה נוספת" },
-      { time: "18:10–19:00", activity: "חזרה על החומר וכתיבת שאלות פתוחות" },
-    ]
-  },
-  {
-    day: "יום חמישי",
-    schedule: [
-      { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
-      { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
-      { time: "17:00–17:10", activity: "הפסקת ריענון קצרה" },
-      { time: "17:10–18:00", activity: "תרגול מעשי" },
-      { time: "18:00–18:10", activity: "הפסקה קצרה נוספת" },
-      { time: "18:10–19:00", activity: "חזרה על החומר וכתיבת שאלות פתוחות" },
-    ]
-  }
-];
+import { initialWeeklySchedule } from "./CourseSchedule/scheduleData";
 
 const weeklyTopics = [
   {
@@ -136,6 +90,30 @@ export default function CourseSchedule() {
     });
   };
 
+  const handleAddDay = () => {
+    const newDay = {
+      day: `יום ${weeklySchedule.length + 1}`,
+      schedule: [
+        { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
+        { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
+      ]
+    };
+    setWeeklySchedule([...weeklySchedule, newDay]);
+    toast({
+      title: "יום חדש נוסף",
+      description: "יום חדש נוסף ללוח הזמנים",
+    });
+  };
+
+  const handleDeleteDay = (dayIndex: number) => {
+    const updatedSchedule = weeklySchedule.filter((_, index) => index !== dayIndex);
+    setWeeklySchedule(updatedSchedule);
+    toast({
+      title: "יום הוסר",
+      description: "היום הוסר מלוח הזמנים",
+    });
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -151,6 +129,8 @@ export default function CourseSchedule() {
             <WeeklySchedule
               schedule={weeklySchedule}
               onUpdateDay={handleUpdateDay}
+              onAddDay={handleAddDay}
+              onDeleteDay={handleDeleteDay}
             />
             
               {backupBlocks.map((block, index) => (

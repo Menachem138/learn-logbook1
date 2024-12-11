@@ -1,22 +1,17 @@
 import React from "react";
 import { DaySchedule } from "./DaySchedule";
-
-interface ScheduleItem {
-  time: string;
-  activity: string;
-}
-
-interface DaySchedule {
-  day: string;
-  schedule: ScheduleItem[];
-}
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { DaySchedule as DayScheduleType } from "./scheduleData";
 
 interface WeeklyScheduleProps {
-  schedule: DaySchedule[];
-  onUpdateDay: (dayIndex: number, newSchedule: ScheduleItem[]) => void;
+  schedule: DayScheduleType[];
+  onUpdateDay: (dayIndex: number, newSchedule: any[]) => void;
+  onAddDay: () => void;
+  onDeleteDay: (dayIndex: number) => void;
 }
 
-export function WeeklySchedule({ schedule, onUpdateDay }: WeeklyScheduleProps) {
+export function WeeklySchedule({ schedule, onUpdateDay, onAddDay, onDeleteDay }: WeeklyScheduleProps) {
   return (
     <div className="space-y-6">
       {schedule.map((day, index) => (
@@ -25,8 +20,17 @@ export function WeeklySchedule({ schedule, onUpdateDay }: WeeklyScheduleProps) {
           day={day.day}
           schedule={day.schedule}
           onUpdateSchedule={(newSchedule) => onUpdateDay(index, newSchedule)}
+          onDeleteDay={() => onDeleteDay(index)}
         />
       ))}
+      <Button 
+        onClick={onAddDay}
+        variant="outline" 
+        className="w-full py-6 border-dashed hover:border-primary hover:bg-primary/5"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        הוסף יום חדש
+      </Button>
     </div>
   );
 }
