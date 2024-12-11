@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLibrary } from '@/hooks/useLibrary';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, Trash2, Link, FileText, Image, Video, MessageCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Star, Trash2, Link, FileText, Image, Video, MessageCircle, Plus } from 'lucide-react';
 import { LibraryItem, LibraryItemType } from '@/types/library';
 
 const getIcon = (type: LibraryItemType) => {
@@ -21,8 +22,89 @@ const getIcon = (type: LibraryItemType) => {
   }
 };
 
+const AddItemDialog = ({ onAdd }: { onAdd: (data: any) => void }) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [type, setType] = useState<LibraryItemType>('note');
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onAdd({ title, content, type, file });
+    setTitle('');
+    setContent('');
+    setType('note');
+    setFile(null);
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus className="w-4 h-4" />
+          הוסף פריט
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>הוסף פריט חדש</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Input
+              placeholder="כותרת"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Input
+              placeholder="תוכן"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <select
+              className="w-full p-2 border rounded"
+              value={type}
+              onChange={(e) => setType(e.target.value as LibraryItemType)}
+            >
+              <option value="note">הערה</option>
+              <option value="link">קישור</option>
+              <option value="image">תמונה</option>
+              <option value="video">וידאו</option>
+              <option value="whatsapp">וואטסאפ</option>
+            </select>
+          </div>
+          {(type === 'image' || type === 'video') && (
+            <div>
+              <Input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                accept={type === 'image' ? 'image/*' : 'video/*'}
+              />
+            </div>
+          )}
+          <Button type="submit">שמור</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Library = () => {
-  const { items, isLoading, filter, setFilter, deleteItem, toggleStar } = useLibrary();
+  const { items, isLoading, filter, setFilter, addItem, deleteItem, toggleStar } = useLibrary();
+
+  const handleAddItem = async (data: any) => {
+    try {
+      await addItem.mutateAsync(data);
+    } catch (error) {
+      console.error('Error adding item:', error);
+    }
+  };
 
   if (isLoading) {
     return <div>טוען...</div>;
@@ -32,13 +114,16 @@ const Library = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">ספריית תוכן</h2>
-        <Input
-          type="search"
-          placeholder="חיפוש..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="max-w-xs"
-        />
+        <div className="flex gap-4">
+          <Input
+            type="search"
+            placeholder="חיפוש..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="max-w-xs"
+          />
+          <AddItemDialog onAdd={handleAddItem} />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -67,6 +152,23 @@ const Library = () => {
               </div>
             </div>
             <p className="text-sm text-gray-600">{item.content}</p>
+            {item.file_details?.path && (
+              <div className="mt-2">
+                {item.type === 'image' ? (
+                  <img
+                    src={item.file_details.path}
+                    alt={item.title}
+                    className="max-w-full h-auto rounded"
+                  />
+                ) : item.type === 'video' ? (
+                  <video
+                    src={item.file_details.path}
+                    controls
+                    className="max-w-full h-auto rounded"
+                  />
+                ) : null}
+              </div>
+            )}
           </Card>
         ))}
       </div>
