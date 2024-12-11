@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ContentItem, ContentItemType, RawContentItem, transformToContentItem, transformToContentItems } from '@/types/content';
+import { ContentItem, ContentItemType, transformToContentItem } from '@/types/content';
 
 export const fetchUserItems = async (userId: string): Promise<ContentItem[]> => {
   console.log('Fetching items for user:', userId);
@@ -15,7 +15,9 @@ export const fetchUserItems = async (userId: string): Promise<ContentItem[]> => 
     throw error;
   }
 
-  return transformToContentItems(data as RawContentItem[]);
+  return data
+    .map(item => transformToContentItem(item))
+    .filter((item): item is ContentItem => item !== null);
 };
 
 export const insertItem = async (
@@ -51,7 +53,7 @@ export const insertItem = async (
     throw error;
   }
 
-  const contentItem = transformToContentItem(data as RawContentItem);
+  const contentItem = transformToContentItem(data);
   if (!contentItem) {
     throw new Error('Invalid content type returned from database');
   }

@@ -7,7 +7,7 @@ export const uploadFileToStorage = async (file: File, userId: string) => {
   const fileName = `${crypto.randomUUID()}.${fileExt}`;
   const filePath = `${userId}/${fileName}`;
 
-  const { error: uploadError, data } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from('content_library')
     .upload(filePath, file);
 
@@ -16,7 +16,6 @@ export const uploadFileToStorage = async (file: File, userId: string) => {
     throw uploadError;
   }
 
-  console.log('File uploaded successfully:', data);
   const { data: { publicUrl } } = supabase.storage
     .from('content_library')
     .getPublicUrl(filePath);

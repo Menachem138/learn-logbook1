@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from "sonner";
 import { ContentItem, ContentItemType } from '@/types/content';
 import { uploadFileToStorage } from '@/utils/fileStorage';
@@ -26,6 +26,12 @@ export const useContentLibrary = () => {
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadItems();
+    }
+  }, [user, loadItems]);
 
   const addItem = useCallback(async (content: string, type: ContentItemType) => {
     if (!user?.id) {
