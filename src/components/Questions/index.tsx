@@ -13,6 +13,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Question {
   id: string;
@@ -20,12 +28,14 @@ interface Question {
   answer: string | null;
   is_answered: boolean;
   created_at: string;
+  type: 'general' | 'trading';
 }
 
 const Questions = () => {
   const { session } = useAuth();
   const { toast } = useToast();
   const [newQuestion, setNewQuestion] = React.useState('');
+  const [questionType, setQuestionType] = React.useState<'general' | 'trading'>('general');
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const queryClient = useQueryClient();
 
@@ -48,6 +58,7 @@ const Questions = () => {
         {
           content,
           user_id: session?.user.id,
+          type: questionType,
         },
       ]);
 
@@ -77,6 +88,39 @@ const Questions = () => {
     addQuestionMutation.mutate(newQuestion);
   };
 
+  const renderQuestions = (type: 'general' | 'trading') => {
+    const filteredQuestions = questions?.filter(q => q.type === type) || [];
+    
+    if (filteredQuestions.length === 0) {
+      return (
+        <div className="text-center py-4 text-gray-500">
+          עדיין אין שאלות. אתה מוזמן להוסיף את השאלה הראשונה!
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {filteredQuestions.map((question) => (
+          <Card key={question.id}>
+            <CardHeader>
+              <CardTitle className="text-lg">{question.content}</CardTitle>
+              <CardDescription>
+                {new Date(question.created_at).toLocaleDateString('he-IL')}
+              </CardDescription>
+            </CardHeader>
+            {question.answer && (
+              <CardContent className="pt-4 border-t">
+                <p className="font-semibold mb-2">תשובה:</p>
+                <p>{question.answer}</p>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
@@ -96,6 +140,22 @@ const Questions = () => {
               <DialogTitle>הוספת שאלה חדשה</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="flex gap-4 mb-4">
+                <Button
+                  type="button"
+                  variant={questionType === 'general' ? 'default' : 'outline'}
+                  onClick={() => setQuestionType('general')}
+                >
+                  שאלה כללית
+                </Button>
+                <Button
+                  type="button"
+                  variant={questionType === 'trading' ? 'default' : 'outline'}
+                  onClick={() => setQuestionType('trading')}
+                >
+                  שאלה ליועץ המסחר
+                </Button>
+              </div>
               <Textarea
                 value={newQuestion}
                 onChange={(e) => setNewQuestion(e.target.value)}
@@ -112,30 +172,19 @@ const Questions = () => {
 
       {isLoading ? (
         <div className="text-center py-4">טוען...</div>
-      ) : questions?.length === 0 ? (
-        <div className="text-center py-4 text-gray-500">
-          עדיין אין שאלות. אתה מוזמן להוסיף את השאלה הראשונה!
-        </div>
       ) : (
-        <div className="space-y-4">
-          {questions?.map((question) => (
-            <div
-              key={question.id}
-              className="border rounded-lg p-4 bg-gray-50"
-            >
-              <p className="mb-2">{question.content}</p>
-              {question.answer && (
-                <div className="mt-2 border-t pt-2">
-                  <p className="text-sm font-semibold">תשובה:</p>
-                  <p className="text-sm">{question.answer}</p>
-                </div>
-              )}
-              <div className="mt-2 text-xs text-gray-500">
-                {new Date(question.created_at).toLocaleDateString('he-IL')}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="general">שאלות כלליות</TabsTrigger>
+            <TabsTrigger value="trading">שאלות ליועץ המסחר</TabsTrigger>
+          </TabsList>
+          <TabsContent value="general" className="mt-6">
+            {renderQuestions('general')}
+          </TabsContent>
+          <TabsContent value="trading" className="mt-6">
+            {renderQuestions('trading')}
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
