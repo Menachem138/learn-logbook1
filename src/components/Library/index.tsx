@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Trash2, Link, FileText, Image, Video, MessageCircle, Edit2, Upload } from "lucide-react";
+import { Star, Trash2, Link, FileText, Image, Video, MessageCircle, Edit2, Upload, HelpCircle } from "lucide-react";
 import { LibraryItem, LibraryItemType } from "@/types/library";
 import { useDropzone } from "react-dropzone";
 import { MediaCard } from "./MediaCard";
@@ -24,6 +24,8 @@ const getIcon = (type: LibraryItemType) => {
       return <MessageCircle className="w-4 h-4" />;
     case 'pdf':
       return <FileText className="w-4 h-4 text-red-500" />;
+    case 'question':
+      return <HelpCircle className="w-4 h-4 text-purple-500" />;
   }
 };
 

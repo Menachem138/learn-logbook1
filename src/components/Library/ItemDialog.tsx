@@ -67,11 +67,12 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
               <option value="video">וידאו</option>
               <option value="whatsapp">וואטסאפ</option>
               <option value="pdf">PDF</option>
+              <option value="question">שאלה</option>
             </select>
           </div>
           <div>
             <Textarea
-              placeholder="תוכן"
+              placeholder={selectedType === 'question' ? "מה השאלה שלך?" : "תוכן"}
               {...register("content", { required: true })}
             />
           </div>
