@@ -6,35 +6,27 @@ import LearningJournal from "@/components/LearningJournal";
 import CourseSchedule from "@/components/CourseSchedule";
 import Library from "@/components/Library";
 import Questions from "@/components/Questions";
+import ChatAssistant from "@/components/ChatAssistant";
 
 const Index = () => {
   return (
     <div className="container mx-auto p-4 min-h-screen" dir="rtl">
       <h1 className="text-4xl font-bold text-center mb-8">תוכנית למידה לקורס קריפטו</h1>
       
-      <div className="space-y-12">
-        <Timer />
-        <MotivationalQuotes />
-      </div>
-
-      <div className="mt-12 mb-12">
-        <CourseContent />
-      </div>
-
-      <div className="mb-6">
-        <CourseSchedule />
-      </div>
-
-      <div className="mb-6">
-        <Library />
-      </div>
-
-      <div className="mb-6">
-        <Questions />
-      </div>
-
-      <div className="mb-6">
-        <LearningJournal />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <Timer />
+          <MotivationalQuotes />
+          <ChatAssistant />
+        </div>
+        
+        <div className="space-y-6">
+          <CourseContent />
+          <CourseSchedule />
+          <Library />
+          <Questions />
+          <LearningJournal />
+        </div>
       </div>
     </div>
   );
