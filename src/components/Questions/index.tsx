@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { MessageCircle, Plus } from 'lucide-react';
+import { MessageCircle, Plus, MessageSquareQuote } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -35,8 +36,11 @@ const Questions = () => {
   const { session } = useAuth();
   const { toast } = useToast();
   const [newQuestion, setNewQuestion] = React.useState('');
+  const [newAnswer, setNewAnswer] = React.useState('');
   const [questionType, setQuestionType] = React.useState<'general' | 'trading'>('general');
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState<string | null>(null);
+  const [isAnswerDialogOpen, setIsAnswerDialogOpen] = React.useState(false);
   const queryClient = useQueryClient();
 
   const { data: questions, isLoading } = useQuery({
@@ -82,10 +86,44 @@ const Questions = () => {
     },
   });
 
+  const addAnswerMutation = useMutation({
+    mutationFn: async ({ questionId, answer }: { questionId: string; answer: string }) => {
+      const { error } = await supabase
+        .from('questions')
+        .update({ answer, is_answered: true })
+        .eq('id', questionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['questions'] });
+      setNewAnswer('');
+      setIsAnswerDialogOpen(false);
+      setSelectedQuestionId(null);
+      toast({
+        title: "התשובה נשמרה בהצלחה",
+        description: "התשובה נוספה לשאלה",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "שגיאה בשמירת התשובה",
+        description: "אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newQuestion.trim()) return;
     addQuestionMutation.mutate(newQuestion);
+  };
+
+  const handleAnswerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAnswer.trim() || !selectedQuestionId) return;
+    addAnswerMutation.mutate({ questionId: selectedQuestionId, answer: newAnswer });
   };
 
   const renderQuestions = (type: 'general' | 'trading') => {
@@ -115,6 +153,19 @@ const Questions = () => {
                 <p>{question.answer}</p>
               </CardContent>
             )}
+            <CardFooter className="pt-4">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  setSelectedQuestionId(question.id);
+                  setIsAnswerDialogOpen(true);
+                }}
+              >
+                <MessageSquareQuote className="h-4 w-4" />
+                {question.answer ? 'ערוך תשובה' : 'הוסף תשובה'}
+              </Button>
+            </CardFooter>
           </Card>
         ))}
       </div>
@@ -169,6 +220,25 @@ const Questions = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Dialog open={isAnswerDialogOpen} onOpenChange={setIsAnswerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>הוספת תשובה</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAnswerSubmit} className="space-y-4">
+            <Textarea
+              value={newAnswer}
+              onChange={(e) => setNewAnswer(e.target.value)}
+              placeholder="כתוב את התשובה כאן..."
+              className="min-h-[100px]"
+            />
+            <Button type="submit" disabled={!newAnswer.trim()}>
+              שמור תשובה
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {isLoading ? (
         <div className="text-center py-4">טוען...</div>
