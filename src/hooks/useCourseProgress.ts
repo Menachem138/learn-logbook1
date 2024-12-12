@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { getTotalLessons } from '@/components/CourseContent/sections';
 
 export function useCourseProgress() {
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
@@ -39,15 +40,16 @@ export function useCourseProgress() {
   };
 
   const toggleLesson = async (lessonId: string) => {
+    if (!session?.user?.id) return;
+    
     const isCompleted = completedLessons.has(lessonId);
     
     try {
       if (isCompleted) {
-        // Delete the progress
         const { error } = await supabase
           .from('course_progress')
           .delete()
-          .eq('user_id', session?.user?.id)
+          .eq('user_id', session.user.id)
           .eq('lesson_id', lessonId);
 
         if (error) throw error;
@@ -58,12 +60,11 @@ export function useCourseProgress() {
           return next;
         });
       } else {
-        // Insert new progress
         const { error } = await supabase
           .from('course_progress')
           .insert([
             {
-              user_id: session?.user?.id,
+              user_id: session.user.id,
               lesson_id: lessonId,
               completed: true,
             },
@@ -74,9 +75,12 @@ export function useCourseProgress() {
         setCompletedLessons(prev => new Set([...prev, lessonId]));
       }
 
+      const totalLessons = getTotalLessons();
+      const completedCount = completedLessons.size + (isCompleted ? -1 : 1);
+      
       toast({
-        title: "ההתקדמות נשמרה",
-        description: isCompleted ? "השיעור סומן כלא הושלם" : "השיעור סומן כהושלם",
+        title: "התקדמות עודכנה",
+        description: `השלמת ${completedCount} מתוך ${totalLessons} שיעורים`,
       });
     } catch (error) {
       console.error('Error updating progress:', error);
