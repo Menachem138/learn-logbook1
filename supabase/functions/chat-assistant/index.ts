@@ -25,39 +25,61 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Fetch user's learning data
-    const { data: progress } = await supabase
+    const { data: progress, error: progressError } = await supabase
       .from('course_progress')
       .select('*')
       .eq('user_id', userId)
 
-    const { data: journalEntries } = await supabase
+    if (progressError) {
+      console.error('Error fetching progress:', progressError)
+    }
+
+    const { data: journalEntries, error: journalError } = await supabase
       .from('learning_journal')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(5)
 
-    const { data: libraryItems } = await supabase
+    if (journalError) {
+      console.error('Error fetching journal entries:', journalError)
+    }
+
+    const { data: libraryItems, error: libraryError } = await supabase
       .from('library_items')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(5)
 
+    if (libraryError) {
+      console.error('Error fetching library items:', libraryError)
+    }
+
+    // Get total lessons count from course_progress table
+    const { data: allLessons, error: lessonsError } = await supabase
+      .from('course_progress')
+      .select('lesson_id')
+      .eq('user_id', userId)
+
+    if (lessonsError) {
+      console.error('Error fetching total lessons:', lessonsError)
+    }
+
     // Calculate completion percentage
-    const totalLessons = 20 // Update this based on your actual total
+    const totalLessons = allLessons?.length || 0
     const completedLessons = progress?.filter(p => p.completed).length || 0
-    const completionPercentage = (completedLessons / totalLessons) * 100
+    const completionPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0
 
     // Create context for the AI
     const context = `
-      Current learning progress: ${completionPercentage.toFixed(1)}% complete (${completedLessons}/${totalLessons} lessons)
+      Current learning progress: ${completionPercentage.toFixed(1)}% complete (${completedLessons} out of ${totalLessons} lessons completed)
       
       Recent journal entries:
-      ${journalEntries?.map(entry => `- ${entry.content}`).join('\n')}
+      ${journalEntries?.map(entry => `- ${entry.content}`).join('\n') || 'No recent journal entries'}
       
       Recent library items:
-      ${libraryItems?.map(item => `- ${item.title}: ${item.content}`).join('\n')}
+      ${libraryItems?.map(item => `- ${item.title}: ${item.content}`).join('\n') || 'No recent library items'}
     `
 
     const messages: ChatMessage[] = [
