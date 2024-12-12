@@ -12,29 +12,6 @@ interface ChatMessage {
   content: string;
 }
 
-interface Section {
-  title: string;
-  lessons: Array<{
-    title: string;
-    duration: string;
-    completed: boolean;
-  }>;
-}
-
-// Import the course data directly in the edge function
-const initialCourseData: Section[] = [
-  {
-    title: "ברוכים הבאים",
-    lessons: [
-      { title: "ברוכים הבאים - פז", duration: "00:14:12", completed: false },
-      { title: "קניין רוחני", duration: "00:02:44", completed: false },
-      { title: "הסרת אחריות", duration: "00:02:01", completed: false },
-      { title: "ברוכים הבאים - חי טל", duration: "00:13:17", completed: false }
-    ]
-  },
-  // ... Add all other sections from courseData.ts
-];
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -48,16 +25,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Calculate total lessons from courseData
-    const totalLessons = initialCourseData.reduce(
-      (acc, section) => acc + section.lessons.length,
-      0
-    );
-
-    // Fetch user's learning data
-    const { data: progress, error: progressError } = await supabase
+    // Fetch user's completed lessons
+    const { data: completedLessons, error: progressError } = await supabase
       .from('course_progress')
-      .select('*')
+      .select('lesson_id')
       .eq('user_id', userId)
       .eq('completed', true)
 
@@ -65,6 +36,7 @@ serve(async (req) => {
       console.error('Error fetching progress:', progressError)
     }
 
+    // Fetch recent journal entries
     const { data: journalEntries, error: journalError } = await supabase
       .from('learning_journal')
       .select('*')
@@ -76,6 +48,7 @@ serve(async (req) => {
       console.error('Error fetching journal entries:', journalError)
     }
 
+    // Fetch recent library items
     const { data: libraryItems, error: libraryError } = await supabase
       .from('library_items')
       .select('*')
@@ -87,13 +60,9 @@ serve(async (req) => {
       console.error('Error fetching library items:', libraryError)
     }
 
-    // Calculate completion percentage
-    const completedLessons = progress?.length || 0
-    const completionPercentage = (completedLessons / totalLessons) * 100
-
     // Create context for the AI
     const context = `
-      Current learning progress: ${completionPercentage.toFixed(1)}% complete (${completedLessons} out of ${totalLessons} lessons completed)
+      Current learning status: ${completedLessons?.length || 0} lessons completed
       
       Recent journal entries:
       ${journalEntries?.map(entry => `- ${entry.content}`).join('\n') || 'No recent journal entries'}
