@@ -99,6 +99,9 @@ export const sections: Section[] = [
   // ... continuing with all other sections
 ];
 
+// Export initialCourseData to match the import in other files
+export const initialCourseData = sections;
+
 export const getTotalLessons = () => {
   return sections.reduce((total, section) => total + section.lessons.length, 0);
 };

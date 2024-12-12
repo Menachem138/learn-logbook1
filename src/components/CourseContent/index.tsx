@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion } from "@/components/ui/accordion";
 import Section from "./Section";
-import { initialCourseData } from "./courseData";
+import { initialCourseData } from "./courseData";  // Updated import
 import { Section as SectionType } from "./types";
 import { useToast } from "@/hooks/use-toast";
 

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Accordion } from "@/components/ui/accordion";
-import { initialCourseData } from "./CourseContent/courseData";
+import { initialCourseData } from "./CourseContent/courseData";  // Updated import
 import { CourseSection } from "./CourseContent/CourseSection";
 import { useCourseProgress } from "@/hooks/useCourseProgress";
 
