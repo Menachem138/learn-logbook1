@@ -1,3 +1,4 @@
+export * from './questions';
 export type Json =
   | string
   | number
@@ -129,33 +130,6 @@ export type Database = {
         }
         Relationships: []
       }
-      questions: {
-        Row: {
-          answer: string | null
-          content: string
-          created_at: string
-          id: string
-          is_answered: boolean | null
-          user_id: string
-        }
-        Insert: {
-          answer?: string | null
-          content: string
-          created_at?: string
-          id?: string
-          is_answered?: boolean | null
-          user_id: string
-        }
-        Update: {
-          answer?: string | null
-          content?: string
-          created_at?: string
-          id?: string
-          is_answered?: boolean | null
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -268,3 +242,4 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+

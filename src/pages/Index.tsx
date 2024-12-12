@@ -5,6 +5,7 @@ import CourseContent from "@/components/CourseContent";
 import LearningJournal from "@/components/LearningJournal";
 import CourseSchedule from "@/components/CourseSchedule";
 import Library from "@/components/Library";
+import Questions from "@/components/Questions";
 
 const Index = () => {
   return (
@@ -26,6 +27,10 @@ const Index = () => {
 
       <div className="mb-6">
         <Library />
+      </div>
+
+      <div className="mb-6">
+        <Questions />
       </div>
 
       <div className="mb-6">
