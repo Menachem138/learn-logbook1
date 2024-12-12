@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,6 +11,29 @@ interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
+
+interface Section {
+  title: string;
+  lessons: Array<{
+    title: string;
+    duration: string;
+    completed: boolean;
+  }>;
+}
+
+// Import the course data directly in the edge function
+const initialCourseData: Section[] = [
+  {
+    title: "ברוכים הבאים",
+    lessons: [
+      { title: "ברוכים הבאים - פז", duration: "00:14:12", completed: false },
+      { title: "קניין רוחני", duration: "00:02:44", completed: false },
+      { title: "הסרת אחריות", duration: "00:02:01", completed: false },
+      { title: "ברוכים הבאים - חי טל", duration: "00:13:17", completed: false }
+    ]
+  },
+  // ... Add all other sections from courseData.ts
+];
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -24,11 +48,18 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    // Calculate total lessons from courseData
+    const totalLessons = initialCourseData.reduce(
+      (acc, section) => acc + section.lessons.length,
+      0
+    );
+
     // Fetch user's learning data
     const { data: progress, error: progressError } = await supabase
       .from('course_progress')
       .select('*')
       .eq('user_id', userId)
+      .eq('completed', true)
 
     if (progressError) {
       console.error('Error fetching progress:', progressError)
@@ -56,20 +87,9 @@ serve(async (req) => {
       console.error('Error fetching library items:', libraryError)
     }
 
-    // Get total lessons count from course_progress table
-    const { data: allLessons, error: lessonsError } = await supabase
-      .from('course_progress')
-      .select('lesson_id')
-      .eq('user_id', userId)
-
-    if (lessonsError) {
-      console.error('Error fetching total lessons:', lessonsError)
-    }
-
     // Calculate completion percentage
-    const totalLessons = allLessons?.length || 0
-    const completedLessons = progress?.filter(p => p.completed).length || 0
-    const completionPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0
+    const completedLessons = progress?.length || 0
+    const completionPercentage = (completedLessons / totalLessons) * 100
 
     // Create context for the AI
     const context = `
