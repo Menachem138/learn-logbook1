@@ -59,34 +59,62 @@ serve(async (req) => {
       console.error('Error fetching schedules:', schedulesError)
     }
 
-    // Get current date in YYYY-MM-DD format for comparison
-    const today = new Date().toISOString().split('T')[0];
-    console.log('Today date for comparison:', today);
-
-    // Fetch timer sessions for today
-    const { data: timerSessions, error: timerError } = await supabase
+    // Get active timer sessions (those without an end time)
+    const { data: activeTimerSessions, error: activeTimerError } = await supabase
       .from('timer_sessions')
       .select('*')
       .eq('user_id', userId)
-      .filter('created_at', 'gte', today);
+      .is('ended_at', null);
 
-    if (timerError) {
-      console.error('Error fetching timer sessions:', timerError)
+    if (activeTimerError) {
+      console.error('Error fetching active timer sessions:', activeTimerError)
     }
 
-    console.log('Timer sessions found:', timerSessions)
+    console.log('Active timer sessions:', activeTimerSessions)
 
-    // Calculate study and break times
+    // Get completed timer sessions for today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const { data: completedTimerSessions, error: completedTimerError } = await supabase
+      .from('timer_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .not('ended_at', 'is', null)
+      .gte('ended_at', today.toISOString());
+
+    if (completedTimerError) {
+      console.error('Error fetching completed timer sessions:', completedTimerError)
+    }
+
+    console.log('Completed timer sessions:', completedTimerSessions)
+
+    // Calculate total study and break times
     let todaysStudyTime = 0
     let todaysBreakTime = 0
 
-    if (timerSessions && timerSessions.length > 0) {
-      timerSessions.forEach(session => {
-        console.log('Processing session:', session)
+    // Process completed sessions
+    if (completedTimerSessions) {
+      completedTimerSessions.forEach(session => {
         if (session.type === 'study') {
           todaysStudyTime += session.duration || 0
         } else if (session.type === 'break') {
           todaysBreakTime += session.duration || 0
+        }
+      })
+    }
+
+    // Add active sessions
+    if (activeTimerSessions) {
+      const now = new Date()
+      activeTimerSessions.forEach(session => {
+        const startTime = new Date(session.started_at)
+        const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000)
+        
+        if (session.type === 'study') {
+          todaysStudyTime += duration
+        } else if (session.type === 'break') {
+          todaysBreakTime += duration
         }
       })
     }
