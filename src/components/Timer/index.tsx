@@ -1,213 +1,224 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { TimeDisplay } from "./TimeDisplay";
-import { Controls } from "./Controls";
-import { DailySummary } from "./DailySummary";
-import { formatDate, formatTime } from "./utils";
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { formatTime, formatDate } from './utils';
+import DailySummary from './DailySummary';
+import Controls from './Controls';
+import TimeDisplay from './TimeDisplay';
 
 interface TimerSession {
   id: string;
   type: string;
-  duration: number;
   started_at: string;
   ended_at: string | null;
+  duration: number;
 }
 
 export default function Timer() {
-  const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [time, setTime] = useState(0);
-  const [timerType, setTimerType] = useState<"study" | "break">("study");
-  const [timerLog, setTimerLog] = useState<TimerSession[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
   const { session } = useAuth();
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [time, setTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [timerType, setTimerType] = useState<'study' | 'break'>('study');
+  const [activeSession, setActiveSession] = useState<string | null>(null);
   const [todayStudyTime, setTodayStudyTime] = useState(0);
   const [todayBreakTime, setTodayBreakTime] = useState(0);
 
   useEffect(() => {
-    loadTimerHistory();
-  }, []);
+    let interval: NodeJS.Timeout | null = null;
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRunning && !isPaused) {
+    if (isRunning) {
       interval = setInterval(() => {
         setTime((prevTime) => prevTime + 1);
       }, 1000);
+    } else if (interval) {
+      clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [isRunning, isPaused]);
 
-  const loadTimerHistory = async () => {
-    if (!session?.user?.id) return;
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning]);
+
+  useEffect(() => {
+    fetchTodayStats();
+  }, []);
+
+  const fetchTodayStats = async () => {
+    if (!session?.user.id) return;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { data, error } = await supabase
-      .from('timer_sessions')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .gte('started_at', today.toISOString())
-      .order('started_at', { ascending: false });
+    try {
+      // Fetch completed sessions for today
+      const { data: completedSessions, error: completedError } = await supabase
+        .from('timer_sessions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .gte('created_at', today.toISOString())
+        .not('ended_at', 'is', null);
 
-    if (error) {
-      console.error('Error loading timer history:', error);
-      return;
-    }
+      if (completedError) throw completedError;
 
-    setTimerLog(data || []);
+      // Fetch active session if any
+      const { data: activeSessions, error: activeError } = await supabase
+        .from('timer_sessions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .is('ended_at', null);
 
-    // Calculate today's totals
-    let studyTime = 0;
-    let breakTime = 0;
+      if (activeError) throw activeError;
 
-    data?.forEach(session => {
-      if (session.type === 'study') {
-        studyTime += session.duration || 0;
-      } else if (session.type === 'break') {
-        breakTime += session.duration || 0;
+      let totalStudyTime = 0;
+      let totalBreakTime = 0;
+
+      // Calculate total time from completed sessions
+      completedSessions?.forEach((session: TimerSession) => {
+        if (session.type === 'study') {
+          totalStudyTime += session.duration;
+        } else {
+          totalBreakTime += session.duration;
+        }
+      });
+
+      // Add time from active session if exists
+      if (activeSessions && activeSessions.length > 0) {
+        const activeSession = activeSessions[0];
+        const startTime = new Date(activeSession.started_at);
+        const currentTime = new Date();
+        const duration = Math.floor((currentTime.getTime() - startTime.getTime()) / 1000);
+
+        if (activeSession.type === 'study') {
+          totalStudyTime += duration;
+        } else {
+          totalBreakTime += duration;
+        }
+
+        setActiveSession(activeSession.id);
+        setTimerType(activeSession.type as 'study' | 'break');
+        setTime(duration);
+        setIsRunning(true);
       }
-    });
 
-    setTodayStudyTime(studyTime);
-    setTodayBreakTime(breakTime);
+      setTodayStudyTime(totalStudyTime);
+      setTodayBreakTime(totalBreakTime);
+    } catch (error) {
+      console.error('Error fetching timer sessions:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בטעינת נתוני הטיימר",
+        variant: "destructive",
+      });
+    }
   };
 
-  const startTimer = async (type: "study" | "break") => {
-    if (!session?.user?.id) {
-      toast.error("יש להתחבר כדי להשתמש בטיימר");
-      return;
+  const startTimer = async () => {
+    if (!session?.user.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('timer_sessions')
+        .insert([
+          {
+            user_id: session.user.id,
+            type: timerType,
+            duration: 0,
+            started_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setActiveSession(data.id);
+      setIsRunning(true);
+      setTime(0);
+
+      toast({
+        title: "הטיימר הופעל",
+        description: `התחלת ${timerType === 'study' ? 'למידה' : 'הפסקה'}`,
+      });
+    } catch (error) {
+      console.error('Error starting timer:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בהפעלת הטיימר",
+        variant: "destructive",
+      });
     }
-
-    if (isRunning) {
-      await stopTimer();
-    }
-
-    const { data, error } = await supabase
-      .from('timer_sessions')
-      .insert({
-        user_id: session.user.id,
-        type,
-        duration: 0,
-        started_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error starting timer session:', error);
-      toast.error("שגיאה בהפעלת הטיימר");
-      return;
-    }
-
-    setCurrentSessionId(data.id);
-    setTimerType(type);
-    setIsRunning(true);
-    setIsPaused(false);
-    setTime(0);
-    toast.success(
-      type === "study" ? "התחלת זמן למידה!" : "התחלת זמן הפסקה!"
-    );
   };
 
   const stopTimer = async () => {
-    if (!session?.user?.id || !currentSessionId) return;
+    if (!session?.user.id || !activeSession) return;
 
-    const { error } = await supabase
-      .from('timer_sessions')
-      .update({
-        duration: time,
-        ended_at: new Date().toISOString(),
-      })
-      .eq('id', currentSessionId);
+    try {
+      const { error } = await supabase
+        .from('timer_sessions')
+        .update({
+          ended_at: new Date().toISOString(),
+          duration: time,
+        })
+        .eq('id', activeSession);
 
-    if (error) {
-      console.error('Error stopping timer session:', error);
-      toast.error("שגיאה בעצירת הטיימר");
-      return;
+      if (error) throw error;
+
+      setIsRunning(false);
+      setActiveSession(null);
+      
+      // Update today's totals
+      if (timerType === 'study') {
+        setTodayStudyTime(prev => prev + time);
+      } else {
+        setTodayBreakTime(prev => prev + time);
+      }
+
+      toast({
+        title: "הטיימר נעצר",
+        description: `סיימת ${timerType === 'study' ? 'למידה' : 'הפסקה'}`,
+      });
+    } catch (error) {
+      console.error('Error stopping timer:', error);
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בעצירת הטיימר",
+        variant: "destructive",
+      });
     }
-
-    // Update today's totals
-    if (timerType === 'study') {
-      setTodayStudyTime(prev => prev + time);
-    } else {
-      setTodayBreakTime(prev => prev + time);
-    }
-
-    setIsRunning(false);
-    setIsPaused(false);
-    setTime(0);
-    setCurrentSessionId(null);
-    loadTimerHistory();
-    toast.info("הטיימר נעצר!");
   };
 
-  const pauseTimer = () => {
-    setIsPaused(!isPaused);
-    toast.info(isPaused ? "הטיימר ממשיך!" : "הטיימר מושהה!");
+  const toggleTimer = () => {
+    if (isRunning) {
+      stopTimer();
+    } else {
+      startTimer();
+    }
+  };
+
+  const switchTimerType = () => {
+    if (!isRunning) {
+      setTimerType(prev => prev === 'study' ? 'break' : 'study');
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="p-6 space-y-4 md:col-span-2">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">טיימר</h2>
-          <TimeDisplay time={time} />
-          <Controls
-            isRunning={isRunning}
-            isPaused={isPaused}
-            onStartStudy={() => startTimer("study")}
-            onStartBreak={() => startTimer("break")}
-            onPause={pauseTimer}
-            onStop={stopTimer}
-            timerType={timerType}
-          />
-        </div>
-
-        <div className="mt-6">
-          <Button
-            variant="ghost"
-            onClick={() => setShowHistory(!showHistory)}
-            className="w-full flex items-center justify-between mb-2"
-          >
-            <span>היסטוריית זמנים</span>
-            {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-          
-          {showHistory && (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {timerLog.map((session) => (
-                <div
-                  key={session.id}
-                  className="flex justify-between items-center p-2 bg-muted rounded"
-                >
-                  <span>
-                    {session.type === "study" ? "למידה" : "הפסקה"} -{" "}
-                    {formatTime(session.duration)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {formatDate(session.started_at)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <DailySummary
-          studyTime={todayStudyTime}
-          breakTime={todayBreakTime}
+    <div className="flex flex-col md:flex-row gap-4 p-4">
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 border rounded-lg shadow-sm">
+        <TimeDisplay time={time} />
+        <Controls
+          isRunning={isRunning}
+          timerType={timerType}
+          onToggle={toggleTimer}
+          onSwitch={switchTimerType}
         />
-      </Card>
+      </div>
+      <DailySummary
+        studyTime={todayStudyTime}
+        breakTime={todayBreakTime}
+      />
     </div>
   );
 }
