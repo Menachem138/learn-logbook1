@@ -12,17 +12,6 @@ interface ChatMessage {
   content: string;
 }
 
-interface Schedule {
-  day_name: string;
-  schedule: Array<{ time: string; activity: string; }>;
-}
-
-interface TimerSession {
-  type: 'study' | 'break';
-  duration: number;
-  created_at: string;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -70,41 +59,41 @@ serve(async (req) => {
       console.error('Error fetching schedules:', schedulesError)
     }
 
-    // Fetch recent timer sessions
+    // Fetch recent timer sessions with better date handling
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
     const { data: timerSessions, error: timerError } = await supabase
       .from('timer_sessions')
       .select('*')
       .eq('user_id', userId)
+      .gte('created_at', today.toISOString())
       .order('created_at', { ascending: false })
-      .limit(10)
 
     if (timerError) {
       console.error('Error fetching timer sessions:', timerError)
     }
 
+    console.log('Timer sessions found:', timerSessions)
+
     const completedLessons = progress?.length || 0
     const totalLessons = 206
 
-    // Calculate total study and break time for today
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    const todaysSessions = timerSessions?.filter(session => {
-      const sessionDate = new Date(session.created_at)
-      return sessionDate >= today
-    }) || []
+    // Calculate total study and break time for today with proper duration handling
+    const todaysStudyTime = timerSessions
+      ?.filter(session => session.type === 'study')
+      .reduce((total, session) => total + (session.duration || 0), 0) || 0
 
-    const todaysStudyTime = todaysSessions
-      .filter(session => session.type === 'study')
-      .reduce((total, session) => total + (session.duration || 0), 0)
+    const todaysBreakTime = timerSessions
+      ?.filter(session => session.type === 'break')
+      .reduce((total, session) => total + (session.duration || 0), 0) || 0
 
-    const todaysBreakTime = todaysSessions
-      .filter(session => session.type === 'break')
-      .reduce((total, session) => total + (session.duration || 0), 0)
+    console.log('Calculated study time:', todaysStudyTime)
+    console.log('Calculated break time:', todaysBreakTime)
 
     // Format schedule data for better readability
     const formattedSchedule = schedules?.map(schedule => {
-      return `${schedule.day_name}:\n${schedule.schedule.map(item => 
+      return `${schedule.day_name}:\n${schedule.schedule.map((item: any) => 
         `  - ${item.time}: ${item.activity}`
       ).join('\n')}`
     }).join('\n\n') || 'לא נמצא לוח זמנים'
