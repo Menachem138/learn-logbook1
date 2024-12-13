@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { formatTime, formatDate } from './utils';
 import { DailySummary } from './DailySummary';
@@ -21,6 +20,7 @@ export default function Timer() {
   const { toast } = useToast();
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [timerType, setTimerType] = useState<'study' | 'break'>('study');
   const [activeSession, setActiveSession] = useState<string | null>(null);
   const [todayStudyTime, setTodayStudyTime] = useState(0);
@@ -29,7 +29,7 @@ export default function Timer() {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (isRunning) {
+    if (isRunning && !isPaused) {
       interval = setInterval(() => {
         setTime((prevTime) => prevTime + 1);
       }, 1000);
@@ -40,7 +40,7 @@ export default function Timer() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning]);
+  }, [isRunning, isPaused]);
 
   useEffect(() => {
     fetchTodayStats();
@@ -115,7 +115,7 @@ export default function Timer() {
     }
   };
 
-  const startTimer = async () => {
+  const startTimer = async (type: 'study' | 'break') => {
     if (!session?.user.id) return;
 
     try {
@@ -124,7 +124,7 @@ export default function Timer() {
         .insert([
           {
             user_id: session.user.id,
-            type: timerType,
+            type: type,
             duration: 0,
             started_at: new Date().toISOString(),
           },
@@ -136,11 +136,13 @@ export default function Timer() {
 
       setActiveSession(data.id);
       setIsRunning(true);
+      setIsPaused(false);
+      setTimerType(type);
       setTime(0);
 
       toast({
         title: "הטיימר הופעל",
-        description: `התחלת ${timerType === 'study' ? 'למידה' : 'הפסקה'}`,
+        description: `התחלת ${type === 'study' ? 'למידה' : 'הפסקה'}`,
       });
     } catch (error) {
       console.error('Error starting timer:', error);
@@ -167,6 +169,7 @@ export default function Timer() {
       if (error) throw error;
 
       setIsRunning(false);
+      setIsPaused(false);
       setActiveSession(null);
       
       // Update today's totals
@@ -190,18 +193,8 @@ export default function Timer() {
     }
   };
 
-  const toggleTimer = () => {
-    if (isRunning) {
-      stopTimer();
-    } else {
-      startTimer();
-    }
-  };
-
-  const switchTimerType = () => {
-    if (!isRunning) {
-      setTimerType(prev => prev === 'study' ? 'break' : 'study');
-    }
+  const togglePause = () => {
+    setIsPaused(prev => !prev);
   };
 
   return (
@@ -210,9 +203,12 @@ export default function Timer() {
         <TimeDisplay time={time} />
         <Controls
           isRunning={isRunning}
+          isPaused={isPaused}
           timerType={timerType}
-          onToggle={toggleTimer}
-          onSwitch={switchTimerType}
+          onStartStudy={() => startTimer('study')}
+          onStartBreak={() => startTimer('break')}
+          onPause={togglePause}
+          onStop={stopTimer}
         />
       </div>
       <DailySummary
