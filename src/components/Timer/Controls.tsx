@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { PlayIcon, PauseIcon, StopIcon } from "lucide-react";
+import { PlayIcon, PauseIcon, Square } from "lucide-react";
 
 interface ControlsProps {
   isRunning: boolean;
@@ -67,7 +67,7 @@ export function Controls({
         onClick={onStop}
         className="flex items-center gap-2"
       >
-        <StopIcon className="w-4 h-4" />
+        <Square className="w-4 h-4" />
         סיים {timerType === 'study' ? 'למידה' : 'הפסקה'}
       </Button>
     </div>
