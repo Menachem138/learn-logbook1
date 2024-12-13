@@ -13,27 +13,37 @@ interface ChatMessage {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, userId } = await req.json()
+    const { message, userId } = await req.json();
+
+    if (!message || !userId) {
+      throw new Error('Message and userId are required');
+    }
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase configuration');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch user's progress
     const { data: progress, error: progressError } = await supabase
       .from('course_progress')
       .select('lesson_id')
       .eq('user_id', userId)
-      .eq('completed', true)
+      .eq('completed', true);
 
     if (progressError) {
-      console.error('Error fetching progress:', progressError)
+      console.error('Error fetching progress:', progressError);
     }
 
     // Fetch learning journal entries
@@ -42,10 +52,10 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(5)
+      .limit(5);
 
     if (journalError) {
-      console.error('Error fetching journal:', journalError)
+      console.error('Error fetching journal:', journalError);
     }
 
     // Fetch schedule
@@ -53,13 +63,13 @@ serve(async (req) => {
       .from('schedules')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: true });
 
     if (schedulesError) {
-      console.error('Error fetching schedules:', schedulesError)
+      console.error('Error fetching schedules:', schedulesError);
     }
 
-    // Get active timer sessions (those without an end time)
+    // Get active timer sessions
     const { data: activeTimerSessions, error: activeTimerError } = await supabase
       .from('timer_sessions')
       .select('*')
@@ -67,14 +77,12 @@ serve(async (req) => {
       .is('ended_at', null);
 
     if (activeTimerError) {
-      console.error('Error fetching active timer sessions:', activeTimerError)
+      console.error('Error fetching active timer sessions:', activeTimerError);
     }
 
-    console.log('Active timer sessions:', activeTimerSessions)
-
     // Get completed timer sessions for today
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     const { data: completedTimerSessions, error: completedTimerError } = await supabase
       .from('timer_sessions')
@@ -84,53 +92,48 @@ serve(async (req) => {
       .gte('ended_at', today.toISOString());
 
     if (completedTimerError) {
-      console.error('Error fetching completed timer sessions:', completedTimerError)
+      console.error('Error fetching completed timer sessions:', completedTimerError);
     }
 
-    console.log('Completed timer sessions:', completedTimerSessions)
-
     // Calculate total study and break times
-    let todaysStudyTime = 0
-    let todaysBreakTime = 0
+    let todaysStudyTime = 0;
+    let todaysBreakTime = 0;
 
     // Process completed sessions
     if (completedTimerSessions) {
       completedTimerSessions.forEach(session => {
         if (session.type === 'study') {
-          todaysStudyTime += session.duration || 0
+          todaysStudyTime += session.duration || 0;
         } else if (session.type === 'break') {
-          todaysBreakTime += session.duration || 0
+          todaysBreakTime += session.duration || 0;
         }
-      })
+      });
     }
 
     // Add active sessions
     if (activeTimerSessions) {
-      const now = new Date()
+      const now = new Date();
       activeTimerSessions.forEach(session => {
-        const startTime = new Date(session.started_at)
-        const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000)
+        const startTime = new Date(session.started_at);
+        const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000);
         
         if (session.type === 'study') {
-          todaysStudyTime += duration
+          todaysStudyTime += duration;
         } else if (session.type === 'break') {
-          todaysBreakTime += duration
+          todaysBreakTime += duration;
         }
-      })
+      });
     }
 
-    console.log('Total study time (seconds):', todaysStudyTime)
-    console.log('Total break time (seconds):', todaysBreakTime)
-
-    const completedLessons = progress?.length || 0
-    const totalLessons = 206
+    const completedLessons = progress?.length || 0;
+    const totalLessons = 206;
 
     // Format schedule data
     const formattedSchedule = schedules?.map(schedule => {
       return `${schedule.day_name}:\n${schedule.schedule.map((item: any) => 
         `  - ${item.time}: ${item.activity}`
-      ).join('\n')}`
-    }).join('\n\n') || 'לא נמצא לוח זמנים'
+      ).join('\n')}`;
+    }).join('\n\n') || 'לא נמצא לוח זמנים';
 
     // Create context with all user data
     const context = `
@@ -148,7 +151,7 @@ serve(async (req) => {
       ${journalEntries?.map(entry => 
         `- ${entry.content} ${entry.is_important ? '(חשוב)' : ''} - ${new Date(entry.created_at).toLocaleDateString('he-IL')}`
       ).join('\n') || 'אין רשומות יומן אחרונות'}
-    `
+    `;
 
     const messages: ChatMessage[] = [
       {
@@ -165,13 +168,18 @@ serve(async (req) => {
         role: 'user',
         content: message
       }
-    ]
+    ];
+
+    const openAiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAiKey) {
+      throw new Error('OpenAI API key is not configured');
+    }
 
     // Call OpenAI API
     const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -179,9 +187,20 @@ serve(async (req) => {
         messages,
         temperature: 0.7,
       }),
-    })
+    });
 
-    const data = await openAiResponse.json()
+    if (!openAiResponse.ok) {
+      const errorData = await openAiResponse.text();
+      console.error('OpenAI API Error:', errorData);
+      throw new Error(`OpenAI API error: ${openAiResponse.status} ${errorData}`);
+    }
+
+    const data = await openAiResponse.json();
+
+    if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid OpenAI response:', data);
+      throw new Error('Invalid response from OpenAI API');
+    }
 
     return new Response(
       JSON.stringify({ response: data.choices[0].message.content }),
@@ -191,9 +210,9 @@ serve(async (req) => {
           'Content-Type': 'application/json' 
         } 
       },
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -203,6 +222,6 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         }
       },
-    )
+    );
   }
-})
+});
