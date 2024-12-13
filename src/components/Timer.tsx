@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface TimerEntry {
   type: "study" | "break";
@@ -9,12 +12,27 @@ interface TimerEntry {
   timestamp: Date;
 }
 
+interface TimerSession {
+  id: string;
+  type: string;
+  duration: number;
+  started_at: string;
+  ended_at: string | null;
+}
+
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [time, setTime] = useState(0);
   const [timerType, setTimerType] = useState<"study" | "break">("study");
-  const [timerLog, setTimerLog] = useState<TimerEntry[]>([]);
+  const [timerLog, setTimerLog] = useState<TimerSession[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const { session } = useAuth();
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadTimerHistory();
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -26,39 +44,84 @@ export default function Timer() {
     return () => clearInterval(interval);
   }, [isRunning, isPaused]);
 
-  const startTimer = (type: "study" | "break") => {
-    if (isRunning) {
-      // Log the previous session
-      setTimerLog((prev) => [
-        ...prev,
-        {
-          type: timerType,
-          duration: time,
-          timestamp: new Date(),
-        },
-      ]);
-      setTime(0);
+  const loadTimerHistory = async () => {
+    if (!session?.user?.id) return;
+
+    const { data, error } = await supabase
+      .from('timer_sessions')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('started_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading timer history:', error);
+      return;
     }
+
+    setTimerLog(data || []);
+  };
+
+  const startTimer = async (type: "study" | "break") => {
+    if (!session?.user?.id) {
+      toast.error("יש להתחבר כדי להשתמש בטיימר");
+      return;
+    }
+
+    if (isRunning) {
+      // Stop current session
+      await stopTimer();
+    }
+
+    // Start new session
+    const { data, error } = await supabase
+      .from('timer_sessions')
+      .insert({
+        user_id: session.user.id,
+        type,
+        duration: 0,
+        started_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error starting timer session:', error);
+      toast.error("שגיאה בהפעלת הטיימר");
+      return;
+    }
+
+    setCurrentSessionId(data.id);
     setTimerType(type);
     setIsRunning(true);
     setIsPaused(false);
+    setTime(0);
     toast.success(
       type === "study" ? "התחלת זמן למידה!" : "התחלת זמן הפסקה!"
     );
   };
 
-  const stopTimer = () => {
+  const stopTimer = async () => {
+    if (!session?.user?.id || !currentSessionId) return;
+
+    const { error } = await supabase
+      .from('timer_sessions')
+      .update({
+        duration: time,
+        ended_at: new Date().toISOString(),
+      })
+      .eq('id', currentSessionId);
+
+    if (error) {
+      console.error('Error stopping timer session:', error);
+      toast.error("שגיאה בעצירת הטיימר");
+      return;
+    }
+
     setIsRunning(false);
     setIsPaused(false);
-    setTimerLog((prev) => [
-      ...prev,
-      {
-        type: timerType,
-        duration: time,
-        timestamp: new Date(),
-      },
-    ]);
     setTime(0);
+    setCurrentSessionId(null);
+    loadTimerHistory();
     toast.info("הטיימר נעצר!");
   };
 
@@ -74,6 +137,16 @@ export default function Timer() {
     return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
       .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('he-IL', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -104,24 +177,35 @@ export default function Timer() {
           </Button>
         </div>
       </div>
+
       <div className="mt-6">
-        <h3 className="text-lg font-semibold mb-2">היסטוריית זמנים</h3>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
-          {timerLog.map((entry, index) => (
-            <div
-              key={index}
-              className="flex justify-between items-center p-2 bg-muted rounded"
-            >
-              <span>
-                {entry.type === "study" ? "למידה" : "הפסקה"} -{" "}
-                {formatTime(entry.duration)}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                {entry.timestamp.toLocaleTimeString()}
-              </span>
-            </div>
-          ))}
-        </div>
+        <Button
+          variant="ghost"
+          onClick={() => setShowHistory(!showHistory)}
+          className="w-full flex items-center justify-between mb-2"
+        >
+          <span>היסטוריית זמנים</span>
+          {showHistory ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+        
+        {showHistory && (
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {timerLog.map((session) => (
+              <div
+                key={session.id}
+                className="flex justify-between items-center p-2 bg-muted rounded"
+              >
+                <span>
+                  {session.type === "study" ? "למידה" : "הפסקה"} -{" "}
+                  {formatTime(session.duration)}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {formatDate(session.started_at)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );
