@@ -59,23 +59,16 @@ serve(async (req) => {
       console.error('Error fetching schedules:', schedulesError)
     }
 
-    // Get today's date in Israel timezone (UTC+2/3)
-    const now = new Date()
-    // Add 2 hours to get to Israel timezone (this is a simplification, proper timezone handling would be more complex)
-    now.setHours(now.getHours() + 2)
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    startOfDay.setHours(startOfDay.getHours() - 2) // Adjust back to UTC for the query
-    const startOfDayUTC = startOfDay.toISOString()
+    // Get current date in YYYY-MM-DD format for comparison
+    const today = new Date().toISOString().split('T')[0];
+    console.log('Today date for comparison:', today);
 
-    console.log('Current time (Israel):', now.toISOString())
-    console.log('Start of day (UTC):', startOfDayUTC)
-
-    // Fetch today's timer sessions
+    // Fetch timer sessions for today
     const { data: timerSessions, error: timerError } = await supabase
       .from('timer_sessions')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', startOfDayUTC)
+      .filter('created_at', 'gte', today);
 
     if (timerError) {
       console.error('Error fetching timer sessions:', timerError)
