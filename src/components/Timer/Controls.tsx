@@ -1,45 +1,74 @@
 import { Button } from "@/components/ui/button";
+import { PlayIcon, PauseIcon, StopIcon } from "lucide-react";
 
 interface ControlsProps {
   isRunning: boolean;
   isPaused: boolean;
+  timerType: 'study' | 'break';
   onStartStudy: () => void;
   onStartBreak: () => void;
   onPause: () => void;
   onStop: () => void;
-  timerType: "study" | "break";
 }
 
 export function Controls({
   isRunning,
   isPaused,
+  timerType,
   onStartStudy,
   onStartBreak,
   onPause,
   onStop,
-  timerType,
 }: ControlsProps) {
-  return (
-    <div className="flex gap-4 justify-center flex-wrap">
-      <Button
-        onClick={onStartStudy}
-        variant={timerType === "study" && isRunning ? "secondary" : "default"}
-      >
-        זמן למידה
-      </Button>
-      <Button
-        onClick={onStartBreak}
-        variant={timerType === "break" && isRunning ? "secondary" : "default"}
-      >
-        זמן הפסקה
-      </Button>
-      {isRunning && (
-        <Button onClick={onPause} variant="outline">
-          {isPaused ? "המשך" : "השהה"}
+  if (!isRunning) {
+    return (
+      <div className="flex gap-4">
+        <Button
+          variant="default"
+          onClick={onStartStudy}
+          className="flex items-center gap-2"
+        >
+          <PlayIcon className="w-4 h-4" />
+          התחל למידה
         </Button>
-      )}
-      <Button onClick={onStop} variant="destructive">
-        עצור
+        <Button
+          variant="secondary"
+          onClick={onStartBreak}
+          className="flex items-center gap-2"
+        >
+          <PlayIcon className="w-4 h-4" />
+          התחל הפסקה
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-4">
+      <Button
+        variant={isPaused ? "default" : "secondary"}
+        onClick={onPause}
+        className="flex items-center gap-2"
+      >
+        {isPaused ? (
+          <>
+            <PlayIcon className="w-4 h-4" />
+            המשך
+          </>
+        ) : (
+          <>
+            <PauseIcon className="w-4 h-4" />
+            השהה
+          </>
+        )}
+      </Button>
+      <Button
+        variant="destructive"
+        onClick={onStop}
+        className="flex items-center gap-2"
+      >
+        <StopIcon className="w-4 h-4" />
+        סיים {timerType === 'study' ? 'למידה' : 'הפסקה'}
       </Button>
     </div>
   );
