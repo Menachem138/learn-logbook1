@@ -4,9 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { formatTime, formatDate } from './utils';
-import DailySummary from './DailySummary';
-import Controls from './Controls';
-import TimeDisplay from './TimeDisplay';
+import { DailySummary } from './DailySummary';
+import { Controls } from './Controls';
+import { TimeDisplay } from './TimeDisplay';
 
 interface TimerSession {
   id: string;
