@@ -17,10 +17,13 @@ export const scheduleToJson = (schedule: ScheduleItem[]): Json => {
 
 export const jsonToSchedule = (json: Json): ScheduleItem[] => {
   if (Array.isArray(json)) {
-    return json.map(item => ({
-      time: String(item.time || ''),
-      activity: String(item.activity || '')
-    }));
+    return json.map(item => {
+      const jsonItem = item as { [key: string]: unknown };
+      return {
+        time: String(jsonItem.time || ''),
+        activity: String(jsonItem.activity || '')
+      };
+    });
   }
   return [];
 };
