@@ -8,7 +8,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { TimeDisplay } from "./TimeDisplay";
 import { Controls } from "./Controls";
 import { DailySummary } from "./DailySummary";
-import { formatDate } from "./utils";
+import { formatDate, formatTime } from "./utils";
 
 interface TimerSession {
   id: string;
