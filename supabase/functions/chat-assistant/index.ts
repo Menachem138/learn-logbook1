@@ -59,12 +59,16 @@ serve(async (req) => {
       console.error('Error fetching schedules:', schedulesError)
     }
 
-    // Get today's date in UTC
+    // Get today's date in Israel timezone (UTC+2/3)
     const now = new Date()
+    // Add 2 hours to get to Israel timezone (this is a simplification, proper timezone handling would be more complex)
+    now.setHours(now.getHours() + 2)
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    startOfDay.setHours(startOfDay.getHours() - 2) // Adjust back to UTC for the query
     const startOfDayUTC = startOfDay.toISOString()
 
-    console.log('Fetching timer sessions since:', startOfDayUTC)
+    console.log('Current time (Israel):', now.toISOString())
+    console.log('Start of day (UTC):', startOfDayUTC)
 
     // Fetch today's timer sessions
     const { data: timerSessions, error: timerError } = await supabase
@@ -83,7 +87,7 @@ serve(async (req) => {
     let todaysStudyTime = 0
     let todaysBreakTime = 0
 
-    if (timerSessions) {
+    if (timerSessions && timerSessions.length > 0) {
       timerSessions.forEach(session => {
         console.log('Processing session:', session)
         if (session.type === 'study') {
