@@ -106,64 +106,86 @@ serve(async (req) => {
 
     console.log('Sending request to OpenAI with context');
 
-    // Call OpenAI API
-    const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
-            יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמים אישית.
-            עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
-            תמיד ענה בעברית ושמור על טון ידידותי ותומך.
-            
-            הנה ההקשר הנוכחי על התקדמות התלמיד ופעילויותיו:
-            ${context}`
+    // Call OpenAI API with retries
+    let retryCount = 0;
+    const maxRetries = 3;
+    let lastError = null;
+
+    while (retryCount < maxRetries) {
+      try {
+        const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAiKey}`,
+            'Content-Type': 'application/json',
           },
-          {
-            role: 'user',
-            content: message
+          body: JSON.stringify({
+            model: 'gpt-3.5-turbo',
+            messages: [
+              {
+                role: 'system',
+                content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
+                יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמים אישית.
+                עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
+                תמיד ענה בעברית ושמור על טון ידידותי ותומך.
+                
+                הנה ההקשר הנוכחי על התקדמות התלמיד ופעילויותיו:
+                ${context}`
+              },
+              {
+                role: 'user',
+                content: message
+              }
+            ],
+            temperature: 0.7,
+          }),
+        });
+
+        if (!openAiResponse.ok) {
+          const errorData = await openAiResponse.text();
+          console.error('OpenAI API Error:', errorData);
+          
+          if (errorData.includes('billing_not_active')) {
+            throw new Error('העוזר האישי אינו זמין כרגע עקב בעיית חיוב. אנא נסה שוב מאוחר יותר.');
           }
-        ],
-        temperature: 0.7,
-      }),
-    });
+          
+          throw new Error(`שגיאה בשירות העוזר האישי: ${openAiResponse.status}`);
+        }
 
-    if (!openAiResponse.ok) {
-      const errorData = await openAiResponse.text();
-      console.error('OpenAI API Error:', errorData);
-      
-      // Check if it's a billing error
-      if (errorData.includes('billing_not_active')) {
-        throw new Error('העוזר האישי אינו זמין כרגע עקב בעיית חיוב. אנא נסה שוב מאוחר יותר.');
+        const data = await openAiResponse.json();
+        console.log('Received response from OpenAI:', data);
+
+        if (!data?.choices?.[0]?.message?.content) {
+          throw new Error('תשובה לא תקינה מהעוזר האישי');
+        }
+
+        return new Response(
+          JSON.stringify({ response: data.choices[0].message.content }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json' 
+            } 
+          },
+        );
+      } catch (error) {
+        console.error(`Attempt ${retryCount + 1} failed:`, error);
+        lastError = error;
+        retryCount++;
+        
+        if (error.message.includes('בעיית חיוב')) {
+          // Don't retry billing errors
+          break;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       }
-      
-      throw new Error(`שגיאה בשירות העוזר האישי: ${openAiResponse.status}`);
     }
 
-    const data = await openAiResponse.json();
-    console.log('Received response from OpenAI:', data);
+    // If we get here, all retries failed
+    throw lastError || new Error('שגיאה בלתי צפויה בשירות העוזר האישי');
 
-    if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Invalid OpenAI response:', data);
-      throw new Error('תשובה לא תקינה מהעוזר האישי');
-    }
-
-    return new Response(
-      JSON.stringify({ response: data.choices[0].message.content }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        } 
-      },
-    );
   } catch (error) {
     console.error('Error:', error);
     return new Response(
