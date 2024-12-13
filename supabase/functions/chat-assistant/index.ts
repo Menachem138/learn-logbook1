@@ -7,11 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -20,6 +15,7 @@ serve(async (req) => {
 
   try {
     const { message, userId } = await req.json();
+    console.log('Received request with message:', message, 'and userId:', userId);
 
     if (!message || !userId) {
       throw new Error('Message and userId are required');
@@ -35,73 +31,23 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch user's progress
-    const { data: progress, error: progressError } = await supabase
-      .from('course_progress')
-      .select('lesson_id')
-      .eq('user_id', userId)
-      .eq('completed', true);
+    // Fetch user's progress and other data
+    const [progress, journalEntries, schedules, activeTimerSessions, completedTimerSessions] = await Promise.all([
+      supabase.from('course_progress').select('lesson_id').eq('user_id', userId).eq('completed', true),
+      supabase.from('learning_journal').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
+      supabase.from('schedules').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      supabase.from('timer_sessions').select('*').eq('user_id', userId).is('ended_at', null),
+      supabase.from('timer_sessions').select('*').eq('user_id', userId).not('ended_at', 'is', null)
+        .gte('ended_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+    ]);
 
-    if (progressError) {
-      console.error('Error fetching progress:', progressError);
-    }
-
-    // Fetch learning journal entries
-    const { data: journalEntries, error: journalError } = await supabase
-      .from('learning_journal')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (journalError) {
-      console.error('Error fetching journal:', journalError);
-    }
-
-    // Fetch schedule
-    const { data: schedules, error: schedulesError } = await supabase
-      .from('schedules')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true });
-
-    if (schedulesError) {
-      console.error('Error fetching schedules:', schedulesError);
-    }
-
-    // Get active timer sessions
-    const { data: activeTimerSessions, error: activeTimerError } = await supabase
-      .from('timer_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .is('ended_at', null);
-
-    if (activeTimerError) {
-      console.error('Error fetching active timer sessions:', activeTimerError);
-    }
-
-    // Get completed timer sessions for today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const { data: completedTimerSessions, error: completedTimerError } = await supabase
-      .from('timer_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .not('ended_at', 'is', null)
-      .gte('ended_at', today.toISOString());
-
-    if (completedTimerError) {
-      console.error('Error fetching completed timer sessions:', completedTimerError);
-    }
-
-    // Calculate total study and break times
+    // Calculate study times
     let todaysStudyTime = 0;
     let todaysBreakTime = 0;
 
     // Process completed sessions
-    if (completedTimerSessions) {
-      completedTimerSessions.forEach(session => {
+    if (completedTimerSessions.data) {
+      completedTimerSessions.data.forEach(session => {
         if (session.type === 'study') {
           todaysStudyTime += session.duration || 0;
         } else if (session.type === 'break') {
@@ -111,9 +57,9 @@ serve(async (req) => {
     }
 
     // Add active sessions
-    if (activeTimerSessions) {
+    if (activeTimerSessions.data) {
       const now = new Date();
-      activeTimerSessions.forEach(session => {
+      activeTimerSessions.data.forEach(session => {
         const startTime = new Date(session.started_at);
         const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000);
         
@@ -125,11 +71,11 @@ serve(async (req) => {
       });
     }
 
-    const completedLessons = progress?.length || 0;
+    const completedLessons = progress.data?.length || 0;
     const totalLessons = 206;
 
     // Format schedule data
-    const formattedSchedule = schedules?.map(schedule => {
+    const formattedSchedule = schedules.data?.map(schedule => {
       return `${schedule.day_name}:\n${schedule.schedule.map((item: any) => 
         `  - ${item.time}: ${item.activity}`
       ).join('\n')}`;
@@ -148,32 +94,17 @@ serve(async (req) => {
       ${formattedSchedule}
 
       רשומות יומן אחרונות:
-      ${journalEntries?.map(entry => 
+      ${journalEntries.data?.map(entry => 
         `- ${entry.content} ${entry.is_important ? '(חשוב)' : ''} - ${new Date(entry.created_at).toLocaleDateString('he-IL')}`
       ).join('\n') || 'אין רשומות יומן אחרונות'}
     `;
-
-    const messages: ChatMessage[] = [
-      {
-        role: 'system',
-        content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
-        יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמים אישית.
-        עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
-        תמיד ענה בעברית ושמור על טון ידידותי ותומך.
-        
-        הנה ההקשר הנוכחי על התקדמות התלמיד ופעילויותיו:
-        ${context}`
-      },
-      {
-        role: 'user',
-        content: message
-      }
-    ];
 
     const openAiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAiKey) {
       throw new Error('OpenAI API key is not configured');
     }
+
+    console.log('Sending request to OpenAI with context');
 
     // Call OpenAI API
     const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -184,7 +115,22 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-4',
-        messages,
+        messages: [
+          {
+            role: 'system',
+            content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
+            יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמים אישית.
+            עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
+            תמיד ענה בעברית ושמור על טון ידידותי ותומך.
+            
+            הנה ההקשר הנוכחי על התקדמות התלמיד ופעילויותיו:
+            ${context}`
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
         temperature: 0.7,
       }),
     });
@@ -196,6 +142,7 @@ serve(async (req) => {
     }
 
     const data = await openAiResponse.json();
+    console.log('Received response from OpenAI:', data);
 
     if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
       console.error('Invalid OpenAI response:', data);
