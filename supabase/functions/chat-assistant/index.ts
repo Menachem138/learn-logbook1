@@ -114,7 +114,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -138,7 +138,13 @@ serve(async (req) => {
     if (!openAiResponse.ok) {
       const errorData = await openAiResponse.text();
       console.error('OpenAI API Error:', errorData);
-      throw new Error(`OpenAI API error: ${openAiResponse.status} ${errorData}`);
+      
+      // Check if it's a billing error
+      if (errorData.includes('billing_not_active')) {
+        throw new Error('העוזר האישי אינו זמין כרגע עקב בעיית חיוב. אנא נסה שוב מאוחר יותר.');
+      }
+      
+      throw new Error(`שגיאה בשירות העוזר האישי: ${openAiResponse.status}`);
     }
 
     const data = await openAiResponse.json();
@@ -146,7 +152,7 @@ serve(async (req) => {
 
     if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
       console.error('Invalid OpenAI response:', data);
-      throw new Error('Invalid response from OpenAI API');
+      throw new Error('תשובה לא תקינה מהעוזר האישי');
     }
 
     return new Response(
