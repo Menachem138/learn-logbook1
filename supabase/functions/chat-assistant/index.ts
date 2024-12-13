@@ -72,12 +72,61 @@ serve(async (req) => {
       console.error('Error fetching questions:', questionsError)
     }
 
+    // Fetch schedule
+    const { data: schedules, error: schedulesError } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+
+    if (schedulesError) {
+      console.error('Error fetching schedules:', schedulesError)
+    }
+
+    // Fetch recent timer sessions
+    const { data: timerSessions, error: timerError } = await supabase
+      .from('timer_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    if (timerError) {
+      console.error('Error fetching timer sessions:', timerError)
+    }
+
     const completedLessons = progress?.length || 0
     const totalLessons = 206
+
+    // Calculate total study and break time for today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const todaysSessions = timerSessions?.filter(session => {
+      const sessionDate = new Date(session.created_at)
+      return sessionDate >= today
+    }) || []
+
+    const todaysStudyTime = todaysSessions
+      .filter(session => session.type === 'study')
+      .reduce((total, session) => total + (session.duration || 0), 0)
+
+    const todaysBreakTime = todaysSessions
+      .filter(session => session.type === 'break')
+      .reduce((total, session) => total + (session.duration || 0), 0)
 
     // Create context with all user data
     const context = `
       Current learning progress: ${completedLessons} out of ${totalLessons} lessons completed (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
+
+      Today's study time: ${Math.floor(todaysStudyTime / 60)} hours and ${todaysStudyTime % 60} minutes
+      Today's break time: ${Math.floor(todaysBreakTime / 60)} hours and ${todaysBreakTime % 60} minutes
+
+      Weekly Schedule:
+      ${schedules?.map(schedule => `
+        ${schedule.day_name}:
+        ${JSON.stringify(schedule.schedule, null, 2)}
+      `).join('\n') || 'No schedule set up yet.'}
 
       Recent journal entries:
       ${journalEntries?.map(entry => `- ${entry.content} (${entry.is_important ? 'Important' : 'Regular'}) - ${new Date(entry.created_at).toLocaleDateString()}`).join('\n') || 'No recent journal entries.'}
@@ -114,7 +163,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages,
         temperature: 0.7,
       }),

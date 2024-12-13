@@ -159,6 +159,60 @@ export type Database = {
         }
         Relationships: []
       }
+      schedules: {
+        Row: {
+          created_at: string
+          day_name: string
+          id: string
+          schedule: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_name: string
+          id?: string
+          schedule: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_name?: string
+          id?: string
+          schedule?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      timer_sessions: {
+        Row: {
+          created_at: string
+          duration: number
+          ended_at: string | null
+          id: string
+          started_at: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration: number
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
