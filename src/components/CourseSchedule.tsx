@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { WeeklySchedule } from "./CourseSchedule/WeeklySchedule";
 import { useToast } from "@/hooks/use-toast";
 import { initialWeeklySchedule } from "./CourseSchedule/scheduleData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const weeklyTopics = [
   {
@@ -75,57 +77,164 @@ const importantRules = [
 export default function CourseSchedule() {
   const [weeklySchedule, setWeeklySchedule] = useState(initialWeeklySchedule);
   const { toast } = useToast();
+  const { session } = useAuth();
 
-  const handleUpdateDay = (dayIndex: number, newSchedule: any[]) => {
-    const updatedSchedule = [...weeklySchedule];
-    updatedSchedule[dayIndex] = {
-      ...updatedSchedule[dayIndex],
-      schedule: newSchedule
-    };
-    setWeeklySchedule(updatedSchedule);
-    
-    toast({
-      title: "לוח הזמנים עודכן",
-      description: "השינויים נשמרו בהצלחה",
-    });
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadScheduleFromSupabase();
+    }
+  }, [session?.user?.id]);
+
+  const loadScheduleFromSupabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('schedules')
+        .select('*')
+        .eq('user_id', session?.user?.id)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const formattedSchedule = data.map(item => ({
+          day: item.day_name,
+          schedule: item.schedule
+        }));
+        setWeeklySchedule(formattedSchedule);
+      } else {
+        // If no schedule exists, save the initial schedule
+        await saveScheduleToSupabase(initialWeeklySchedule);
+      }
+    } catch (error) {
+      console.error('Error loading schedule:', error);
+      toast({
+        title: "שגיאה בטעינת לוח הזמנים",
+        description: "אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdateDayName = (dayIndex: number, newName: string) => {
-    const updatedSchedule = [...weeklySchedule];
-    updatedSchedule[dayIndex] = {
-      ...updatedSchedule[dayIndex],
-      day: newName
-    };
-    setWeeklySchedule(updatedSchedule);
-    
-    toast({
-      title: "שם היום עודכן",
-      description: "השינויים נשמרו בהצלחה",
-    });
+  const saveScheduleToSupabase = async (scheduleToSave: typeof weeklySchedule) => {
+    if (!session?.user?.id) return;
+
+    try {
+      // First, delete existing schedules
+      await supabase
+        .from('schedules')
+        .delete()
+        .eq('user_id', session.user.id);
+
+      // Then insert new schedules
+      const { error } = await supabase
+        .from('schedules')
+        .insert(
+          scheduleToSave.map(day => ({
+            user_id: session.user.id,
+            day_name: day.day,
+            schedule: day.schedule
+          }))
+        );
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving schedule:', error);
+      throw error;
+    }
   };
 
-  const handleAddDay = () => {
-    const newDay = {
-      day: `יום ${weeklySchedule.length + 1}`,
-      schedule: [
-        { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
-        { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
-      ]
-    };
-    setWeeklySchedule([...weeklySchedule, newDay]);
-    toast({
-      title: "יום חדש נוסף",
-      description: "יום חדש נוסף ללוח הזמנים",
-    });
+  const handleUpdateDay = async (dayIndex: number, newSchedule: any[]) => {
+    try {
+      const updatedSchedule = [...weeklySchedule];
+      updatedSchedule[dayIndex] = {
+        ...updatedSchedule[dayIndex],
+        schedule: newSchedule
+      };
+      
+      await saveScheduleToSupabase(updatedSchedule);
+      setWeeklySchedule(updatedSchedule);
+      
+      toast({
+        title: "לוח הזמנים עודכן",
+        description: "השינויים נשמרו בהצלחה",
+      });
+    } catch (error) {
+      toast({
+        title: "שגיאה בשמירת לוח הזמנים",
+        description: "אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteDay = (dayIndex: number) => {
-    const updatedSchedule = weeklySchedule.filter((_, index) => index !== dayIndex);
-    setWeeklySchedule(updatedSchedule);
-    toast({
-      title: "יום הוסר",
-      description: "היום הוסר מלוח הזמנים",
-    });
+  const handleUpdateDayName = async (dayIndex: number, newName: string) => {
+    try {
+      const updatedSchedule = [...weeklySchedule];
+      updatedSchedule[dayIndex] = {
+        ...updatedSchedule[dayIndex],
+        day: newName
+      };
+      
+      await saveScheduleToSupabase(updatedSchedule);
+      setWeeklySchedule(updatedSchedule);
+      
+      toast({
+        title: "שם היום עודכן",
+        description: "השינויים נשמרו בהצלחה",
+      });
+    } catch (error) {
+      toast({
+        title: "שגיאה בשמירת שם היום",
+        description: "אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddDay = async () => {
+    try {
+      const newDay = {
+        day: `יום ${weeklySchedule.length + 1}`,
+        schedule: [
+          { time: "16:00–16:15", activity: "הכנה מנטלית ופיזית" },
+          { time: "16:15–17:00", activity: "צפייה בפרק מהקורס וסיכומים" },
+        ]
+      };
+      
+      const updatedSchedule = [...weeklySchedule, newDay];
+      await saveScheduleToSupabase(updatedSchedule);
+      setWeeklySchedule(updatedSchedule);
+      
+      toast({
+        title: "יום חדש נוסף",
+        description: "יום חדש נוסף ללוח הזמנים",
+      });
+    } catch (error) {
+      toast({
+        title: "שגיאה בהוספת יום חדש",
+        description: "אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteDay = async (dayIndex: number) => {
+    try {
+      const updatedSchedule = weeklySchedule.filter((_, index) => index !== dayIndex);
+      await saveScheduleToSupabase(updatedSchedule);
+      setWeeklySchedule(updatedSchedule);
+      
+      toast({
+        title: "יום הוסר",
+        description: "היום הוסר מלוח הזמנים",
+      });
+    } catch (error) {
+      toast({
+        title: "שגיאה במחיקת היום",
+        description: "אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
