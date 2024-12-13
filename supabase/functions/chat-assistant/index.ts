@@ -59,16 +59,19 @@ serve(async (req) => {
       console.error('Error fetching schedules:', schedulesError)
     }
 
-    // Fetch recent timer sessions with better date handling
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
+    // Get today's date in UTC
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfDayUTC = startOfDay.toISOString()
+
+    console.log('Fetching timer sessions since:', startOfDayUTC)
+
+    // Fetch today's timer sessions
     const { data: timerSessions, error: timerError } = await supabase
       .from('timer_sessions')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', today.toISOString())
-      .order('created_at', { ascending: false })
+      .gte('created_at', startOfDayUTC)
 
     if (timerError) {
       console.error('Error fetching timer sessions:', timerError)
@@ -76,22 +79,28 @@ serve(async (req) => {
 
     console.log('Timer sessions found:', timerSessions)
 
+    // Calculate study and break times
+    let todaysStudyTime = 0
+    let todaysBreakTime = 0
+
+    if (timerSessions) {
+      timerSessions.forEach(session => {
+        console.log('Processing session:', session)
+        if (session.type === 'study') {
+          todaysStudyTime += session.duration || 0
+        } else if (session.type === 'break') {
+          todaysBreakTime += session.duration || 0
+        }
+      })
+    }
+
+    console.log('Total study time (seconds):', todaysStudyTime)
+    console.log('Total break time (seconds):', todaysBreakTime)
+
     const completedLessons = progress?.length || 0
     const totalLessons = 206
 
-    // Calculate total study and break time for today with proper duration handling
-    const todaysStudyTime = timerSessions
-      ?.filter(session => session.type === 'study')
-      .reduce((total, session) => total + (session.duration || 0), 0) || 0
-
-    const todaysBreakTime = timerSessions
-      ?.filter(session => session.type === 'break')
-      .reduce((total, session) => total + (session.duration || 0), 0) || 0
-
-    console.log('Calculated study time:', todaysStudyTime)
-    console.log('Calculated break time:', todaysBreakTime)
-
-    // Format schedule data for better readability
+    // Format schedule data
     const formattedSchedule = schedules?.map(schedule => {
       return `${schedule.day_name}:\n${schedule.schedule.map((item: any) => 
         `  - ${item.time}: ${item.activity}`
@@ -104,8 +113,8 @@ serve(async (req) => {
       - השלמת ${completedLessons} מתוך ${totalLessons} שיעורים (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
       
       זמני למידה להיום:
-      - זמן למידה: ${Math.floor(todaysStudyTime / 60)} שעות ו-${todaysStudyTime % 60} דקות
-      - זמן הפסקות: ${Math.floor(todaysBreakTime / 60)} שעות ו-${todaysBreakTime % 60} דקות
+      - זמן למידה: ${Math.floor(todaysStudyTime / 60)} דקות
+      - זמן הפסקות: ${Math.floor(todaysBreakTime / 60)} דקות
       
       לוח הזמנים השבועי שלך:
       ${formattedSchedule}
