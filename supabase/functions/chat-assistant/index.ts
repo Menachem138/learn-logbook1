@@ -12,6 +12,17 @@ interface ChatMessage {
   content: string;
 }
 
+interface Schedule {
+  day_name: string;
+  schedule: Array<{ time: string; activity: string; }>;
+}
+
+interface TimerSession {
+  type: 'study' | 'break';
+  duration: number;
+  created_at: string;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -46,30 +57,6 @@ serve(async (req) => {
 
     if (journalError) {
       console.error('Error fetching journal:', journalError)
-    }
-
-    // Fetch library items
-    const { data: libraryItems, error: libraryError } = await supabase
-      .from('library_items')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5)
-
-    if (libraryError) {
-      console.error('Error fetching library:', libraryError)
-    }
-
-    // Fetch questions
-    const { data: questions, error: questionsError } = await supabase
-      .from('questions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5)
-
-    if (questionsError) {
-      console.error('Error fetching questions:', questionsError)
     }
 
     // Fetch schedule
@@ -115,38 +102,40 @@ serve(async (req) => {
       .filter(session => session.type === 'break')
       .reduce((total, session) => total + (session.duration || 0), 0)
 
+    // Format schedule data for better readability
+    const formattedSchedule = schedules?.map(schedule => {
+      return `${schedule.day_name}:\n${schedule.schedule.map(item => 
+        `  - ${item.time}: ${item.activity}`
+      ).join('\n')}`
+    }).join('\n\n') || 'לא נמצא לוח זמנים'
+
     // Create context with all user data
     const context = `
-      Current learning progress: ${completedLessons} out of ${totalLessons} lessons completed (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
+      מידע על ההתקדמות שלך:
+      - השלמת ${completedLessons} מתוך ${totalLessons} שיעורים (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
+      
+      זמני למידה להיום:
+      - זמן למידה: ${Math.floor(todaysStudyTime / 60)} שעות ו-${todaysStudyTime % 60} דקות
+      - זמן הפסקות: ${Math.floor(todaysBreakTime / 60)} שעות ו-${todaysBreakTime % 60} דקות
+      
+      לוח הזמנים השבועי שלך:
+      ${formattedSchedule}
 
-      Today's study time: ${Math.floor(todaysStudyTime / 60)} hours and ${todaysStudyTime % 60} minutes
-      Today's break time: ${Math.floor(todaysBreakTime / 60)} hours and ${todaysBreakTime % 60} minutes
-
-      Weekly Schedule:
-      ${schedules?.map(schedule => `
-        ${schedule.day_name}:
-        ${JSON.stringify(schedule.schedule, null, 2)}
-      `).join('\n') || 'No schedule set up yet.'}
-
-      Recent journal entries:
-      ${journalEntries?.map(entry => `- ${entry.content} (${entry.is_important ? 'Important' : 'Regular'}) - ${new Date(entry.created_at).toLocaleDateString()}`).join('\n') || 'No recent journal entries.'}
-
-      Recent library items:
-      ${libraryItems?.map(item => `- ${item.title}: ${item.content} (Type: ${item.type})`).join('\n') || 'No recent library items.'}
-
-      Recent questions:
-      ${questions?.map(q => `- Q: ${q.content}${q.answer ? `\n  A: ${q.answer}` : ' (Unanswered)'}`).join('\n') || 'No recent questions.'}
+      רשומות יומן אחרונות:
+      ${journalEntries?.map(entry => 
+        `- ${entry.content} ${entry.is_important ? '(חשוב)' : ''} - ${new Date(entry.created_at).toLocaleDateString('he-IL')}`
+      ).join('\n') || 'אין רשומות יומן אחרונות'}
     `
 
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: `You are a supportive learning assistant for a cryptocurrency trading course. 
-        You have access to the student's learning data and can provide personalized feedback and support.
-        You should be encouraging but also honest about areas where improvement is needed.
-        Always respond in Hebrew and maintain a friendly, supportive tone.
+        content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
+        יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמים אישית.
+        עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
+        תמיד ענה בעברית ושמור על טון ידידותי ותומך.
         
-        Here is the current context about the student's progress and activities:
+        הנה ההקשר הנוכחי על התקדמות התלמיד ופעילויותיו:
         ${context}`
       },
       {
@@ -163,7 +152,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4',
         messages,
         temperature: 0.7,
       }),
