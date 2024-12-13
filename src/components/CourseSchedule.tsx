@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { WeeklySchedule } from "./CourseSchedule/WeeklySchedule";
 import { useToast } from "@/hooks/use-toast";
-import { initialWeeklySchedule } from "./CourseSchedule/scheduleData";
+import { initialWeeklySchedule, scheduleToJson, jsonToSchedule, DaySchedule } from "./CourseSchedule/scheduleData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 
@@ -98,11 +98,10 @@ export default function CourseSchedule() {
       if (data && data.length > 0) {
         const formattedSchedule = data.map(item => ({
           day: item.day_name,
-          schedule: item.schedule
+          schedule: jsonToSchedule(item.schedule)
         }));
         setWeeklySchedule(formattedSchedule);
       } else {
-        // If no schedule exists, save the initial schedule
         await saveScheduleToSupabase(initialWeeklySchedule);
       }
     } catch (error) {
@@ -115,24 +114,22 @@ export default function CourseSchedule() {
     }
   };
 
-  const saveScheduleToSupabase = async (scheduleToSave: typeof weeklySchedule) => {
+  const saveScheduleToSupabase = async (scheduleToSave: DaySchedule[]) => {
     if (!session?.user?.id) return;
 
     try {
-      // First, delete existing schedules
       await supabase
         .from('schedules')
         .delete()
         .eq('user_id', session.user.id);
 
-      // Then insert new schedules
       const { error } = await supabase
         .from('schedules')
         .insert(
           scheduleToSave.map(day => ({
             user_id: session.user.id,
             day_name: day.day,
-            schedule: day.schedule
+            schedule: scheduleToJson(day.schedule)
           }))
         );
 

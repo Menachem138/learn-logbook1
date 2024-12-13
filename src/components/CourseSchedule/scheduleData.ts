@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export interface ScheduleItem {
   time: string;
   activity: string;
@@ -7,6 +9,21 @@ export interface DaySchedule {
   day: string;
   schedule: ScheduleItem[];
 }
+
+// Helper function to convert schedule items to/from JSON
+export const scheduleToJson = (schedule: ScheduleItem[]): Json => {
+  return schedule as unknown as Json;
+};
+
+export const jsonToSchedule = (json: Json): ScheduleItem[] => {
+  if (Array.isArray(json)) {
+    return json.map(item => ({
+      time: String(item.time || ''),
+      activity: String(item.activity || '')
+    }));
+  }
+  return [];
+};
 
 export const initialWeeklySchedule: DaySchedule[] = [
   {
