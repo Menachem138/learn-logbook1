@@ -156,7 +156,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
         </Button>
       </div>
 
-      <div className="w-full">
+      <div className="w-full max-h-[60vh] overflow-y-auto">
         <EditorContent editor={editor} className="prose prose-lg max-w-none w-full" />
       </div>
     </div>

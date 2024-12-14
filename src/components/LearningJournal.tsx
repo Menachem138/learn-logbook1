@@ -190,14 +190,16 @@ export default function LearningJournal() {
       </div>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent>
+        <DialogContent className="w-full max-w-4xl">
           <DialogHeader>
             <DialogTitle>ערוך רשומה</DialogTitle>
           </DialogHeader>
-          <Editor
-            content={editingEntry?.content || ""}
-            onChange={(content) => setEditingEntry(editingEntry ? { ...editingEntry, content } : null)}
-          />
+          <div className="w-full max-h-[60vh] overflow-y-auto">
+            <Editor
+              content={editingEntry?.content || ""}
+              onChange={(content) => setEditingEntry(editingEntry ? { ...editingEntry, content } : null)}
+            />
+          </div>
           <div className="flex justify-end space-x-2 mt-4">
             <Button onClick={updateEntry}>שמור שינויים</Button>
             <Button variant="outline" onClick={() => {
