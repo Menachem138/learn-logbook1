@@ -60,21 +60,21 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
   ]
 
   return (
-    <div className="border rounded-lg p-2 space-y-4 rtl" dir="rtl">
-      <div className="flex items-center gap-1 border-b pb-2">
+    <div className="border rounded-lg overflow-hidden" dir="rtl">
+      <div className="flex items-center gap-2 border-b p-3 bg-gray-50/80">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1 text-right">
+            <Button variant="ghost" size="sm" className="gap-1 text-right px-3 font-normal">
               טקסט רגיל
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="min-w-[120px]">
             {headingOptions.map((option) => (
               <DropdownMenuItem
                 key={option.label}
                 onClick={option.command}
-                className="text-right"
+                className="text-right px-3 py-2"
               >
                 {option.label}
               </DropdownMenuItem>
@@ -82,12 +82,14 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="flex items-center gap-1">
+        <div className="h-4 w-[1px] bg-gray-200 mx-1" />
+
+        <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={editor.isActive('bold') ? 'bg-accent' : ''}
+            className={`px-2 ${editor.isActive('bold') ? 'bg-gray-100' : ''}`}
           >
             <Bold className="h-4 w-4" />
           </Button>
@@ -95,7 +97,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={editor.isActive('italic') ? 'bg-accent' : ''}
+            className={`px-2 ${editor.isActive('italic') ? 'bg-gray-100' : ''}`}
           >
             <Italic className="h-4 w-4" />
           </Button>
@@ -103,18 +105,20 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={editor.isActive('underline') ? 'bg-accent' : ''}
+            className={`px-2 ${editor.isActive('underline') ? 'bg-gray-100' : ''}`}
           >
             <UnderlineIcon className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="h-4 w-[1px] bg-gray-200 mx-1" />
+
+        <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={editor.isActive({ textAlign: 'right' }) ? 'bg-accent' : ''}
+            className={`px-2 ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-100' : ''}`}
           >
             <AlignRight className="h-4 w-4" />
           </Button>
@@ -122,7 +126,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={editor.isActive({ textAlign: 'center' }) ? 'bg-accent' : ''}
+            className={`px-2 ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-100' : ''}`}
           >
             <AlignCenter className="h-4 w-4" />
           </Button>
@@ -130,23 +134,27 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={editor.isActive({ textAlign: 'left' }) ? 'bg-accent' : ''}
+            className={`px-2 ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-100' : ''}`}
           >
             <AlignLeft className="h-4 w-4" />
           </Button>
         </div>
 
+        <div className="h-4 w-[1px] bg-gray-200 mx-1" />
+
         <Button
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={editor.isActive('blockquote') ? 'bg-accent' : ''}
+          className={`px-2 ${editor.isActive('blockquote') ? 'bg-gray-100' : ''}`}
         >
           <Quote className="h-4 w-4" />
         </Button>
       </div>
 
-      <EditorContent editor={editor} className="prose-sm" />
+      <div className="p-4">
+        <EditorContent editor={editor} className="prose prose-sm max-w-none focus:outline-none" />
+      </div>
     </div>
   )
 }
