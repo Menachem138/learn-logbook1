@@ -10,11 +10,11 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState, fo
   const getBgColor = () => {
     switch (timerState) {
       case 'STUDYING':
-        return 'bg-[#FFFBE6]';
+        return 'bg-[#E8F5E9]'; // Light green for study mode
       case 'BREAK':
-        return 'bg-[#FFFBE6]';
+        return 'bg-[#FFF8E1]'; // Light yellow for break mode
       default:
-        return 'bg-[#FFFBE6]';
+        return 'bg-[#F5F5F5]'; // Light gray for stopped state
     }
   };
 
@@ -22,7 +22,7 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState, fo
     <div className="text-center mb-8">
       <h2 className="text-3xl font-bold mb-6">מעקב זמן למידה</h2>
       <div className={`${getBgColor()} rounded-2xl p-8 transition-colors duration-300`}>
-        <div className="text-7xl font-mono tracking-wider" dir="ltr">
+        <div className="text-8xl font-black tracking-wider font-mono" dir="ltr">
           {formatTime(time)}
         </div>
       </div>
