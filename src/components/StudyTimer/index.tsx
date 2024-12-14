@@ -177,6 +177,7 @@ export const StudyTimer = () => {
             totalStudyTime={totalStudyTime}
             totalBreakTime={totalBreakTime}
             onCalculateSummary={() => setShowHistory(false)}
+            onSessionsUpdate={loadSessions}
           />
         )}
 
