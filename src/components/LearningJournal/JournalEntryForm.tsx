@@ -20,22 +20,20 @@ export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEnt
     const end = textarea.selectionEnd;
     const selectedText = newEntry.substring(start, end);
 
-    if (format === '- ') {
-      // Handle list items differently
-      const newText = `${newEntry.substring(0, start)}- ${selectedText}${newEntry.substring(end)}`;
+    if (format.endsWith(' ')) {
+      // Handle lists and quotes
+      const newText = `${newEntry.substring(0, start)}${format}${selectedText}${newEntry.substring(end)}`;
       setNewEntry(newText);
       
-      // Set cursor position after the list marker
       setTimeout(() => {
         textarea.focus();
-        textarea.setSelectionRange(start + 2, start + 2 + selectedText.length);
+        textarea.setSelectionRange(start + format.length, start + format.length + selectedText.length);
       }, 0);
     } else {
-      // Handle other formatting
+      // Handle text formatting (bold, italic, underline)
       const newText = `${newEntry.substring(0, start)}${format}${selectedText}${format}${newEntry.substring(end)}`;
       setNewEntry(newText);
       
-      // Set cursor position inside the formatting marks if no text was selected
       setTimeout(() => {
         textarea.focus();
         if (start === end) {
@@ -48,23 +46,25 @@ export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEnt
   };
 
   return (
-    <div className="space-y-4 bg-navy-900 p-6 rounded-lg border border-navy-800 shadow-xl">
+    <div className="space-y-4 bg-background rounded-lg border shadow-sm">
       <TextEditorToolbar onFormatText={handleFormatText} />
-      <Textarea
-        ref={textareaRef}
-        placeholder="מה למדת היום?"
-        value={newEntry}
-        onChange={(e) => setNewEntry(e.target.value)}
-        className="min-h-[150px] text-right bg-navy-800 border-navy-800 focus:border-blue-500"
-        dir="rtl"
-      />
-      <div className="flex gap-2 justify-end">
-        <Button onClick={() => addEntry(false)} className="flex-1">
-          הוסף רשומה
-        </Button>
-        <Button onClick={() => addEntry(true)} variant="secondary" className="flex-1">
-          הוסף כהערה חשובה
-        </Button>
+      <div className="px-4 pb-4">
+        <Textarea
+          ref={textareaRef}
+          placeholder="מה למדת היום?"
+          value={newEntry}
+          onChange={(e) => setNewEntry(e.target.value)}
+          className="min-h-[150px] text-right bg-background"
+          dir="rtl"
+        />
+        <div className="flex gap-2 justify-end mt-4">
+          <Button onClick={() => addEntry(false)} variant="outline">
+            הוסף רשומה
+          </Button>
+          <Button onClick={() => addEntry(true)}>
+            הוסף כהערה חשובה
+          </Button>
+        </div>
       </div>
     </div>
   );

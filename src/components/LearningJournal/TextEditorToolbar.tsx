@@ -1,6 +1,20 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Bold, Italic, Underline, List, Strikethrough } from 'lucide-react';
+import { 
+  Bold, 
+  Italic, 
+  Underline, 
+  List, 
+  ListOrdered,
+  Quote,
+  ChevronDown 
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TextEditorToolbarProps {
   onFormatText: (format: string) => void;
@@ -8,51 +22,73 @@ interface TextEditorToolbarProps {
 
 export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
   return (
-    <div className="flex gap-2 mb-2 bg-navy-800 p-3 rounded-lg shadow-md" dir="rtl">
+    <div className="flex gap-2 mb-2 p-2 border-b" dir="rtl">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="flex gap-2">
+            טקסט רגיל
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>טקסט רגיל</DropdownMenuItem>
+          <DropdownMenuItem>כותרת משנית</DropdownMenuItem>
+          <DropdownMenuItem>תת-כותרת</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Button
-        variant="secondary"
+        variant="ghost"
         size="sm"
-        onClick={() => onFormatText('**')}
-        title="מודגש"
-        className="hover:bg-navy-900"
+        onClick={() => onFormatText('> ')}
+        title="ציטוט"
       >
-        <Bold className="h-4 w-4" />
+        <Quote className="h-4 w-4" />
       </Button>
+
       <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onFormatText('*')}
-        title="נטוי"
-        className="hover:bg-navy-900"
-      >
-        <Italic className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onFormatText('__')}
-        title="קו תחתון"
-        className="hover:bg-navy-900"
-      >
-        <Underline className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => onFormatText('~~')}
-        title="קו חוצה"
-        className="hover:bg-navy-900"
-      >
-        <Strikethrough className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="secondary"
+        variant="ghost"
         size="sm"
         onClick={() => onFormatText('- ')}
         title="רשימה"
-        className="hover:bg-navy-900"
       >
         <List className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onFormatText('1. ')}
+        title="רשימה ממוספרת"
+      >
+        <ListOrdered className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onFormatText('**')}
+        title="מודגש"
+      >
+        <Bold className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onFormatText('*')}
+        title="נטוי"
+      >
+        <Italic className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onFormatText('__')}
+        title="קו תחתון"
+      >
+        <Underline className="h-4 w-4" />
       </Button>
     </div>
   );
