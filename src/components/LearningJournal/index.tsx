@@ -4,9 +4,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { JournalEntryForm } from './JournalEntryForm';
 import { JournalEntry } from './JournalEntry';
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+
+interface JournalEntryType {
+  id: string;
+  content: string;
+  created_at: string;
+  is_important: boolean;
+  user_id: string;
+}
 
 export default function LearningJournal() {
   const [newEntry, setNewEntry] = useState('');
+  const [editingEntry, setEditingEntry] = useState<JournalEntryType | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: entries = [], isLoading } = useQuery({
@@ -53,9 +66,51 @@ export default function LearningJournal() {
     },
   });
 
+  const deleteEntryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('learning_journal')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      toast.success('הרשומה נמחקה בהצלחה');
+    },
+  });
+
+  const updateEntryMutation = useMutation({
+    mutationFn: async (entry: JournalEntryType) => {
+      const { error } = await supabase
+        .from('learning_journal')
+        .update({ content: entry.content })
+        .eq('id', entry.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
+      setIsEditing(false);
+      setEditingEntry(null);
+      toast.success('הרשומה עודכנה בהצלחה');
+    },
+  });
+
   const handleAddEntry = (isImportant: boolean) => {
     if (!newEntry.trim()) return;
     addEntryMutation.mutate({ content: newEntry, isImportant });
+  };
+
+  const handleEditEntry = (entry: JournalEntryType) => {
+    setEditingEntry(entry);
+    setIsEditing(true);
+  };
+
+  const handleUpdateEntry = () => {
+    if (!editingEntry) return;
+    updateEntryMutation.mutate(editingEntry);
   };
 
   if (isLoading) {
@@ -80,9 +135,33 @@ export default function LearningJournal() {
           <JournalEntry
             key={entry.id}
             entry={entry}
+            onEdit={() => handleEditEntry(entry)}
+            onDelete={() => deleteEntryMutation.mutate(entry.id)}
           />
         ))}
       </div>
+
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ערוך רשומה</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={editingEntry?.content || ""}
+            onChange={(e) => setEditingEntry(editingEntry ? { ...editingEntry, content: e.target.value } : null)}
+            className="min-h-[200px]"
+          />
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button onClick={handleUpdateEntry}>שמור שינויים</Button>
+            <Button variant="outline" onClick={() => {
+              setIsEditing(false);
+              setEditingEntry(null);
+            }}>
+              ביטול
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
