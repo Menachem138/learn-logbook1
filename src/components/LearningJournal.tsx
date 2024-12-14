@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import Editor from "./LearningJournal/Editor";
 
 interface JournalEntry {
   id: string;
@@ -135,12 +135,13 @@ export default function LearningJournal() {
     <Card className="p-6">
       <h2 className="text-2xl font-bold mb-4">יומן למידה</h2>
       <div className="space-y-4">
-        <Textarea
-          placeholder="מה למדת היום?"
-          value={newEntry}
-          onChange={(e) => setNewEntry(e.target.value)}
-          className="min-h-[100px]"
-        />
+        <div className="space-y-2">
+          <h3 className="text-lg">מה למדת היום?</h3>
+          <Editor
+            content={newEntry}
+            onChange={setNewEntry}
+          />
+        </div>
         <div className="flex space-x-2">
           <Button onClick={() => addEntry(false)} className="flex-1">
             הוסף רשומה
@@ -150,6 +151,7 @@ export default function LearningJournal() {
           </Button>
         </div>
       </div>
+
       <div className="mt-6 space-y-4">
         {entries.map((entry) => (
           <Card key={entry.id} className={`p-4 ${entry.is_important ? 'border-2 border-yellow-500' : ''}`}>
@@ -179,7 +181,7 @@ export default function LearningJournal() {
                 </Button>
               </div>
             </div>
-            <p className="whitespace-pre-wrap">{entry.content}</p>
+            <div className="prose prose-sm rtl" dangerouslySetInnerHTML={{ __html: entry.content }} />
             <p className="text-sm text-muted-foreground mt-2">
               {new Date(entry.created_at).toLocaleDateString()} {new Date(entry.created_at).toLocaleTimeString()}
             </p>
@@ -192,10 +194,9 @@ export default function LearningJournal() {
           <DialogHeader>
             <DialogTitle>ערוך רשומה</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={editingEntry?.content || ""}
-            onChange={(e) => setEditingEntry(editingEntry ? { ...editingEntry, content: e.target.value } : null)}
-            className="min-h-[200px]"
+          <Editor
+            content={editingEntry?.content || ""}
+            onChange={(content) => setEditingEntry(editingEntry ? { ...editingEntry, content } : null)}
           />
           <div className="flex justify-end space-x-2 mt-4">
             <Button onClick={updateEntry}>שמור שינויים</Button>

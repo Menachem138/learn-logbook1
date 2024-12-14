@@ -145,7 +145,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_answered?: boolean | null
-          type?: string
+          type: string
           user_id: string
         }
         Update: {
@@ -242,6 +242,120 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      achievements: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          type: 'badge' | 'trophy' | 'star'
+          earned_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          type: 'badge' | 'trophy' | 'star'
+          earned_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          type?: 'badge' | 'trophy' | 'star'
+          earned_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_stats: {
+        Row: {
+          user_id: string
+          total_points: number
+          current_streak: number
+          longest_streak: number
+          last_activity: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          total_points?: number
+          current_streak?: number
+          longest_streak?: number
+          last_activity?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          total_points?: number
+          current_streak?: number
+          longest_streak?: number
+          last_activity?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      progress_tracking: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          completed_sections: string[]
+          total_sections: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          completed_sections?: string[]
+          total_sections: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          course_id?: string
+          completed_sections?: string[]
+          total_sections?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
