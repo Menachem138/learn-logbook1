@@ -132,10 +132,10 @@ export default function LearningJournal() {
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 w-full">
       <h2 className="text-2xl font-bold mb-4">יומן למידה</h2>
-      <div className="space-y-4">
-        <div className="space-y-2">
+      <div className="space-y-4 w-full">
+        <div className="space-y-2 w-full">
           <h3 className="text-lg">מה למדת היום?</h3>
           <Editor
             content={newEntry}
