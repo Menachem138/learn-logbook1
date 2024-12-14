@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { Play, StopCircle } from 'lucide-react';
 
 interface TimerControlsProps {
@@ -16,41 +17,35 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 }) => {
   return (
     <div className="flex justify-center gap-4 mb-8">
-      <button
+      <Button
         onClick={onStartStudy}
         disabled={timerState === 'STUDYING'}
-        className={`flex items-center gap-2 px-6 py-2 rounded-lg border transition-colors
-          ${timerState === 'STUDYING' 
-            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
-            : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+        variant={timerState === 'STUDYING' ? 'secondary' : 'outline'}
+        className="bg-white hover:bg-gray-50 border-gray-200"
       >
-        <Play size={16} />
+        <Play className="mr-2 h-4 w-4" />
         למידה
-      </button>
+      </Button>
       
-      <button
+      <Button
         onClick={onStartBreak}
         disabled={timerState === 'BREAK'}
-        className={`flex items-center gap-2 px-6 py-2 rounded-lg border transition-colors
-          ${timerState === 'BREAK'
-            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-            : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+        variant={timerState === 'BREAK' ? 'secondary' : 'outline'}
+        className="bg-white hover:bg-gray-50 border-gray-200"
       >
-        <Play size={16} />
+        <Play className="mr-2 h-4 w-4" />
         הפסקה
-      </button>
+      </Button>
       
-      <button
+      <Button
         onClick={onStop}
         disabled={timerState === 'STOPPED'}
-        className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors
-          ${timerState === 'STOPPED'
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+        variant="default"
+        className="bg-gray-900 hover:bg-gray-800 text-white"
       >
-        <StopCircle size={16} />
+        <StopCircle className="mr-2 h-4 w-4" />
         עצור
-      </button>
+      </Button>
     </div>
   );
 };

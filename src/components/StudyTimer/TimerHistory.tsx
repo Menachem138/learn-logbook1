@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coffee, Book } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/timeUtils';
 
 interface TimerSession {
@@ -35,9 +35,9 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 text-sm font-medium text-gray-500 pb-2 border-b">
-        <div>סיכום</div>
-        <div>פירוט</div>
-        <div className="text-left">יומן</div>
+        <div>סוג</div>
+        <div>זמן</div>
+        <div className="text-left">תאריך</div>
       </div>
 
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -48,25 +48,19 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
               session.type === 'study' ? 'bg-green-50' : 'bg-yellow-50'
             }`}
           >
-            <div className="flex items-center gap-2">
-              {session.type === 'study' ? (
-                <Book className="w-4 h-4 text-green-600" />
-              ) : (
-                <Coffee className="w-4 h-4 text-yellow-600" />
-              )}
-            </div>
-            <div>{formatDate(session.started_at)}</div>
-            <div className="text-left tabular-nums">{formatTime(session.duration || 0)}</div>
+            <div>{session.type === 'study' ? 'למידה' : 'הפסקה'}</div>
+            <div className="tabular-nums">{formatTime(session.duration || 0)}</div>
+            <div className="text-left">{formatDate(session.started_at)}</div>
           </div>
         ))}
       </div>
 
-      <button
+      <Button
         onClick={onCalculateSummary}
         className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
       >
-        הסתר סיכום
-      </button>
+        חשב סיכום
+      </Button>
 
       {(totalStudyTime > 0 || totalBreakTime > 0) && (
         <div className="space-y-2 pt-4">
