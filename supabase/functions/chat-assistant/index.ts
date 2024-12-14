@@ -31,42 +31,32 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch user's progress and other data
-    const [progress, journalEntries, schedules, activeTimerSessions, completedTimerSessions] = await Promise.all([
+    // Fetch user's progress, timer sessions, and other data
+    const [
+      progress, 
+      journalEntries, 
+      schedules, 
+      timerSessions
+    ] = await Promise.all([
       supabase.from('course_progress').select('lesson_id').eq('user_id', userId).eq('completed', true),
       supabase.from('learning_journal').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
       supabase.from('schedules').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-      supabase.from('timer_sessions').select('*').eq('user_id', userId).is('ended_at', null),
-      supabase.from('timer_sessions').select('*').eq('user_id', userId).not('ended_at', 'is', null)
-        .gte('ended_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+      supabase.from('timer_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
     ]);
 
-    // Calculate study times
+    // Calculate today's study times
     let todaysStudyTime = 0;
     let todaysBreakTime = 0;
 
-    // Process completed sessions
-    if (completedTimerSessions.data) {
-      completedTimerSessions.data.forEach(session => {
+    if (timerSessions.data) {
+      timerSessions.data.forEach(session => {
         if (session.type === 'study') {
           todaysStudyTime += session.duration || 0;
         } else if (session.type === 'break') {
           todaysBreakTime += session.duration || 0;
-        }
-      });
-    }
-
-    // Add active sessions
-    if (activeTimerSessions.data) {
-      const now = new Date();
-      activeTimerSessions.data.forEach(session => {
-        const startTime = new Date(session.started_at);
-        const duration = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-        
-        if (session.type === 'study') {
-          todaysStudyTime += duration;
-        } else if (session.type === 'break') {
-          todaysBreakTime += duration;
         }
       });
     }
@@ -81,14 +71,15 @@ serve(async (req) => {
       ).join('\n')}`;
     }).join('\n\n') || 'לא נמצא לוח זמנים';
 
-    // Create context with all user data
+    // Create context with all user data including timer sessions
     const context = `
       מידע על ההתקדמות שלך:
       - השלמת ${completedLessons} מתוך ${totalLessons} שיעורים (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
       
       זמני למידה להיום:
-      - זמן למידה: ${Math.floor(todaysStudyTime / 60)} דקות
-      - זמן הפסקות: ${Math.floor(todaysBreakTime / 60)} דקות
+      - זמן למידה: ${Math.floor(todaysStudyTime / (1000 * 60))} דקות
+      - זמן הפסקות: ${Math.floor(todaysBreakTime / (1000 * 60))} דקות
+      - סך הכל: ${Math.floor((todaysStudyTime + todaysBreakTime) / (1000 * 60))} דקות
       
       לוח הזמנים השבועי שלך:
       ${formattedSchedule}
