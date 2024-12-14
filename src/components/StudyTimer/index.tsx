@@ -13,6 +13,7 @@ export const StudyTimer = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
   const [totalBreakTime, setTotalBreakTime] = useState<number>(0);
+  const [showSummary, setShowSummary] = useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const { session } = useAuth();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -40,6 +41,25 @@ export const StudyTimer = () => {
     }
 
     setSessions(data || []);
+    calculateTotalTimes(data || []);
+  };
+
+  const calculateTotalTimes = (sessionData: any[]) => {
+    let studyTime = 0;
+    let breakTime = 0;
+
+    sessionData.forEach(session => {
+      if (session.duration) {
+        if (session.type === 'study') {
+          studyTime += session.duration;
+        } else if (session.type === 'break') {
+          breakTime += session.duration;
+        }
+      }
+    });
+
+    setTotalStudyTime(studyTime);
+    setTotalBreakTime(breakTime);
   };
 
   const startTimer = async (type: 'study' | 'break') => {
@@ -108,25 +128,6 @@ export const StudyTimer = () => {
     toast.info('הטיימר נעצר!');
   };
 
-  const calculateSummary = () => {
-    let studyTime = 0;
-    let breakTime = 0;
-
-    sessions.forEach(session => {
-      if (session.duration) {
-        if (session.type === 'study') {
-          studyTime += session.duration;
-        } else if (session.type === 'break') {
-          breakTime += session.duration;
-        }
-      }
-    });
-
-    setTotalStudyTime(studyTime);
-    setTotalBreakTime(breakTime);
-    toast.success('הסיכום חושב בהצלחה');
-  };
-
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -153,9 +154,9 @@ export const StudyTimer = () => {
 
         <TimerHistory
           sessions={sessions}
-          onCalculateSummary={calculateSummary}
           totalStudyTime={totalStudyTime}
           totalBreakTime={totalBreakTime}
+          onCalculateSummary={() => setShowSummary(!showSummary)}
         />
       </CardContent>
     </Card>

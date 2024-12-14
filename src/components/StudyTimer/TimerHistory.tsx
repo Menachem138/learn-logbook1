@@ -12,16 +12,16 @@ interface TimerSession {
 
 interface TimerHistoryProps {
   sessions: TimerSession[];
-  onCalculateSummary: () => void;
   totalStudyTime: number;
   totalBreakTime: number;
+  onCalculateSummary: () => void;
 }
 
 export const TimerHistory: React.FC<TimerHistoryProps> = ({
   sessions,
-  onCalculateSummary,
   totalStudyTime,
   totalBreakTime,
+  onCalculateSummary,
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('he-IL', {
@@ -38,14 +38,14 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
       <div className="grid grid-cols-3 text-sm font-medium text-gray-500 pb-2">
         <div>סיכום</div>
         <div>פירוט</div>
-        <div className="text-left">זמן</div>
+        <div className="text-left">יומן</div>
       </div>
 
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {sessions.map((session) => (
           <div
             key={session.id}
-            className={`grid grid-cols-2 items-center p-3 rounded-lg ${
+            className={`flex justify-between items-center p-3 rounded-lg ${
               session.type === 'study' ? 'bg-green-50' : 'bg-yellow-50'
             }`}
           >
@@ -64,9 +64,9 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
 
       <Button
         onClick={onCalculateSummary}
-        className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+        className="w-full bg-gray-900 text-white hover:bg-gray-800"
       >
-        הצג סיכום
+        הסתר סיכום
       </Button>
 
       {(totalStudyTime > 0 || totalBreakTime > 0) && (
