@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TimerDisplay } from "./TimerDisplay";
 import { TimerControls } from "./TimerControls";
 import { TimerHistory } from "./TimerHistory";
+import { TimerSummary } from "./TimerSummary";
 import { HistoryToggle } from "./HistoryToggle";
 
 export const StudyTimer = () => {
@@ -14,6 +15,7 @@ export const StudyTimer = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
   const [totalBreakTime, setTotalBreakTime] = useState<number>(0);
+  const [showHistory, setShowHistory] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const { session } = useAuth();
@@ -138,8 +140,13 @@ export const StudyTimer = () => {
   };
 
   const handleDiaryToggle = () => {
-    // This will be implemented later for diary functionality
-    toast.info('יומן יהיה זמין בקרוב!');
+    setShowHistory(!showHistory);
+    if (showSummary) setShowSummary(false);
+  };
+
+  const handleSummaryToggle = () => {
+    setShowSummary(!showSummary);
+    if (showHistory) setShowHistory(false);
   };
 
   return (
@@ -159,17 +166,25 @@ export const StudyTimer = () => {
         />
 
         <HistoryToggle
-          isOpen={showSummary}
-          onToggle={() => setShowSummary(!showSummary)}
+          isOpen={showHistory || showSummary}
+          onToggle={handleSummaryToggle}
           onDiaryToggle={handleDiaryToggle}
         />
 
-        {showSummary && (
+        {showHistory && (
           <TimerHistory
             sessions={sessions}
             totalStudyTime={totalStudyTime}
             totalBreakTime={totalBreakTime}
-            onCalculateSummary={() => setShowSummary(false)}
+            onCalculateSummary={() => setShowHistory(false)}
+          />
+        )}
+
+        {showSummary && (
+          <TimerSummary
+            totalStudyTime={totalStudyTime}
+            totalBreakTime={totalBreakTime}
+            onClose={() => setShowSummary(false)}
           />
         )}
       </CardContent>

@@ -19,8 +19,6 @@ interface TimerHistoryProps {
 
 export const TimerHistory: React.FC<TimerHistoryProps> = ({
   sessions,
-  totalStudyTime,
-  totalBreakTime,
   onCalculateSummary,
 }) => {
   const formatDate = (dateString: string) => {
@@ -35,12 +33,6 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 text-sm font-medium text-gray-500 pb-2">
-        <div>סיכום</div>
-        <div>פירוט</div>
-        <div className="text-left">יומן</div>
-      </div>
-
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {sessions.map((session) => (
           <div
@@ -66,21 +58,8 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
         onClick={onCalculateSummary}
         className="w-full bg-gray-900 text-white hover:bg-gray-800"
       >
-        הסתר סיכום
+        הסתר היסטוריה
       </Button>
-
-      {(totalStudyTime > 0 || totalBreakTime > 0) && (
-        <div className="space-y-2 pt-4">
-          <div className="flex justify-between p-3 bg-green-50 rounded-lg">
-            <span>סה"כ זמן למידה:</span>
-            <span className="tabular-nums">{formatTime(totalStudyTime)}</span>
-          </div>
-          <div className="flex justify-between p-3 bg-yellow-50 rounded-lg">
-            <span>סה"כ זמן הפסקה:</span>
-            <span className="tabular-nums">{formatTime(totalBreakTime)}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
