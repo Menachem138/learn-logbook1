@@ -1,9 +1,8 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { TimerState } from '@/types/timer';
+import { Play, Pause, StopCircle } from 'lucide-react';
 
 interface TimerControlsProps {
-  timerState: TimerState;
+  timerState: 'STOPPED' | 'STUDYING' | 'BREAK';
   onStartStudy: () => void;
   onStartBreak: () => void;
   onStop: () => void;
@@ -16,31 +15,39 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   onStop,
 }) => {
   return (
-    <div className="flex gap-4 justify-center" dir="rtl">
-      <Button 
-        onClick={onStop} 
-        disabled={timerState === TimerState.STOPPED}
-        className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-xl"
-        variant="destructive"
-      >
-        עצור
-      </Button>
-      <Button
-        onClick={onStartBreak}
-        disabled={timerState === TimerState.BREAK}
-        className="bg-navy-800 hover:bg-navy-900 text-white px-8 py-2 rounded-xl"
-        variant="default"
-      >
-        זמן הפסקה
-      </Button>
-      <Button
+    <div className="flex justify-center gap-4" dir="rtl">
+      <button
         onClick={onStartStudy}
-        disabled={timerState === TimerState.STUDYING}
-        className="bg-navy-800 hover:bg-navy-900 text-white px-8 py-2 rounded-xl"
-        variant="default"
+        disabled={timerState === 'STUDYING'}
+        className={`flex items-center gap-2 px-6 py-2 rounded-xl transition-colors
+          ${timerState === 'STUDYING' 
+            ? 'bg-gray-200 text-gray-600' 
+            : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
       >
-        זמן למידה
-      </Button>
+        {timerState === 'STUDYING' ? <Pause size={16} /> : <Play size={16} />}
+        למידה
+      </button>
+      
+      <button
+        onClick={onStartBreak}
+        disabled={timerState === 'BREAK'}
+        className={`flex items-center gap-2 px-6 py-2 rounded-xl transition-colors
+          ${timerState === 'BREAK' 
+            ? 'bg-gray-200 text-gray-600' 
+            : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
+      >
+        {timerState === 'BREAK' ? <Pause size={16} /> : <Play size={16} />}
+        הפסקה
+      </button>
+      
+      <button
+        onClick={onStop}
+        disabled={timerState === 'STOPPED'}
+        className="flex items-center gap-2 px-6 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors"
+      >
+        <StopCircle size={16} />
+        עצור
+      </button>
     </div>
   );
 };
