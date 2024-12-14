@@ -1,12 +1,15 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
-  Bold, 
-  Italic, 
-  Underline, 
-  List, 
-  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
   Quote,
+  List,
+  ListOrdered,
+  Bold,
+  Italic,
+  Underline,
   ChevronDown 
 } from 'lucide-react';
 import {
@@ -22,7 +25,7 @@ interface TextEditorToolbarProps {
 
 export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
   return (
-    <div className="flex gap-2 mb-2 p-2 border-b" dir="rtl">
+    <div className="flex items-center gap-1 mb-2 p-2 border-b" dir="rtl">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="flex gap-2">
@@ -30,66 +33,102 @@ export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem>טקסט רגיל</DropdownMenuItem>
-          <DropdownMenuItem>כותרת משנית</DropdownMenuItem>
-          <DropdownMenuItem>תת-כותרת</DropdownMenuItem>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem>
+            טקסט רגיל
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            כותרת
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            כותרת משנית
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            תת-כותרת
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onFormatText('> ')}
-        title="ציטוט"
-      >
-        <Quote className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1 border-r pr-2 mr-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('align-right')}
+          title="יישור לימין"
+        >
+          <AlignRight className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('align-center')}
+          title="יישור למרכז"
+        >
+          <AlignCenter className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('align-left')}
+          title="יישור לשמאל"
+        >
+          <AlignLeft className="h-4 w-4" />
+        </Button>
+      </div>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onFormatText('- ')}
-        title="רשימה"
-      >
-        <List className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1 border-r pr-2 mr-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('quote')}
+          title="ציטוט"
+        >
+          <Quote className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('bullet-list')}
+          title="רשימה"
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('numbered-list')}
+          title="רשימה ממוספרת"
+        >
+          <ListOrdered className="h-4 w-4" />
+        </Button>
+      </div>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onFormatText('1. ')}
-        title="רשימה ממוספרת"
-      >
-        <ListOrdered className="h-4 w-4" />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onFormatText('**')}
-        title="מודגש"
-      >
-        <Bold className="h-4 w-4" />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onFormatText('*')}
-        title="נטוי"
-      >
-        <Italic className="h-4 w-4" />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onFormatText('__')}
-        title="קו תחתון"
-      >
-        <Underline className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1 border-r pr-2 mr-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('bold')}
+          title="מודגש"
+        >
+          <Bold className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('italic')}
+          title="נטוי"
+        >
+          <Italic className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('underline')}
+          title="קו תחתון"
+        >
+          <Underline className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

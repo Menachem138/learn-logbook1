@@ -120,8 +120,8 @@ export default function LearningJournal() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto p-4">
       <div>
-        <h2 className="text-2xl font-bold mb-2">יומן למידה</h2>
-        <h3 className="text-lg text-muted-foreground mb-4">מה למדת היום?</h3>
+        <h2 className="text-2xl font-bold mb-2 text-right">יומן למידה</h2>
+        <h3 className="text-lg text-muted-foreground mb-4 text-right">מה למדת היום?</h3>
       </div>
       
       <JournalEntryForm
@@ -150,8 +150,9 @@ export default function LearningJournal() {
             value={editingEntry?.content || ""}
             onChange={(e) => setEditingEntry(editingEntry ? { ...editingEntry, content: e.target.value } : null)}
             className="min-h-[200px]"
+            dir="rtl"
           />
-          <div className="flex justify-end space-x-2 mt-4">
+          <div className="flex justify-end gap-2 mt-4">
             <Button onClick={handleUpdateEntry}>שמור שינויים</Button>
             <Button variant="outline" onClick={() => {
               setIsEditing(false);

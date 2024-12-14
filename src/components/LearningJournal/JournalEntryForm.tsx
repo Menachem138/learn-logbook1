@@ -46,7 +46,7 @@ export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEnt
   };
 
   return (
-    <div className="space-y-4 bg-background rounded-lg border shadow-sm">
+    <div className="space-y-4 bg-white rounded-lg border shadow-sm">
       <TextEditorToolbar onFormatText={handleFormatText} />
       <div className="px-4 pb-4">
         <Textarea
@@ -54,15 +54,22 @@ export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEnt
           placeholder="מה למדת היום?"
           value={newEntry}
           onChange={(e) => setNewEntry(e.target.value)}
-          className="min-h-[150px] text-right bg-background"
+          className="min-h-[150px] text-right bg-white resize-none"
           dir="rtl"
         />
         <div className="flex gap-2 justify-end mt-4">
-          <Button onClick={() => addEntry(false)} variant="outline">
-            הוסף רשומה
-          </Button>
-          <Button onClick={() => addEntry(true)}>
+          <Button 
+            variant="outline" 
+            onClick={() => addEntry(true)}
+            className="bg-white hover:bg-gray-50"
+          >
             הוסף כהערה חשובה
+          </Button>
+          <Button 
+            onClick={() => addEntry(false)}
+            className="bg-black hover:bg-black/90 text-white"
+          >
+            הוסף רשומה
           </Button>
         </div>
       </div>
