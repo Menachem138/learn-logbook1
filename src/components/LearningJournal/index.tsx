@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { JournalEntryForm } from './JournalEntryForm';
@@ -17,9 +17,9 @@ interface JournalEntryType {
 }
 
 export default function LearningJournal() {
-  const [newEntry, setNewEntry] = useState('');
-  const [editingEntry, setEditingEntry] = useState<JournalEntryType | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [newEntry, setNewEntry] = React.useState('');
+  const [editingEntry, setEditingEntry] = React.useState<JournalEntryType | null>(null);
+  const [isEditing, setIsEditing] = React.useState(false);
   const queryClient = useQueryClient();
 
   const { data: entries = [], isLoading } = useQuery({
@@ -27,7 +27,7 @@ export default function LearningJournal() {
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
-        throw new Error('No authenticated user found');
+        throw new Error('יש להתחבר כדי לצפות ביומן');
       }
 
       const { data, error } = await supabase
@@ -45,19 +45,18 @@ export default function LearningJournal() {
     mutationFn: async ({ content, isImportant }: { content: string; isImportant: boolean }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user?.id) {
-        throw new Error('No authenticated user found');
+        throw new Error('יש להתחבר כדי להוסיף רשומה');
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('learning_journal')
-        .insert([{ 
-          content, 
+        .insert([{
+          content,
           is_important: isImportant,
-          user_id: session.session.user.id 
+          user_id: session.session.user.id
         }]);
 
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
@@ -99,18 +98,11 @@ export default function LearningJournal() {
   });
 
   const handleAddEntry = (isImportant: boolean) => {
-    if (!newEntry.trim()) return;
+    if (!newEntry.trim()) {
+      toast.error('אנא הכנס תוכן ליומן');
+      return;
+    }
     addEntryMutation.mutate({ content: newEntry, isImportant });
-  };
-
-  const handleEditEntry = (entry: JournalEntryType) => {
-    setEditingEntry(entry);
-    setIsEditing(true);
-  };
-
-  const handleUpdateEntry = () => {
-    if (!editingEntry) return;
-    updateEntryMutation.mutate(editingEntry);
   };
 
   if (isLoading) {
@@ -118,10 +110,10 @@ export default function LearningJournal() {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto p-4">
+    <div className="space-y-6 bg-white rounded-lg p-6 shadow-sm">
       <div>
-        <h2 className="text-2xl font-bold mb-2 text-right">יומן למידה</h2>
-        <h3 className="text-lg text-muted-foreground mb-4 text-right">מה למדת היום?</h3>
+        <h2 className="text-2xl font-bold mb-2">יומן למידה</h2>
+        <h3 className="text-lg text-muted-foreground mb-4">מה למדת היום?</h3>
       </div>
       
       <JournalEntryForm
@@ -130,12 +122,15 @@ export default function LearningJournal() {
         addEntry={handleAddEntry}
       />
 
-      <div className="space-y-4">
+      <div className="space-y-4 mt-8">
         {entries.map((entry) => (
           <JournalEntry
             key={entry.id}
             entry={entry}
-            onEdit={() => handleEditEntry(entry)}
+            onEdit={() => {
+              setEditingEntry(entry);
+              setIsEditing(true);
+            }}
             onDelete={() => deleteEntryMutation.mutate(entry.id)}
           />
         ))}
@@ -153,7 +148,7 @@ export default function LearningJournal() {
             dir="rtl"
           />
           <div className="flex justify-end gap-2 mt-4">
-            <Button onClick={handleUpdateEntry}>שמור שינויים</Button>
+            <Button onClick={() => updateEntryMutation.mutate(editingEntry!)}>שמור שינויים</Button>
             <Button variant="outline" onClick={() => {
               setIsEditing(false);
               setEditingEntry(null);

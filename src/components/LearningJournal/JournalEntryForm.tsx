@@ -20,29 +20,41 @@ export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEnt
     const end = textarea.selectionEnd;
     const selectedText = newEntry.substring(start, end);
 
-    if (format.endsWith(' ')) {
-      // Handle lists and quotes
-      const newText = `${newEntry.substring(0, start)}${format}${selectedText}${newEntry.substring(end)}`;
-      setNewEntry(newText);
-      
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + format.length, start + format.length + selectedText.length);
-      }, 0);
-    } else {
-      // Handle text formatting (bold, italic, underline)
-      const newText = `${newEntry.substring(0, start)}${format}${selectedText}${format}${newEntry.substring(end)}`;
-      setNewEntry(newText);
-      
-      setTimeout(() => {
-        textarea.focus();
-        if (start === end) {
-          textarea.setSelectionRange(start + format.length, start + format.length);
-        } else {
-          textarea.setSelectionRange(start, end + format.length * 2);
-        }
-      }, 0);
+    let newText = newEntry;
+    let newCursorPos = start;
+
+    switch (format) {
+      case 'align-right':
+      case 'align-center':
+      case 'align-left':
+        // Add text-align class to the selected text
+        newText = `${newEntry.substring(0, start)}<div class="${format}">${selectedText}</div>${newEntry.substring(end)}`;
+        newCursorPos = start + format.length + 7;
+        break;
+      case 'quote':
+        newText = `${newEntry.substring(0, start)}> ${selectedText}${newEntry.substring(end)}`;
+        newCursorPos = start + 2;
+        break;
+      case 'bullet-list':
+        newText = `${newEntry.substring(0, start)}• ${selectedText}${newEntry.substring(end)}`;
+        newCursorPos = start + 2;
+        break;
+      case 'numbered-list':
+        newText = `${newEntry.substring(0, start)}1. ${selectedText}${newEntry.substring(end)}`;
+        newCursorPos = start + 3;
+        break;
+      default:
+        // For bold (**), italic (*), and underline (__)
+        newText = `${newEntry.substring(0, start)}${format}${selectedText}${format}${newEntry.substring(end)}`;
+        newCursorPos = start + format.length;
     }
+
+    setNewEntry(newText);
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos + selectedText.length);
+    }, 0);
   };
 
   return (

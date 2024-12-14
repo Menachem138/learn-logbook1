@@ -107,7 +107,7 @@ export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('bold')}
+          onClick={() => onFormatText('**')}
           title="מודגש"
         >
           <Bold className="h-4 w-4" />
@@ -115,7 +115,7 @@ export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('italic')}
+          onClick={() => onFormatText('*')}
           title="נטוי"
         >
           <Italic className="h-4 w-4" />
@@ -123,7 +123,7 @@ export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('underline')}
+          onClick={() => onFormatText('__')}
           title="קו תחתון"
         >
           <Underline className="h-4 w-4" />
