@@ -186,7 +186,7 @@ export type Database = {
       timer_sessions: {
         Row: {
           created_at: string
-          duration: number
+          duration: number | null
           ended_at: string | null
           id: string
           started_at: string
@@ -195,7 +195,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          duration: number
+          duration?: number | null
           ended_at?: string | null
           id?: string
           started_at?: string
@@ -204,7 +204,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          duration?: number
+          duration?: number | null
           ended_at?: string | null
           id?: string
           started_at?: string

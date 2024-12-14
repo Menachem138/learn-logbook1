@@ -4,12 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
 import { TimerDisplay } from './TimerDisplay';
 import { TimerControls } from './TimerControls';
 import { TimerStats } from './TimerStats';
 import { TimerState } from './types';
 import { useTimerData } from '@/hooks/useTimerData';
+import { supabase } from '@/integrations/supabase/client';
 
 export const StudyTimeTracker: React.FC = () => {
   const [timerState, setTimerState] = useState<TimerState>(TimerState.STOPPED);
@@ -26,36 +26,9 @@ export const StudyTimeTracker: React.FC = () => {
   const startTimeRef = useRef<number>(0);
   const currentSessionRef = useRef<string | null>(null);
 
-  const cleanup = async () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    if (currentSessionRef.current && timerState !== TimerState.STOPPED) {
-      const { error } = await supabase
-        .from('timer_sessions')
-        .update({ 
-          ended_at: new Date().toISOString()
-        })
-        .eq('id', currentSessionRef.current);
-
-      if (error) {
-        console.error('Error ending session:', error);
-        toast({
-          title: "שגיאה בשמירת הנתונים",
-          description: "לא ניתן לשמור את זמני הלמידה כרגע",
-          variant: "destructive",
-        });
-      }
-      
-      await loadLatestSessionData();
-    }
-  };
-
   useEffect(() => {
     return () => {
-      cleanup();
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
@@ -100,6 +73,33 @@ export const StudyTimeTracker: React.FC = () => {
     }, 10);
 
     await loadLatestSessionData();
+  };
+
+  const cleanup = async () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (currentSessionRef.current && timerState !== TimerState.STOPPED) {
+      const { error } = await supabase
+        .from('timer_sessions')
+        .update({ 
+          ended_at: new Date().toISOString()
+        })
+        .eq('id', currentSessionRef.current);
+
+      if (error) {
+        console.error('Error ending session:', error);
+        toast({
+          title: "שגיאה בשמירת הנתונים",
+          description: "לא ניתן לשמור את זמני הלמידה כרגע",
+          variant: "destructive",
+        });
+      }
+      
+      await loadLatestSessionData();
+    }
   };
 
   const stopTimer = async () => {
