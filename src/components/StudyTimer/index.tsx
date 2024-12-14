@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { TimerState } from '@/types/timer';
 import { TimerDisplay } from './TimerDisplay';
 import { TimerControls } from './TimerControls';
 import { HistoryToggle } from './HistoryToggle';
+import { TimerState } from '@/types/timer';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export const StudyTimeTracker: React.FC = () => {
+export const StudyTimer = () => {
   const [timerState, setTimerState] = useState<TimerState>(TimerState.STOPPED);
   const [time, setTime] = useState<number>(0);
   const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
@@ -154,7 +154,7 @@ export const StudyTimeTracker: React.FC = () => {
   return (
     <Card className="w-full max-w-xl mx-auto bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
       <CardContent className="p-8 space-y-8">
-        <TimerDisplay time={time} timerState={timerState} />
+        <TimerDisplay time={time} />
         <TimerControls
           timerState={timerState}
           onStartStudy={() => startTimer(TimerState.STUDYING)}
