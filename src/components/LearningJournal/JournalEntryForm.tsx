@@ -48,14 +48,14 @@ export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEnt
   };
 
   return (
-    <div className="space-y-4 bg-card p-4 rounded-lg border">
+    <div className="space-y-4 bg-navy-900 p-6 rounded-lg border border-navy-800 shadow-xl">
       <TextEditorToolbar onFormatText={handleFormatText} />
       <Textarea
         ref={textareaRef}
         placeholder="מה למדת היום?"
         value={newEntry}
         onChange={(e) => setNewEntry(e.target.value)}
-        className="min-h-[100px] text-right"
+        className="min-h-[150px] text-right bg-navy-800 border-navy-800 focus:border-blue-500"
         dir="rtl"
       />
       <div className="flex gap-2 justify-end">
