@@ -1,4 +1,5 @@
 import React from "react";
+import { StudyTimeTracker } from "@/components/StudyTimeTracker";
 import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
 import LearningJournal from "@/components/LearningJournal";
@@ -14,6 +15,7 @@ const Index = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
+          <StudyTimeTracker />
           <MotivationalQuotes />
           <ChatAssistant />
         </div>
