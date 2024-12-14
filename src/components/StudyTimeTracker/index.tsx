@@ -43,7 +43,7 @@ export const StudyTimeTracker: React.FC = () => {
     }
 
     await cleanup();
-    
+
     const { data: newSession, error } = await supabase
       .from('timer_sessions')
       .insert({

@@ -28,6 +28,8 @@ export const useTimerData = () => {
       let breakTime = 0;
 
       sessions?.forEach(session => {
+        if (!session.started_at) return;
+        
         const startTime = new Date(session.started_at).getTime();
         const endTime = session.ended_at ? new Date(session.ended_at).getTime() : Date.now();
         const duration = endTime - startTime;
@@ -37,11 +39,6 @@ export const useTimerData = () => {
         } else if (session.type === 'break') {
           breakTime += duration;
         }
-      });
-
-      console.log('Calculated times:', { 
-        studyTime: Math.floor(studyTime / 1000),
-        breakTime: Math.floor(breakTime / 1000)
       });
 
       setTotalStudyTime(studyTime);
@@ -59,7 +56,7 @@ export const useTimerData = () => {
 
   useEffect(() => {
     loadLatestSessionData();
-    const intervalId = setInterval(loadLatestSessionData, 1000);
+    const intervalId = setInterval(loadLatestSessionData, 5000);
     return () => clearInterval(intervalId);
   }, [loadLatestSessionData]);
 
