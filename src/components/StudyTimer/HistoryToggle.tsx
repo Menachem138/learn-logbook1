@@ -1,21 +1,32 @@
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BookOpen, Calendar } from 'lucide-react';
 
 interface HistoryToggleProps {
   isOpen: boolean;
   onToggle: () => void;
+  onDiaryToggle: () => void;
 }
 
-export const HistoryToggle: React.FC<HistoryToggleProps> = ({ isOpen, onToggle }) => {
+export const HistoryToggle: React.FC<HistoryToggleProps> = ({ isOpen, onToggle, onDiaryToggle }) => {
   return (
-    <div className="text-right">
-      <button
+    <div className="flex justify-center gap-4 mt-4">
+      <Button
         onClick={onToggle}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+        variant="outline"
+        className="flex items-center gap-2 px-6 py-2 bg-white hover:bg-gray-50 border-gray-300"
       >
-        היסטוריית זמנים
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+        <BookOpen className="w-4 h-4" />
+        סיכום
+      </Button>
+      <Button
+        onClick={onDiaryToggle}
+        variant="outline"
+        className="flex items-center gap-2 px-6 py-2 bg-white hover:bg-gray-50 border-gray-300"
+      >
+        <Calendar className="w-4 h-4" />
+        יומן
+      </Button>
     </div>
   );
 };

@@ -21,7 +21,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
         onClick={onStartStudy}
         disabled={timerState === 'STUDYING'}
         variant="outline"
-        className="flex-1 max-w-[200px] bg-white hover:bg-gray-50"
+        className="flex-1 max-w-[200px] bg-white hover:bg-gray-50 border-gray-300"
       >
         <Play className="ml-2 h-4 w-4" />
         למידה
@@ -31,16 +31,16 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
         onClick={onStartBreak}
         disabled={timerState === 'BREAK'}
         variant="outline"
-        className="flex-1 max-w-[200px] bg-white hover:bg-gray-50"
+        className="flex-1 max-w-[200px] bg-gray-400 hover:bg-gray-500 text-white border-0"
       >
-        <Play className="ml-2 h-4 w-4" />
+        <Pause className="ml-2 h-4 w-4" />
         הפסקה
       </Button>
       
       <Button
         onClick={onStop}
         disabled={timerState === 'STOPPED'}
-        className="flex-1 max-w-[200px] bg-red-100 hover:bg-red-200 text-red-600 border-red-200"
+        className="flex-1 max-w-[200px] bg-red-500 hover:bg-red-600 text-white border-0"
       >
         <StopCircle className="ml-2 h-4 w-4" />
         עצור

@@ -10,11 +10,11 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState, fo
   const getBgColor = () => {
     switch (timerState) {
       case 'STUDYING':
-        return 'bg-green-50';
+        return 'bg-[#FFFBE6]';
       case 'BREAK':
-        return 'bg-yellow-50';
+        return 'bg-[#FFFBE6]';
       default:
-        return 'bg-gray-50';
+        return 'bg-[#FFFBE6]';
     }
   };
 

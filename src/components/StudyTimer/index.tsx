@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TimerDisplay } from "./TimerDisplay";
 import { TimerControls } from "./TimerControls";
 import { TimerHistory } from "./TimerHistory";
+import { HistoryToggle } from "./HistoryToggle";
 
 export const StudyTimer = () => {
   const [timerState, setTimerState] = useState<'STOPPED' | 'STUDYING' | 'BREAK'>('STOPPED');
@@ -136,8 +137,13 @@ export const StudyTimer = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const handleDiaryToggle = () => {
+    // This will be implemented later for diary functionality
+    toast.info('יומן יהיה זמין בקרוב!');
+  };
+
   return (
-    <Card className="w-full max-w-md mx-auto bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
+    <Card className="w-full max-w-2xl mx-auto bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
       <CardContent className="p-8 space-y-6">
         <TimerDisplay
           time={time}
@@ -152,12 +158,20 @@ export const StudyTimer = () => {
           onStop={stopTimer}
         />
 
-        <TimerHistory
-          sessions={sessions}
-          totalStudyTime={totalStudyTime}
-          totalBreakTime={totalBreakTime}
-          onCalculateSummary={() => setShowSummary(!showSummary)}
+        <HistoryToggle
+          isOpen={showSummary}
+          onToggle={() => setShowSummary(!showSummary)}
+          onDiaryToggle={handleDiaryToggle}
         />
+
+        {showSummary && (
+          <TimerHistory
+            sessions={sessions}
+            totalStudyTime={totalStudyTime}
+            totalBreakTime={totalBreakTime}
+            onCalculateSummary={() => setShowSummary(false)}
+          />
+        )}
       </CardContent>
     </Card>
   );
