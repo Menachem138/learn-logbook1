@@ -84,6 +84,17 @@ export default {
       typography: {
         DEFAULT: {
           css: {
+            maxWidth: 'none',
+            width: '100%',
+            p: {
+              width: '100%',
+              maxWidth: 'none',
+              textAlign: 'right',
+            },
+            div: {
+              width: '100%',
+              maxWidth: 'none',
+            },
             'ul > li': {
               paddingLeft: '0',
               paddingRight: '1.5em',
