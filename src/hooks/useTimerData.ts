@@ -12,16 +12,17 @@ export const useTimerData = () => {
   const loadLatestSessionData = useCallback(async () => {
     if (!session?.user?.id) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     try {
+      // Get today's date at midnight
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       const { data: sessions, error } = await supabase
         .from('timer_sessions')
         .select('*')
         .eq('user_id', session.user.id)
-        .gte('created_at', today.toISOString())
-        .order('created_at', { ascending: false });
+        .gte('started_at', today.toISOString())
+        .order('started_at', { ascending: true });
 
       if (error) throw error;
 
@@ -29,26 +30,29 @@ export const useTimerData = () => {
       let breakTime = 0;
 
       sessions?.forEach(session => {
+        // Calculate duration based on whether the session has ended or is ongoing
+        let sessionDuration = 0;
+        
         if (session.ended_at) {
-          // For completed sessions, use the duration field
-          if (session.type === 'study') {
-            studyTime += session.duration || 0;
-          } else if (session.type === 'break') {
-            breakTime += session.duration || 0;
-          }
-        } else if (session.started_at) {
-          // For ongoing sessions, calculate current duration
-          const currentDuration = Date.now() - new Date(session.started_at).getTime();
-          if (session.type === 'study') {
-            studyTime += currentDuration;
-          } else if (session.type === 'break') {
-            breakTime += currentDuration;
-          }
+          // For completed sessions
+          sessionDuration = new Date(session.ended_at).getTime() - new Date(session.started_at).getTime();
+        } else {
+          // For ongoing sessions
+          sessionDuration = Date.now() - new Date(session.started_at).getTime();
+        }
+
+        // Add to appropriate total
+        if (session.type === 'study') {
+          studyTime += sessionDuration;
+        } else if (session.type === 'break') {
+          breakTime += sessionDuration;
         }
       });
 
+      console.log('Updated totals:', { studyTime, breakTime });
       setTotalStudyTime(studyTime);
       setTotalBreakTime(breakTime);
+
     } catch (error: any) {
       console.error('Error loading timer sessions:', error);
       toast({
@@ -63,7 +67,7 @@ export const useTimerData = () => {
     // Load data immediately when the component mounts
     loadLatestSessionData();
 
-    // Set up interval to refresh data
+    // Set up interval to refresh data every second
     const intervalId = setInterval(loadLatestSessionData, 1000);
 
     // Cleanup interval on unmount

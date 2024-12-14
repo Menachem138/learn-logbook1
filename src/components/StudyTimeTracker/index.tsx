@@ -35,13 +35,22 @@ export const StudyTimeTracker: React.FC = () => {
 
     if (currentSessionRef.current && timerState !== TimerState.STOPPED) {
       const elapsedTime = Date.now() - startTimeRef.current;
-      await supabase
+      const { error } = await supabase
         .from('timer_sessions')
         .update({ 
           ended_at: new Date().toISOString(),
-          duration: elapsedTime
+          duration: Math.floor(elapsedTime / 1000) // Convert to seconds
         })
         .eq('id', currentSessionRef.current);
+
+      if (error) {
+        console.error('Error ending session:', error);
+        toast({
+          title: "שגיאה בשמירת הנתונים",
+          description: "לא ניתן לשמור את זמני הלמידה כרגע",
+          variant: "destructive",
+        });
+      }
       
       await loadLatestSessionData();
     }
