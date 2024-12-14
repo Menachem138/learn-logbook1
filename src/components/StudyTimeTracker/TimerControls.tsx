@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, StopCircle } from 'lucide-react';
 import { TimerState } from '@/types/timer';
 
 interface TimerControlsProps {
@@ -17,33 +16,30 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   onStop,
 }) => {
   return (
-    <div className="flex justify-center gap-2 rtl">
-      <Button 
-        onClick={onStartStudy} 
-        disabled={timerState === TimerState.STUDYING}
-        variant={timerState === TimerState.STUDYING ? "secondary" : "outline"}
-        className="flex items-center gap-2"
-      >
-        {timerState === TimerState.STUDYING ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        למידה
-      </Button>
-      <Button 
-        onClick={onStartBreak} 
-        disabled={timerState === TimerState.BREAK}
-        variant={timerState === TimerState.BREAK ? "secondary" : "outline"}
-        className="flex items-center gap-2"
-      >
-        {timerState === TimerState.BREAK ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        הפסקה
-      </Button>
+    <div className="flex gap-4 justify-center" dir="rtl">
       <Button 
         onClick={onStop} 
         disabled={timerState === TimerState.STOPPED}
+        className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-xl"
         variant="destructive"
-        className="flex items-center gap-2"
       >
-        <StopCircle className="h-4 w-4" />
         עצור
+      </Button>
+      <Button
+        onClick={onStartBreak}
+        disabled={timerState === TimerState.BREAK}
+        className="bg-navy-800 hover:bg-navy-900 text-white px-8 py-2 rounded-xl"
+        variant="default"
+      >
+        זמן הפסקה
+      </Button>
+      <Button
+        onClick={onStartStudy}
+        disabled={timerState === TimerState.STUDYING}
+        className="bg-navy-800 hover:bg-navy-900 text-white px-8 py-2 rounded-xl"
+        variant="default"
+      >
+        זמן למידה
       </Button>
     </div>
   );
