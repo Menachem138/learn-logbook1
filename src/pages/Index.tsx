@@ -2,7 +2,6 @@ import React from "react";
 import { StudyTimer } from "@/components/StudyTimer";
 import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
-import LearningJournal from "@/components/LearningJournal";
 import Library from "@/components/Library";
 import Questions from "@/components/Questions";
 import ChatAssistant from "@/components/ChatAssistant";
@@ -24,8 +23,6 @@ export default function Index() {
         <CourseSchedule />
         <Library />
         <Questions />
-        {/* Learning Journal moved to bottom */}
-        <LearningJournal />
       </div>
     </div>
   );
