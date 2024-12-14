@@ -8,7 +8,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -21,7 +20,6 @@ serve(async (req) => {
       throw new Error('Message and userId are required');
     }
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
@@ -31,35 +29,48 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch user's progress, timer sessions, and other data
+    // Fetch timer sessions for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const { data: timerSessions } = await supabase
+      .from('timer_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('created_at', today.toISOString());
+
+    // Calculate total study and break times for today
+    let todayStudyTime = 0;
+    let todayBreakTime = 0;
+
+    timerSessions?.forEach(session => {
+      if (session.type === 'study') {
+        todayStudyTime += session.duration || 0;
+      } else if (session.type === 'break') {
+        todayBreakTime += session.duration || 0;
+      }
+    });
+
+    // Format times for display
+    const formatMinutes = (ms: number) => {
+      const minutes = Math.floor(ms / (1000 * 60));
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return hours > 0 
+        ? `${hours} שעות ו-${remainingMinutes} דקות`
+        : `${remainingMinutes} דקות`;
+    };
+
+    // Fetch other user data
     const [
       progress, 
       journalEntries, 
-      schedules, 
-      timerSessions
+      schedules
     ] = await Promise.all([
       supabase.from('course_progress').select('lesson_id').eq('user_id', userId).eq('completed', true),
       supabase.from('learning_journal').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
-      supabase.from('schedules').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-      supabase.from('timer_sessions')
-        .select('*')
-        .eq('user_id', userId)
-        .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+      supabase.from('schedules').select('*').eq('user_id', userId).order('created_at', { ascending: true })
     ]);
-
-    // Calculate today's study times
-    let todaysStudyTime = 0;
-    let todaysBreakTime = 0;
-
-    if (timerSessions.data) {
-      timerSessions.data.forEach(session => {
-        if (session.type === 'study') {
-          todaysStudyTime += session.duration || 0;
-        } else if (session.type === 'break') {
-          todaysBreakTime += session.duration || 0;
-        }
-      });
-    }
 
     const completedLessons = progress.data?.length || 0;
     const totalLessons = 206;
@@ -73,13 +84,17 @@ serve(async (req) => {
 
     // Create context with all user data including timer sessions
     const context = `
+      מידע על זמני הלמידה שלך להיום:
+      - זמן למידה: ${formatMinutes(todayStudyTime)}
+      - זמן הפסקות: ${formatMinutes(todayBreakTime)}
+      - סך הכל: ${formatMinutes(todayStudyTime + todayBreakTime)}
+      
+      ${timerSessions && timerSessions.length > 0 
+        ? `המשתמש למד היום ${formatMinutes(todayStudyTime)} ולקח ${formatMinutes(todayBreakTime)} הפסקה.`
+        : 'עדיין לא נרשמו זמני למידה להיום.'}
+      
       מידע על ההתקדמות שלך:
       - השלמת ${completedLessons} מתוך ${totalLessons} שיעורים (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
-      
-      זמני למידה להיום:
-      - זמן למידה: ${Math.floor(todaysStudyTime / (1000 * 60))} דקות
-      - זמן הפסקות: ${Math.floor(todaysBreakTime / (1000 * 60))} דקות
-      - סך הכל: ${Math.floor((todaysStudyTime + todaysBreakTime) / (1000 * 60))} דקות
       
       לוח הזמנים השבועי שלך:
       ${formattedSchedule}
@@ -116,7 +131,7 @@ serve(async (req) => {
               {
                 role: 'system',
                 content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
-                יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמים אישית.
+                יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמת אישית.
                 עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
                 תמיד ענה בעברית ושמור על טון ידידותי ותומך.
                 
