@@ -28,9 +28,10 @@ import {
 interface EditorProps {
   content: string
   onChange: (content: string) => void
+  onClear?: () => void
 }
 
-const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
+const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -49,6 +50,11 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
+    onCreate: ({ editor }) => {
+      if (!content) {
+        editor.commands.setContent('')
+      }
+    },
     editorProps: {
       attributes: {
         class: 'prose prose-lg rtl w-full min-h-[200px] overflow-y-auto p-4',
@@ -56,6 +62,12 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
       },
     },
   })
+
+  React.useEffect(() => {
+    if (editor && !content) {
+      editor.commands.setContent('')
+    }
+  }, [editor, content])
 
   const addImage = () => {
     const url = window.prompt('הכנס את כתובת התמונה:');
