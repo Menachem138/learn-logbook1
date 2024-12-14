@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { formatTime } from '@/utils/timeUtils';
+import { Book, Coffee } from 'lucide-react';
 
 interface TimerSession {
   id: string;
@@ -34,23 +35,29 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 text-sm font-medium text-gray-500 pb-2 border-b">
-        <div>סוג</div>
-        <div>זמן</div>
-        <div className="text-left">תאריך</div>
+      <div className="grid grid-cols-3 text-sm font-medium text-gray-500 pb-2">
+        <div>סיכום</div>
+        <div>פירוט</div>
+        <div className="text-left">זמן</div>
       </div>
 
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {sessions.map((session) => (
           <div
             key={session.id}
-            className={`grid grid-cols-3 items-center p-3 rounded-lg ${
+            className={`grid grid-cols-2 items-center p-3 rounded-lg ${
               session.type === 'study' ? 'bg-green-50' : 'bg-yellow-50'
             }`}
           >
-            <div>{session.type === 'study' ? 'למידה' : 'הפסקה'}</div>
-            <div className="tabular-nums">{formatTime(session.duration || 0)}</div>
-            <div className="text-left">{formatDate(session.started_at)}</div>
+            <div className="flex items-center gap-2">
+              {session.type === 'study' ? (
+                <Book className="h-4 w-4 text-green-600" />
+              ) : (
+                <Coffee className="h-4 w-4 text-yellow-600" />
+              )}
+              <span>{formatDate(session.started_at)}</span>
+            </div>
+            <div className="text-left tabular-nums">{formatTime(session.duration || 0)}</div>
           </div>
         ))}
       </div>
@@ -59,7 +66,7 @@ export const TimerHistory: React.FC<TimerHistoryProps> = ({
         onClick={onCalculateSummary}
         className="w-full py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
       >
-        חשב סיכום
+        הצג סיכום
       </Button>
 
       {(totalStudyTime > 0 || totalBreakTime > 0) && (

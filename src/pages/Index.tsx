@@ -3,16 +3,14 @@ import { StudyTimer } from "@/components/StudyTimer";
 import MotivationalQuotes from "@/components/MotivationalQuotes";
 import CourseContent from "@/components/CourseContent";
 import LearningJournal from "@/components/LearningJournal";
-import CourseSchedule from "@/components/CourseSchedule";
 import Library from "@/components/Library";
 import Questions from "@/components/Questions";
 import ChatAssistant from "@/components/ChatAssistant";
+import CourseSchedule from "@/components/CourseSchedule";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="container mx-auto p-4 min-h-screen" dir="rtl">
-      <h1 className="text-4xl font-bold text-center mb-8">תוכנית למידה לקורס קריפטו</h1>
-      
+    <div className="container py-6 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <div className="w-full max-w-md mx-auto">
@@ -21,17 +19,14 @@ const Index = () => {
           <MotivationalQuotes />
           <ChatAssistant />
         </div>
-        
         <div className="space-y-6">
           <CourseContent />
-          <CourseSchedule />
+          <LearningJournal />
           <Library />
           <Questions />
-          <LearningJournal />
+          <CourseSchedule />
         </div>
       </div>
     </div>
   );
-};
-
-export default Index;
+}

@@ -21,7 +21,7 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState, fo
   return (
     <div className="text-center mb-8">
       <h2 className="text-3xl font-bold mb-6">מעקב זמן למידה</h2>
-      <div className={`${getBgColor()} rounded-xl p-8 transition-colors duration-300`}>
+      <div className={`${getBgColor()} rounded-2xl p-8 transition-colors duration-300`}>
         <div className="text-7xl font-mono tracking-wider" dir="ltr">
           {formatTime(time)}
         </div>
