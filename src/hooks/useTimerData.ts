@@ -13,7 +13,6 @@ export const useTimerData = () => {
     if (!session?.user?.id) return;
 
     try {
-      // Get today's date at midnight
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -21,8 +20,7 @@ export const useTimerData = () => {
         .from('timer_sessions')
         .select('*')
         .eq('user_id', session.user.id)
-        .gte('started_at', today.toISOString())
-        .order('started_at', { ascending: true });
+        .gte('started_at', today.toISOString());
 
       if (error) throw error;
 
@@ -30,26 +28,22 @@ export const useTimerData = () => {
       let breakTime = 0;
 
       sessions?.forEach(session => {
-        // Calculate duration based on whether the session has ended or is ongoing
-        let sessionDuration = 0;
-        
-        if (session.ended_at) {
-          // For completed sessions
-          sessionDuration = new Date(session.ended_at).getTime() - new Date(session.started_at).getTime();
-        } else {
-          // For ongoing sessions
-          sessionDuration = Date.now() - new Date(session.started_at).getTime();
-        }
+        const startTime = new Date(session.started_at).getTime();
+        const endTime = session.ended_at ? new Date(session.ended_at).getTime() : Date.now();
+        const duration = endTime - startTime;
 
-        // Add to appropriate total
         if (session.type === 'study') {
-          studyTime += sessionDuration;
+          studyTime += duration;
         } else if (session.type === 'break') {
-          breakTime += sessionDuration;
+          breakTime += duration;
         }
       });
 
-      console.log('Updated totals:', { studyTime, breakTime });
+      console.log('Calculated times:', { 
+        studyTime: Math.floor(studyTime / 1000),
+        breakTime: Math.floor(breakTime / 1000)
+      });
+
       setTotalStudyTime(studyTime);
       setTotalBreakTime(breakTime);
 
@@ -64,13 +58,8 @@ export const useTimerData = () => {
   }, [session?.user?.id, toast]);
 
   useEffect(() => {
-    // Load data immediately when the component mounts
     loadLatestSessionData();
-
-    // Set up interval to refresh data every second
     const intervalId = setInterval(loadLatestSessionData, 1000);
-
-    // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, [loadLatestSessionData]);
 

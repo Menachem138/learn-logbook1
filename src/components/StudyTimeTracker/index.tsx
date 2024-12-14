@@ -26,7 +26,6 @@ export const StudyTimeTracker: React.FC = () => {
   const startTimeRef = useRef<number>(0);
   const currentSessionRef = useRef<string | null>(null);
 
-  // Cleanup function to handle intervals and active sessions
   const cleanup = async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -34,12 +33,10 @@ export const StudyTimeTracker: React.FC = () => {
     }
 
     if (currentSessionRef.current && timerState !== TimerState.STOPPED) {
-      const elapsedTime = Date.now() - startTimeRef.current;
       const { error } = await supabase
         .from('timer_sessions')
         .update({ 
-          ended_at: new Date().toISOString(),
-          duration: Math.floor(elapsedTime / 1000) // Convert to seconds
+          ended_at: new Date().toISOString()
         })
         .eq('id', currentSessionRef.current);
 
@@ -57,7 +54,6 @@ export const StudyTimeTracker: React.FC = () => {
   };
 
   useEffect(() => {
-    // Cleanup on unmount
     return () => {
       cleanup();
     };
@@ -73,16 +69,13 @@ export const StudyTimeTracker: React.FC = () => {
       return;
     }
 
-    // Clean up any existing timer
     await cleanup();
     
-    // Start new session
     const { data: newSession, error } = await supabase
       .from('timer_sessions')
       .insert({
         user_id: session.user.id,
         type: state === TimerState.STUDYING ? 'study' : 'break',
-        duration: 0,
         started_at: new Date().toISOString(),
       })
       .select()
