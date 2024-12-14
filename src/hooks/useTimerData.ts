@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -9,11 +9,7 @@ export const useTimerData = () => {
   const { toast } = useToast();
   const { session } = useAuth();
 
-  useEffect(() => {
-    loadLatestSessionData();
-  }, [session?.user?.id]);
-
-  const loadLatestSessionData = async () => {
+  const loadLatestSessionData = useCallback(async () => {
     if (!session?.user?.id) return;
 
     const today = new Date();
@@ -33,16 +29,15 @@ export const useTimerData = () => {
       let breakTime = 0;
 
       sessions?.forEach(session => {
-        // For completed sessions
         if (session.ended_at) {
+          // For completed sessions, use the duration field
           if (session.type === 'study') {
-            studyTime += session.duration;
+            studyTime += session.duration || 0;
           } else if (session.type === 'break') {
-            breakTime += session.duration;
+            breakTime += session.duration || 0;
           }
-        }
-        // For ongoing sessions
-        else if (session.started_at) {
+        } else if (session.started_at) {
+          // For ongoing sessions, calculate current duration
           const currentDuration = Date.now() - new Date(session.started_at).getTime();
           if (session.type === 'study') {
             studyTime += currentDuration;
@@ -62,13 +57,22 @@ export const useTimerData = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [session?.user?.id, toast]);
+
+  useEffect(() => {
+    // Load data immediately when the component mounts
+    loadLatestSessionData();
+
+    // Set up interval to refresh data
+    const intervalId = setInterval(loadLatestSessionData, 1000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, [loadLatestSessionData]);
 
   return {
     totalStudyTime,
     totalBreakTime,
-    setTotalStudyTime,
-    setTotalBreakTime,
     loadLatestSessionData
   };
 };

@@ -26,14 +26,31 @@ export const StudyTimeTracker: React.FC = () => {
   const startTimeRef = useRef<number>(0);
   const currentSessionRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadLatestSessionData();
-    }, 1000);
+  // Cleanup function to handle intervals and active sessions
+  const cleanup = async () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
 
+    if (currentSessionRef.current && timerState !== TimerState.STOPPED) {
+      const elapsedTime = Date.now() - startTimeRef.current;
+      await supabase
+        .from('timer_sessions')
+        .update({ 
+          ended_at: new Date().toISOString(),
+          duration: elapsedTime
+        })
+        .eq('id', currentSessionRef.current);
+      
+      await loadLatestSessionData();
+    }
+  };
+
+  useEffect(() => {
+    // Cleanup on unmount
     return () => {
-      clearInterval(interval);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      cleanup();
     };
   }, []);
 
@@ -47,20 +64,9 @@ export const StudyTimeTracker: React.FC = () => {
       return;
     }
 
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    // Clean up any existing timer
+    await cleanup();
     
-    // End current session if exists
-    if (timerState !== TimerState.STOPPED && currentSessionRef.current) {
-      const elapsedTime = Date.now() - startTimeRef.current;
-      await supabase
-        .from('timer_sessions')
-        .update({ 
-          ended_at: new Date().toISOString(),
-          duration: elapsedTime
-        })
-        .eq('id', currentSessionRef.current);
-    }
-
     // Start new session
     const { data: newSession, error } = await supabase
       .from('timer_sessions')
@@ -96,30 +102,7 @@ export const StudyTimeTracker: React.FC = () => {
 
   const stopTimer = async () => {
     if (!session?.user?.id) return;
-
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    
-    if (currentSessionRef.current) {
-      const elapsedTime = Date.now() - startTimeRef.current;
-      const { error } = await supabase
-        .from('timer_sessions')
-        .update({ 
-          ended_at: new Date().toISOString(),
-          duration: elapsedTime
-        })
-        .eq('id', currentSessionRef.current);
-
-      if (error) {
-        console.error('Error stopping timer session:', error);
-        toast({
-          title: "שגיאה בשמירת הנתונים",
-          description: "לא ניתן לשמור את זמני הלמידה כרגע",
-          variant: "destructive",
-        });
-      }
-    }
-
-    await loadLatestSessionData();
+    await cleanup();
     setTimerState(TimerState.STOPPED);
     setTime(0);
     currentSessionRef.current = null;
