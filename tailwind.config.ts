@@ -81,7 +81,33 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.5s ease-out",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            'ul > li': {
+              paddingLeft: '0',
+              paddingRight: '1.5em',
+            },
+            'ol > li': {
+              paddingLeft: '0',
+              paddingRight: '1.5em',
+            },
+            'blockquote p:first-of-type::before': {
+              content: 'none',
+            },
+            'blockquote p:first-of-type::after': {
+              content: 'none',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography")({
+      target: 'legacy-edge',
+      className: 'prose',
+    }),
+  ],
 } satisfies Config;

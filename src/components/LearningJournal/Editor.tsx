@@ -42,7 +42,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm focus:outline-none min-h-[150px] rtl text-right',
+        class: 'prose prose-sm rtl min-h-[150px]',
         dir: 'rtl',
       },
     },
@@ -153,7 +153,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
       </div>
 
       <div className="p-4">
-        <EditorContent editor={editor} className="prose prose-sm max-w-none focus:outline-none" />
+        <EditorContent editor={editor} className="prose prose-sm max-w-none" />
       </div>
     </div>
   )
