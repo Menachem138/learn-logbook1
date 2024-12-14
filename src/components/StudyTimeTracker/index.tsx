@@ -9,15 +9,21 @@ import { TimerDisplay } from './TimerDisplay';
 import { TimerControls } from './TimerControls';
 import { TimerStats } from './TimerStats';
 import { TimerState } from './types';
+import { useTimerData } from '@/hooks/useTimerData';
 
 export const StudyTimeTracker: React.FC = () => {
   const [timerState, setTimerState] = useState<TimerState>(TimerState.STOPPED);
   const [time, setTime] = useState<number>(0);
-  const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
-  const [totalBreakTime, setTotalBreakTime] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const { session } = useAuth();
+  const { 
+    totalStudyTime, 
+    totalBreakTime, 
+    setTotalStudyTime, 
+    setTotalBreakTime,
+    loadLatestSessionData 
+  } = useTimerData();
 
   const startTimeRef = useRef<number>(0);
   const studyTimeRef = useRef<number>(0);
@@ -49,7 +55,6 @@ export const StudyTimeTracker: React.FC = () => {
         breakTimeRef.current += elapsedTime;
       }
       
-      // End the current session
       if (currentSessionRef.current) {
         await supabase
           .from('timer_sessions')
@@ -61,7 +66,6 @@ export const StudyTimeTracker: React.FC = () => {
       }
     }
 
-    // Start a new session
     const { data: newSession, error } = await supabase
       .from('timer_sessions')
       .insert({
@@ -104,7 +108,6 @@ export const StudyTimeTracker: React.FC = () => {
       breakTimeRef.current += elapsedTime;
     }
 
-    // End the current session
     if (currentSessionRef.current) {
       const { error } = await supabase
         .from('timer_sessions')
@@ -124,8 +127,7 @@ export const StudyTimeTracker: React.FC = () => {
       }
     }
 
-    setTotalStudyTime(studyTimeRef.current);
-    setTotalBreakTime(breakTimeRef.current);
+    await loadLatestSessionData();
     setTimerState(TimerState.STOPPED);
     setTime(0);
     currentSessionRef.current = null;
