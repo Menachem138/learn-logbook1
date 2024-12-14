@@ -42,7 +42,7 @@ export function JournalEntry({ entry, onEdit, onDelete }: JournalEntryProps) {
           </Button>
         </div>
       </div>
-      <div className="whitespace-pre-wrap text-right" dir="rtl">
+      <div className="prose prose-sm max-w-none text-right" dir="rtl">
         <ReactMarkdown>{entry.content}</ReactMarkdown>
       </div>
       <p className="text-sm text-muted-foreground mt-2 text-right">

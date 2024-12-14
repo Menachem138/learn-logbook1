@@ -8,7 +8,7 @@ interface TextEditorToolbarProps {
 
 export function TextEditorToolbar({ onFormatText }: TextEditorToolbarProps) {
   return (
-    <div className="flex gap-1 mb-2" dir="rtl">
+    <div className="flex gap-1 mb-2 bg-secondary/20 p-2 rounded-md" dir="rtl">
       <Button
         variant="ghost"
         size="sm"
