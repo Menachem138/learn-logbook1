@@ -183,6 +183,36 @@ export type Database = {
         }
         Relationships: []
       }
+      timer_daily_summaries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          total_break_time: number
+          total_study_time: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          total_break_time?: number
+          total_study_time?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          total_break_time?: number
+          total_study_time?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       timer_sessions: {
         Row: {
           created_at: string
