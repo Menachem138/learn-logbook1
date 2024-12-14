@@ -1,3 +1,4 @@
+import { TimerState } from './types';
 import { formatTime } from './TimeUtils';
 
 interface TimerDisplayProps {
