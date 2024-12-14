@@ -20,7 +20,7 @@ export const useTimerData = () => {
     today.setHours(0, 0, 0, 0);
 
     try {
-      const { data, error } = await supabase
+      const { data: sessions, error } = await supabase
         .from('timer_sessions')
         .select('*')
         .eq('user_id', session.user.id)
@@ -32,12 +32,22 @@ export const useTimerData = () => {
       let studyTime = 0;
       let breakTime = 0;
 
-      data?.forEach(session => {
-        if (session.duration && session.ended_at) {
+      sessions?.forEach(session => {
+        // For completed sessions
+        if (session.ended_at) {
           if (session.type === 'study') {
             studyTime += session.duration;
           } else if (session.type === 'break') {
             breakTime += session.duration;
+          }
+        }
+        // For ongoing sessions
+        else if (session.started_at) {
+          const currentDuration = Date.now() - new Date(session.started_at).getTime();
+          if (session.type === 'study') {
+            studyTime += currentDuration;
+          } else if (session.type === 'break') {
+            breakTime += currentDuration;
           }
         }
       });

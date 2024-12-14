@@ -19,19 +19,20 @@ export const StudyTimeTracker: React.FC = () => {
   const { session } = useAuth();
   const { 
     totalStudyTime, 
-    totalBreakTime, 
-    setTotalStudyTime, 
-    setTotalBreakTime,
+    totalBreakTime,
     loadLatestSessionData 
   } = useTimerData();
 
   const startTimeRef = useRef<number>(0);
-  const studyTimeRef = useRef<number>(0);
-  const breakTimeRef = useRef<number>(0);
   const currentSessionRef = useRef<string | null>(null);
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      loadLatestSessionData();
+    }, 1000);
+
     return () => {
+      clearInterval(interval);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
@@ -47,25 +48,20 @@ export const StudyTimeTracker: React.FC = () => {
     }
 
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (timerState !== TimerState.STOPPED) {
+    
+    // End current session if exists
+    if (timerState !== TimerState.STOPPED && currentSessionRef.current) {
       const elapsedTime = Date.now() - startTimeRef.current;
-      if (timerState === TimerState.STUDYING) {
-        studyTimeRef.current += elapsedTime;
-      } else if (timerState === TimerState.BREAK) {
-        breakTimeRef.current += elapsedTime;
-      }
-      
-      if (currentSessionRef.current) {
-        await supabase
-          .from('timer_sessions')
-          .update({ 
-            ended_at: new Date().toISOString(),
-            duration: elapsedTime
-          })
-          .eq('id', currentSessionRef.current);
-      }
+      await supabase
+        .from('timer_sessions')
+        .update({ 
+          ended_at: new Date().toISOString(),
+          duration: elapsedTime
+        })
+        .eq('id', currentSessionRef.current);
     }
 
+    // Start new session
     const { data: newSession, error } = await supabase
       .from('timer_sessions')
       .insert({
@@ -94,21 +90,17 @@ export const StudyTimeTracker: React.FC = () => {
     intervalRef.current = setInterval(() => {
       setTime(prevTime => prevTime + 10);
     }, 10);
+
+    await loadLatestSessionData();
   };
 
   const stopTimer = async () => {
     if (!session?.user?.id) return;
 
     if (intervalRef.current) clearInterval(intervalRef.current);
-    const elapsedTime = Date.now() - startTimeRef.current;
     
-    if (timerState === TimerState.STUDYING) {
-      studyTimeRef.current += elapsedTime;
-    } else if (timerState === TimerState.BREAK) {
-      breakTimeRef.current += elapsedTime;
-    }
-
     if (currentSessionRef.current) {
+      const elapsedTime = Date.now() - startTimeRef.current;
       const { error } = await supabase
         .from('timer_sessions')
         .update({ 
