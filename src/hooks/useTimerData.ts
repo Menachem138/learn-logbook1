@@ -13,6 +13,7 @@ export const useTimerData = () => {
     if (!session?.user?.id) return;
 
     try {
+      // Get the start of today in the user's timezone
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -20,7 +21,8 @@ export const useTimerData = () => {
         .from('timer_sessions')
         .select('*')
         .eq('user_id', session.user.id)
-        .gte('started_at', today.toISOString());
+        .gte('started_at', today.toISOString())
+        .order('started_at', { ascending: true });
 
       if (error) throw error;
 
@@ -31,14 +33,21 @@ export const useTimerData = () => {
         if (!session.started_at) return;
         
         const startTime = new Date(session.started_at).getTime();
+        // אם אין זמן סיום, נשתמש בזמן הנוכחי
         const endTime = session.ended_at ? new Date(session.ended_at).getTime() : Date.now();
         const duration = endTime - startTime;
 
+        // נוסיף את משך הזמן לסך הכולל בהתאם לסוג הסשן
         if (session.type === 'study') {
           studyTime += duration;
         } else if (session.type === 'break') {
           breakTime += duration;
         }
+      });
+
+      console.log('Updated session times:', {
+        studyTime: Math.floor(studyTime / 1000 / 60), // Convert to minutes for logging
+        breakTime: Math.floor(breakTime / 1000 / 60)  // Convert to minutes for logging
       });
 
       setTotalStudyTime(studyTime);
@@ -56,6 +65,7 @@ export const useTimerData = () => {
 
   useEffect(() => {
     loadLatestSessionData();
+    // נעדכן כל 5 שניות
     const intervalId = setInterval(loadLatestSessionData, 5000);
     return () => clearInterval(intervalId);
   }, [loadLatestSessionData]);
