@@ -79,6 +79,8 @@ export const StudyTimer = () => {
     intervalRef.current = setInterval(() => {
       setTime(prev => prev + 1000);
     }, 1000);
+
+    toast.success(type === 'study' ? 'התחלת זמן למידה!' : 'התחלת זמן הפסקה!');
   };
 
   const stopTimer = async () => {
@@ -106,6 +108,7 @@ export const StudyTimer = () => {
     setTime(0);
     setCurrentSessionId(null);
     loadSessions();
+    toast.info('הטיימר נעצר!');
   };
 
   const calculateSummary = () => {
