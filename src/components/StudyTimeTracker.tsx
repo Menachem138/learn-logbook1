@@ -2,21 +2,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { BookOpen, Coffee, Pause, Play, StopCircle } from 'lucide-react';
-import { formatTime, formatTotalTime } from '@/utils/timeUtils';
+import { Card, CardContent } from '@/components/ui/card';
 import { TimerState } from '@/types/timer';
+import { formatTime } from '@/utils/timeUtils';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ChevronDown } from 'lucide-react';
 
 export const StudyTimeTracker: React.FC = () => {
   const [timerState, setTimerState] = useState<TimerState>(TimerState.STOPPED);
   const [time, setTime] = useState<number>(0);
   const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
   const [totalBreakTime, setTotalBreakTime] = useState<number>(0);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { session } = useAuth();
 
@@ -152,98 +151,52 @@ export const StudyTimeTracker: React.FC = () => {
     }
   };
 
-  const totalTime = totalStudyTime + totalBreakTime + (timerState !== TimerState.STOPPED ? time : 0);
-  const studyPercentage = totalTime > 0 ? 
-    ((totalStudyTime + (timerState === TimerState.STUDYING ? time : 0)) / totalTime) * 100 : 0;
-
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/80 backdrop-blur-sm shadow-lg border border-gray-200">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-center text-3xl font-bold text-gray-800">מעקב זמן למידה</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="relative">
-          <div className={`w-full py-8 px-4 rounded-2xl ${
-            timerState === TimerState.STUDYING 
-              ? 'bg-green-100' 
-              : timerState === TimerState.BREAK 
-                ? 'bg-yellow-100' 
-                : 'bg-gray-100'
-          } transition-colors duration-300 ease-in-out shadow-inner`}>
-            <div className="relative z-10 text-7xl font-bold text-center tabular-nums" dir="ltr">
-              {formatTime(time)}
-            </div>
+    <Card className="w-full max-w-xl mx-auto bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
+      <CardContent className="p-8 space-y-8">
+        <div className="text-center space-y-6">
+          <h1 className="text-2xl font-bold">טיימר</h1>
+          <div className="text-[96px] font-mono font-bold tracking-[0.2em] tabular-nums" dir="ltr">
+            {formatTime(time)}
           </div>
         </div>
-        <div className="flex justify-center space-x-2">
-          <Button 
-            onClick={() => startTimer(TimerState.STUDYING)} 
-            disabled={timerState === TimerState.STUDYING}
-            variant={timerState === TimerState.STUDYING ? "default" : "outline"}
-            className="transition-all duration-300 ease-in-out hover:shadow-md"
-          >
-            {timerState === TimerState.STUDYING ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-            למידה
-          </Button>
-          <Button 
-            onClick={() => startTimer(TimerState.BREAK)} 
-            disabled={timerState === TimerState.BREAK}
-            variant={timerState === TimerState.BREAK ? "default" : "outline"}
-            className="transition-all duration-300 ease-in-out hover:shadow-md"
-          >
-            {timerState === TimerState.BREAK ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-            הפסקה
-          </Button>
+
+        <div className="flex gap-4 justify-center" dir="rtl">
           <Button 
             onClick={stopTimer} 
-            disabled={timerState === TimerState.STOPPED} 
+            disabled={timerState === TimerState.STOPPED}
+            className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-xl"
             variant="destructive"
-            className="transition-all duration-300 ease-in-out hover:shadow-md"
           >
-            <StopCircle className="mr-2 h-4 w-4" />
             עצור
           </Button>
+          <Button
+            onClick={() => startTimer(TimerState.BREAK)}
+            disabled={timerState === TimerState.BREAK}
+            className="bg-navy-800 hover:bg-navy-900 text-white px-8 py-2 rounded-xl"
+            variant="default"
+          >
+            זמן הפסקה
+          </Button>
+          <Button
+            onClick={() => startTimer(TimerState.STUDYING)}
+            disabled={timerState === TimerState.STUDYING}
+            className="bg-navy-800 hover:bg-navy-900 text-white px-8 py-2 rounded-xl"
+            variant="default"
+          >
+            זמן למידה
+          </Button>
         </div>
-        <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="summary" className="text-sm">סיכום</TabsTrigger>
-            <TabsTrigger value="details" className="text-sm">פירוט</TabsTrigger>
-          </TabsList>
-          <TabsContent value="summary" className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span>זמן למידה</span>
-                <span className="font-semibold">{formatTotalTime(totalStudyTime + (timerState === TimerState.STUDYING ? time : 0))}</span>
-              </div>
-              <Progress value={studyPercentage} className="w-full h-2" />
-              <div className="flex justify-between items-center text-xs text-gray-500">
-                <span>0%</span>
-                <span>50%</span>
-                <span>100%</span>
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="details" className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center bg-green-100 p-3 rounded-lg transition-all duration-300 ease-in-out hover:shadow-md">
-                <span className="flex items-center text-green-800">
-                  <BookOpen className="mr-2 h-5 w-5" /> זמן למידה
-                </span>
-                <span className="font-semibold text-green-800">
-                  {formatTotalTime(totalStudyTime + (timerState === TimerState.STUDYING ? time : 0))}
-                </span>
-              </div>
-              <div className="flex justify-between items-center bg-yellow-100 p-3 rounded-lg transition-all duration-300 ease-in-out hover:shadow-md">
-                <span className="flex items-center text-yellow-800">
-                  <Coffee className="mr-2 h-5 w-5" /> זמן הפסקה
-                </span>
-                <span className="font-semibold text-yellow-800">
-                  {formatTotalTime(totalBreakTime + (timerState === TimerState.BREAK ? time : 0))}
-                </span>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+
+        <div className="text-right">
+          <button
+            onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            היסטוריית זמנים
+            <ChevronDown className={`w-4 h-4 transition-transform ${isHistoryOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
       </CardContent>
     </Card>
   );
