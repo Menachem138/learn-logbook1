@@ -14,9 +14,15 @@ export default function LearningJournal() {
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['journal-entries'],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data, error } = await supabase
         .from('learning_journal')
         .select('*')
+        .eq('user_id', session.session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -26,9 +32,18 @@ export default function LearningJournal() {
 
   const addEntryMutation = useMutation({
     mutationFn: async ({ content, isImportant }: { content: string; isImportant: boolean }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data, error } = await supabase
         .from('learning_journal')
-        .insert([{ content, is_important: isImportant }]);
+        .insert([{ 
+          content, 
+          is_important: isImportant,
+          user_id: session.session.user.id 
+        }]);
 
       if (error) throw error;
       return data;
@@ -45,10 +60,16 @@ export default function LearningJournal() {
 
   const updateEntryMutation = useMutation({
     mutationFn: async ({ id, content, isImportant }: { id: string; content: string; isImportant: boolean }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data, error } = await supabase
         .from('learning_journal')
         .update({ content, is_important: isImportant })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', session.session.user.id);
 
       if (error) throw error;
       return data;
@@ -65,10 +86,16 @@ export default function LearningJournal() {
 
   const deleteEntryMutation = useMutation({
     mutationFn: async (id: string) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        throw new Error('No authenticated user found');
+      }
+
       const { error } = await supabase
         .from('learning_journal')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', session.session.user.id);
 
       if (error) throw error;
     },
