@@ -29,6 +29,8 @@ export default function Timer() {
   const [showHistory, setShowHistory] = useState(false);
   const { session } = useAuth();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [totalStudyTime, setTotalStudyTime] = useState(0);
+  const [totalBreakTime, setTotalBreakTime] = useState(0);
 
   useEffect(() => {
     loadTimerHistory();
@@ -59,6 +61,25 @@ export default function Timer() {
     }
 
     setTimerLog(data || []);
+    calculateTotalTimes(data || []);
+  };
+
+  const calculateTotalTimes = (sessions: TimerSession[]) => {
+    let studyTime = 0;
+    let breakTime = 0;
+
+    sessions.forEach(session => {
+      if (session.duration) {
+        if (session.type === 'study') {
+          studyTime += session.duration;
+        } else if (session.type === 'break') {
+          breakTime += session.duration;
+        }
+      }
+    });
+
+    setTotalStudyTime(studyTime);
+    setTotalBreakTime(breakTime);
   };
 
   const startTimer = async (type: "study" | "break") => {
@@ -68,11 +89,9 @@ export default function Timer() {
     }
 
     if (isRunning) {
-      // Stop current session
       await stopTimer();
     }
 
-    // Start new session
     const { data, error } = await supabase
       .from('timer_sessions')
       .insert({
@@ -189,21 +208,37 @@ export default function Timer() {
         </Button>
         
         {showHistory && (
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {timerLog.map((session) => (
-              <div
-                key={session.id}
-                className="flex justify-between items-center p-2 bg-muted rounded"
-              >
-                <span>
-                  {session.type === "study" ? "למידה" : "הפסקה"} -{" "}
-                  {formatTime(session.duration)}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {formatDate(session.started_at)}
-                </span>
+          <div className="space-y-4">
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {timerLog.map((session) => (
+                <div
+                  key={session.id}
+                  className="flex justify-between items-center p-2 bg-muted rounded"
+                >
+                  <span>
+                    {session.type === "study" ? "למידה" : "הפסקה"} -{" "}
+                    {formatTime(session.duration || 0)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {formatDate(session.started_at)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-semibold mb-2">סיכום זמנים</h3>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span>סה"כ זמן למידה:</span>
+                  <span>{formatTime(totalStudyTime)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>סה"כ זמן הפסקות:</span>
+                  <span>{formatTime(totalBreakTime)}</span>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
