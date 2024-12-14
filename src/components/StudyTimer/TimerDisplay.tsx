@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface TimerDisplayProps {
   time: number;
@@ -8,21 +7,13 @@ interface TimerDisplayProps {
 }
 
 export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState, formatTime }) => {
-  const getTimerBackground = () => {
-    switch (timerState) {
-      case 'STUDYING':
-        return 'bg-green-100';
-      case 'BREAK':
-        return 'bg-yellow-100';
-      default:
-        return 'bg-gray-100';
-    }
-  };
-
   return (
-    <div className={`rounded-2xl p-8 ${getTimerBackground()} transition-colors duration-300`}>
-      <div className="text-7xl font-mono text-center" dir="ltr">
-        {formatTime(time)}
+    <div className="text-center mb-8">
+      <h2 className="text-3xl font-bold mb-6">מעקב זמן למידה</h2>
+      <div className="bg-gray-50 rounded-xl p-6">
+        <div className="text-7xl font-mono tracking-wider" dir="ltr">
+          {formatTime(time)}
+        </div>
       </div>
     </div>
   );

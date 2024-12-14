@@ -1,22 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { formatTime } from '@/utils/timeUtils';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { TimerDisplay } from './TimerDisplay';
-import { TimerControls } from './TimerControls';
-import { TimerHistory } from './TimerHistory';
-
-type TimerState = 'STOPPED' | 'STUDYING' | 'BREAK';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { TimerDisplay } from "./TimerDisplay";
+import { TimerControls } from "./TimerControls";
+import { TimerHistory } from "./TimerHistory";
 
 export const StudyTimer = () => {
-  const [timerState, setTimerState] = useState<TimerState>('STOPPED');
+  const [timerState, setTimerState] = useState<'STOPPED' | 'STUDYING' | 'BREAK'>('STOPPED');
   const [time, setTime] = useState<number>(0);
   const [sessions, setSessions] = useState<any[]>([]);
   const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
   const [totalBreakTime, setTotalBreakTime] = useState<number>(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const { session } = useAuth();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
@@ -130,11 +127,17 @@ export const StudyTimer = () => {
     toast.success('הסיכום חושב בהצלחה');
   };
 
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <Card className="w-full max-w-xl mx-auto bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
-      <CardContent className="p-8 space-y-8">
-        <h2 className="text-center text-3xl font-bold mb-8">מעקב זמן למידה</h2>
-        
+    <Card className="w-full max-w-md mx-auto bg-white shadow-sm border border-gray-100 rounded-3xl overflow-hidden">
+      <CardContent className="p-8 space-y-6">
         <TimerDisplay
           time={time}
           timerState={timerState}
