@@ -1,8 +1,9 @@
 import React from 'react';
-import { useEditor, EditorContent, Editor as TiptapEditor } from '@tiptap/react'
+import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
+import Image from '@tiptap/extension-image'
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -18,7 +19,10 @@ import {
   Italic,
   Underline as UnderlineIcon,
   Quote,
-  ChevronDown
+  ChevronDown,
+  ImageIcon,
+  ListOrdered,
+  List
 } from 'lucide-react'
 
 interface EditorProps {
@@ -35,6 +39,11 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
         defaultAlignment: 'right',
       }),
       Underline,
+      Image.configure({
+        HTMLAttributes: {
+          class: 'max-w-full rounded-lg',
+        },
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -42,26 +51,24 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm rtl min-h-[150px]',
+        class: 'prose prose-lg rtl w-full min-h-[200px] overflow-y-auto p-4',
         dir: 'rtl',
       },
     },
   })
 
-  if (!editor) {
-    return null
-  }
+  const addImage = () => {
+    const url = window.prompt('הכנס את כתובת התמונה:');
+    if (url && editor) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
 
-  const headingOptions = [
-    { label: 'טקסט רגיל', command: () => editor.chain().focus().setParagraph().run() },
-    { label: 'כותרת', command: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
-    { label: 'כותרת משנית', command: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
-    { label: 'תת-כותרת', command: () => editor.chain().focus().toggleHeading({ level: 3 }).run() },
-  ]
+  if (!editor) return null;
 
   return (
-    <div className="border rounded-lg overflow-hidden" dir="rtl">
-      <div className="flex items-center gap-2 border-b p-3 bg-gray-50/80">
+    <div className="border rounded-lg w-full">
+      <div className="flex items-center gap-2 border-b p-3 bg-gray-50/80 flex-wrap">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1 text-right px-3 font-normal">
@@ -70,7 +77,12 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[120px]">
-            {headingOptions.map((option) => (
+            {[
+              { label: 'טקסט רגיל', command: () => editor.chain().focus().setParagraph().run() },
+              { label: 'כותרת', command: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
+              { label: 'כותרת משנית', command: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
+              { label: 'תת-כותרת', command: () => editor.chain().focus().toggleHeading({ level: 3 }).run() },
+            ].map((option) => (
               <DropdownMenuItem
                 key={option.label}
                 onClick={option.command}
@@ -117,26 +129,18 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`px-2 ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-100' : ''}`}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`px-2 ${editor.isActive('orderedList') ? 'bg-gray-100' : ''}`}
           >
-            <AlignRight className="h-4 w-4" />
+            <ListOrdered className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`px-2 ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-100' : ''}`}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`px-2 ${editor.isActive('bulletList') ? 'bg-gray-100' : ''}`}
           >
-            <AlignCenter className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`px-2 ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-100' : ''}`}
-          >
-            <AlignLeft className="h-4 w-4" />
+            <List className="h-4 w-4" />
           </Button>
         </div>
 
@@ -145,18 +149,18 @@ const Editor: React.FC<EditorProps> = ({ content, onChange }) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`px-2 ${editor.isActive('blockquote') ? 'bg-gray-100' : ''}`}
+          onClick={addImage}
+          className="px-2"
         >
-          <Quote className="h-4 w-4" />
+          <ImageIcon className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="p-4">
-        <EditorContent editor={editor} className="prose prose-sm max-w-none" />
+      <div className="w-full">
+        <EditorContent editor={editor} className="prose prose-lg max-w-none w-full" />
       </div>
     </div>
-  )
+  );
 }
 
-export default Editor
+export default Editor;
