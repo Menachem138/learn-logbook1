@@ -7,6 +7,8 @@ import Questions from "@/components/Questions";
 import ChatAssistant from "@/components/ChatAssistant";
 import CourseSchedule from "@/components/CourseSchedule";
 import LearningJournal from "@/components/LearningJournal";
+import { StudyStatistics } from "@/components/StudyStatistics";
+import { RewardsSystem } from "@/components/RewardsSystem";
 
 export default function Index() {
   return (
@@ -15,6 +17,12 @@ export default function Index() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <StudyTimer />
         <ChatAssistant />
+      </div>
+
+      {/* Study Statistics and Rewards System */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <StudyStatistics />
+        <RewardsSystem />
       </div>
 
       {/* Other components in full width */}
