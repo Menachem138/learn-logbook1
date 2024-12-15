@@ -22,15 +22,19 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
   fetchVideos: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
+      const response = await supabase
         .from('youtube_videos')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      set({ videos: data || [] });
+      if (response.error) {
+        throw response.error;
+      }
+
+      set({ videos: response.data || [] });
     } catch (error) {
-      set({ error: (error as Error).message });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
+      set({ error: errorMessage });
     } finally {
       set({ isLoading: false });
     }
@@ -43,7 +47,7 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
       if (!videoId) throw new Error('Invalid YouTube URL');
 
       const details = await getYouTubeVideoDetails(videoId);
-      const { error } = await supabase
+      const response = await supabase
         .from('youtube_videos')
         .insert({
           url,
@@ -52,10 +56,14 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
           thumbnail_url: details.thumbnail,
         });
 
-      if (error) throw error;
+      if (response.error) {
+        throw response.error;
+      }
+
       await get().fetchVideos();
     } catch (error) {
-      set({ error: (error as Error).message });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add video';
+      set({ error: errorMessage });
       throw error;
     } finally {
       set({ isLoading: false });
@@ -65,15 +73,19 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
   deleteVideo: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { error } = await supabase
+      const response = await supabase
         .from('youtube_videos')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (response.error) {
+        throw response.error;
+      }
+
       await get().fetchVideos();
     } catch (error) {
-      set({ error: (error as Error).message });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete video';
+      set({ error: errorMessage });
       throw error;
     } finally {
       set({ isLoading: false });
