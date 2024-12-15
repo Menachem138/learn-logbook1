@@ -3,11 +3,12 @@ import { useLibrary } from "@/hooks/useLibrary";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Star, Trash2, Link, FileText, Image, Video, MessageCircle, Edit2, Upload, HelpCircle } from "lucide-react";
 import { LibraryItem, LibraryItemType } from "@/types/library";
+import { useDropzone } from "react-dropzone";
 import { MediaCard } from "./MediaCard";
 import { ItemDialog } from "./ItemDialog";
-import { YouTubeCard } from "./YouTubeCard";
 
 const getIcon = (type: LibraryItemType) => {
   switch (type) {
@@ -19,8 +20,6 @@ const getIcon = (type: LibraryItemType) => {
       return <Image className="w-4 h-4" />;
     case 'video':
       return <Video className="w-4 h-4" />;
-    case 'youtube':
-      return <Video className="w-4 h-4 text-red-500" />;
     case 'whatsapp':
       return <MessageCircle className="w-4 h-4" />;
     case 'pdf':
@@ -62,66 +61,6 @@ const Library = () => {
     );
   }
 
-  const renderItem = (item: LibraryItem) => {
-    if (item.type === 'youtube') {
-      return (
-        <YouTubeCard
-          videoId={item.videoId || ''}
-          title={item.title}
-          onDelete={() => deleteItem.mutate(item.id)}
-        />
-      );
-    }
-
-    if (item.file_details?.path && (item.type === 'image' || item.type === 'video' || item.type === 'pdf')) {
-      return (
-        <MediaCard
-          type={item.type as "image" | "video" | "pdf"}
-          src={item.file_details.path}
-          title={item.title}
-        />
-      );
-    }
-
-    return (
-      <Card key={item.id} className="p-4 hover:shadow-lg transition-shadow">
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex items-center gap-2">
-            {getIcon(item.type)}
-            <h3 className="font-semibold">{item.title}</h3>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleStar.mutate({ id: item.id, is_starred: !item.is_starred })}
-              className="hover:text-yellow-400"
-            >
-              <Star className={`w-4 h-4 ${item.is_starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEdit(item)}
-              className="hover:text-blue-500"
-            >
-              <Edit2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => deleteItem.mutate(item.id)}
-              className="hover:text-red-500"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-        <p className="text-sm text-gray-600 mb-3">{item.content}</p>
-      </Card>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -148,9 +87,50 @@ const Library = () => {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {items.map((item: LibraryItem) => (
-          <div key={item.id}>
-            {renderItem(item)}
-          </div>
+          <Card key={item.id} className="p-4 hover:shadow-lg transition-shadow">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center gap-2">
+                {getIcon(item.type)}
+                <h3 className="font-semibold">{item.title}</h3>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleStar.mutate({ id: item.id, is_starred: !item.is_starred })}
+                  className="hover:text-yellow-400"
+                >
+                  <Star className={`w-4 h-4 ${item.is_starred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEdit(item)}
+                  className="hover:text-blue-500"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => deleteItem.mutate(item.id)}
+                  className="hover:text-red-500"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">{item.content}</p>
+            {item.file_details?.path && (item.type === 'image' || item.type === 'video' || item.type === 'pdf') && (
+              <div className="mt-2">
+                <MediaCard
+                  type={item.type as "image" | "video" | "pdf"}
+                  src={item.file_details.path}
+                  title={item.title}
+                />
+              </div>
+            )}
+          </Card>
         ))}
       </div>
 
