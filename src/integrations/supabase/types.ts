@@ -134,7 +134,7 @@ export type Database = {
           id: string
           is_starred: boolean | null
           title: string
-          type: string
+          type: Database["public"]["Enums"]["library_item_type"]
           user_id: string
         }
         Insert: {
@@ -144,7 +144,7 @@ export type Database = {
           id?: string
           is_starred?: boolean | null
           title: string
-          type: string
+          type: Database["public"]["Enums"]["library_item_type"]
           user_id: string
         }
         Update: {
@@ -154,7 +154,7 @@ export type Database = {
           id?: string
           is_starred?: boolean | null
           title?: string
-          type?: string
+          type?: Database["public"]["Enums"]["library_item_type"]
           user_id?: string
         }
         Relationships: []
@@ -347,7 +347,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      library_item_type:
+        | "note"
+        | "link"
+        | "image"
+        | "video"
+        | "whatsapp"
+        | "pdf"
+        | "question"
+        | "youtube"
     }
     CompositeTypes: {
       [_ in never]: never
