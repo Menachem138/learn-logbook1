@@ -14,6 +14,25 @@ interface YouTubeStore {
   fetchVideos: () => Promise<void>;
 }
 
+const getHebrewError = (error: string): string => {
+  if (error.includes('API key')) {
+    return 'מפתח ה-API של YouTube לא מוגדר';
+  }
+  if (error.includes('Invalid YouTube URL')) {
+    return 'כתובת URL לא חוקית של YouTube';
+  }
+  if (error.includes('Failed to fetch')) {
+    return 'שגיאה בטעינת הסרטונים';
+  }
+  if (error.includes('Failed to add')) {
+    return 'שגיאה בהוספת הסרטון';
+  }
+  if (error.includes('Failed to delete')) {
+    return 'שגיאה במחיקת הסרטון';
+  }
+  return 'שגיאה לא צפויה';
+};
+
 export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
   videos: [],
   isLoading: false,
@@ -28,22 +47,30 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) {
-        set({ error: error.message, isLoading: false, videos: [] });
+        const hebrewError = getHebrewError('Failed to fetch videos');
+        set({ error: hebrewError, isLoading: false, videos: [] });
         return;
       }
 
       set({ videos: data || [], isLoading: false, error: null });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
-      set({ error: errorMessage, isLoading: false, videos: [] });
+      const hebrewError = getHebrewError(errorMessage);
+      set({ error: hebrewError, isLoading: false, videos: [] });
     }
   },
 
   addVideo: async (url: string) => {
     set({ isLoading: true, error: null });
     try {
+      if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
+        throw new Error('YouTube API key is not configured');
+      }
+
       const videoId = parseYouTubeUrl(url);
-      if (!videoId) throw new Error('Invalid YouTube URL');
+      if (!videoId) {
+        throw new Error('Invalid YouTube URL format');
+      }
 
       const details = await getYouTubeVideoDetails(videoId);
       const { error } = await supabase
@@ -56,14 +83,16 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         });
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        const hebrewError = getHebrewError('Failed to add video');
+        set({ error: hebrewError, isLoading: false });
         throw error;
       }
 
       await get().fetchVideos();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to add video';
-      set({ error: errorMessage, isLoading: false });
+      const hebrewError = getHebrewError(errorMessage);
+      set({ error: hebrewError, isLoading: false });
       throw error;
     }
   },
@@ -77,14 +106,16 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         .eq('id', id);
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        const hebrewError = getHebrewError('Failed to delete video');
+        set({ error: hebrewError, isLoading: false });
         throw error;
       }
 
       await get().fetchVideos();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete video';
-      set({ error: errorMessage, isLoading: false });
+      const hebrewError = getHebrewError(errorMessage);
+      set({ error: hebrewError, isLoading: false });
       throw error;
     }
   },
