@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Play as PlayIcon } from "lucide-react";
@@ -7,9 +7,13 @@ import { YouTubePlayer } from "./YouTubePlayer";
 import { AddVideoDialog } from "./AddVideoDialog";
 
 export function YouTubeLibrary() {
-  const { videos, isLoading } = useYouTubeStore();
+  const { videos, isLoading, fetchVideos } = useYouTubeStore();
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
+
+  useEffect(() => {
+    fetchVideos();
+  }, [fetchVideos]);
 
   return (
     <div className="space-y-6">
