@@ -40,7 +40,8 @@ export const RewardsSystem: React.FC = () => {
       const { data: achievements, error: achievementsError } = await supabase
         .from('achievements')
         .select('*')
-        .eq('user_id', session.user.id);
+        .eq('user_id', session.user.id)
+        .returns<{ id: string; title: string; description: string; type: Achievement['type']; earned_at: string; created_at: string; user_id: string; }[]>();
 
       if (achievementsError) {
         console.error('Error fetching achievements:', achievementsError);
