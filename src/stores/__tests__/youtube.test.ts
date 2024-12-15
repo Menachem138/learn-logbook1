@@ -2,45 +2,25 @@ import { useYouTubeStore } from '../youtube';
 import { supabase } from '../../integrations/supabase/client';
 import { parseYouTubeUrl, getYouTubeVideoDetails } from '../../utils/youtube';
 
-// Mock the entire Supabase module
-const mockSupabaseModule = {
-  from: jest.fn(),
-  select: jest.fn(),
-  order: jest.fn(),
-  insert: jest.fn(),
-  delete: jest.fn(),
-  eq: jest.fn(),
-};
-
 // Mock dependencies
-jest.mock('../../integrations/supabase/client', () => ({
-  supabase: {
-    from: (...args: any[]) => {
-      mockSupabaseModule.from(...args);
-      return {
-        select: (...args: any[]) => {
-          mockSupabaseModule.select(...args);
-          return {
-            order: (...args: any[]) => {
-              mockSupabaseModule.order(...args);
-              return mockSupabaseModule.order();
-            },
-          };
-        },
-        insert: (...args: any[]) => {
-          mockSupabaseModule.insert(...args);
-          return mockSupabaseModule.insert();
-        },
-        delete: () => ({
-          eq: (...args: any[]) => {
-            mockSupabaseModule.eq(...args);
-            return mockSupabaseModule.eq();
-          },
-        }),
-      };
+jest.mock('../../integrations/supabase/client', () => {
+  const mockOrder = jest.fn();
+  const mockEq = jest.fn();
+  const mockInsert = jest.fn();
+  const mockSelect = jest.fn(() => ({ order: mockOrder }));
+  const mockDelete = jest.fn(() => ({ eq: mockEq }));
+  const mockFrom = jest.fn(() => ({
+    select: mockSelect,
+    insert: mockInsert,
+    delete: mockDelete,
+  }));
+
+  return {
+    supabase: {
+      from: mockFrom,
     },
-  },
-}));
+  };
+});
 
 jest.mock('../../utils/youtube', () => ({
   parseYouTubeUrl: jest.fn(),
@@ -48,9 +28,24 @@ jest.mock('../../utils/youtube', () => ({
 }));
 
 describe('YouTubeStore', () => {
+  let mockFrom: jest.Mock;
+  let mockSelect: jest.Mock;
+  let mockOrder: jest.Mock;
+  let mockInsert: jest.Mock;
+  let mockDelete: jest.Mock;
+  let mockEq: jest.Mock;
+
   beforeEach(() => {
     jest.clearAllMocks();
     useYouTubeStore.setState({ videos: [], isLoading: false, error: null });
+
+    // Get mock functions
+    mockFrom = (supabase.from as jest.Mock);
+    mockSelect = mockFrom().select;
+    mockOrder = mockSelect().order;
+    mockInsert = mockFrom().insert;
+    mockDelete = mockFrom().delete;
+    mockEq = mockDelete().eq;
   });
 
   describe('fetchVideos', () => {
@@ -65,20 +60,17 @@ describe('YouTubeStore', () => {
         user_id: null,
       }];
 
-      mockSupabaseModule.order.mockResolvedValueOnce({
+      mockOrder.mockResolvedValueOnce({
         data: mockVideos,
         error: null,
-        status: 200,
-        statusText: 'OK',
-        count: null,
       });
 
       const store = useYouTubeStore.getState();
       await store.fetchVideos();
 
-      expect(mockSupabaseModule.from).toHaveBeenCalledWith('youtube_videos');
-      expect(mockSupabaseModule.select).toHaveBeenCalledWith('*');
-      expect(mockSupabaseModule.order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockFrom).toHaveBeenCalledWith('youtube_videos');
+      expect(mockSelect).toHaveBeenCalledWith('*');
+      expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false });
       expect(store.videos).toEqual(mockVideos);
       expect(store.isLoading).toBe(false);
       expect(store.error).toBeNull();
@@ -86,12 +78,9 @@ describe('YouTubeStore', () => {
 
     it('should handle fetch error', async () => {
       const mockError = new Error('Failed to fetch');
-      mockSupabaseModule.order.mockResolvedValueOnce({
+      mockOrder.mockResolvedValueOnce({
         data: null,
         error: mockError,
-        status: 500,
-        statusText: 'Error',
-        count: null,
       });
 
       const store = useYouTubeStore.getState();
@@ -115,20 +104,14 @@ describe('YouTubeStore', () => {
       (parseYouTubeUrl as jest.Mock).mockReturnValue(videoId);
       (getYouTubeVideoDetails as jest.Mock).mockResolvedValue(videoDetails);
 
-      mockSupabaseModule.insert.mockResolvedValueOnce({
+      mockInsert.mockResolvedValueOnce({
         data: null,
         error: null,
-        status: 201,
-        statusText: 'Created',
-        count: null,
       });
 
-      mockSupabaseModule.order.mockResolvedValueOnce({
+      mockOrder.mockResolvedValueOnce({
         data: [],
         error: null,
-        status: 200,
-        statusText: 'OK',
-        count: null,
       });
 
       const store = useYouTubeStore.getState();
@@ -136,7 +119,7 @@ describe('YouTubeStore', () => {
 
       expect(parseYouTubeUrl).toHaveBeenCalledWith(url);
       expect(getYouTubeVideoDetails).toHaveBeenCalledWith(videoId);
-      expect(mockSupabaseModule.insert).toHaveBeenCalledWith({
+      expect(mockInsert).toHaveBeenCalledWith({
         url,
         video_id: videoId,
         title: videoDetails.title,
@@ -156,27 +139,21 @@ describe('YouTubeStore', () => {
     it('should delete video successfully', async () => {
       const videoId = '123';
 
-      mockSupabaseModule.eq.mockResolvedValueOnce({
+      mockEq.mockResolvedValueOnce({
         data: null,
         error: null,
-        status: 200,
-        statusText: 'OK',
-        count: null,
       });
 
-      mockSupabaseModule.order.mockResolvedValueOnce({
+      mockOrder.mockResolvedValueOnce({
         data: [],
         error: null,
-        status: 200,
-        statusText: 'OK',
-        count: null,
       });
 
       const store = useYouTubeStore.getState();
       await store.deleteVideo(videoId);
 
-      expect(mockSupabaseModule.from).toHaveBeenCalledWith('youtube_videos');
-      expect(mockSupabaseModule.eq).toHaveBeenCalledWith('id', videoId);
+      expect(mockFrom).toHaveBeenCalledWith('youtube_videos');
+      expect(mockEq).toHaveBeenCalledWith('id', videoId);
     });
   });
 });
