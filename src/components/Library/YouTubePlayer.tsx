@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface YouTubePlayerProps {
   videoId: string;
@@ -12,6 +12,9 @@ export function YouTubePlayer({ videoId, title, isOpen, onClose }: YouTubePlayer
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-full p-6">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
+        </DialogHeader>
         <div className="aspect-video">
           <iframe
             width="100%"
@@ -21,8 +24,12 @@ export function YouTubePlayer({ videoId, title, isOpen, onClose }: YouTubePlayer
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            aria-describedby={`youtube-video-${videoId}`}
           />
         </div>
+        <p id={`youtube-video-${videoId}`} className="sr-only">
+          סרטון YouTube: {title}
+        </p>
       </DialogContent>
     </Dialog>
   );
