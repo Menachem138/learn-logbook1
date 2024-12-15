@@ -1,15 +1,9 @@
 import { create } from 'zustand';
 import { supabase } from '../integrations/supabase/client';
 import { parseYouTubeUrl, getYouTubeVideoDetails } from '../utils/youtube';
+import type { Database } from '../integrations/supabase/types';
 
-interface YouTubeVideo {
-  id: string;
-  url: string;
-  video_id: string;
-  title: string;
-  thumbnail_url: string;
-  created_at: string;
-}
+type YouTubeVideo = Database['public']['Tables']['youtube_videos']['Row'];
 
 interface YouTubeStore {
   videos: YouTubeVideo[];
@@ -59,7 +53,7 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         });
 
       if (error) throw error;
-      get().fetchVideos();
+      await get().fetchVideos();
     } catch (error) {
       set({ error: (error as Error).message });
       throw error;
@@ -77,7 +71,7 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         .eq('id', id);
 
       if (error) throw error;
-      get().fetchVideos();
+      await get().fetchVideos();
     } catch (error) {
       set({ error: (error as Error).message });
       throw error;

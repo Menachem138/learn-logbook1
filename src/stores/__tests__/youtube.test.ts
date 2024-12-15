@@ -30,9 +30,15 @@ describe('YouTubeStore', () => {
 
   describe('fetchVideos', () => {
     it('should fetch videos successfully', async () => {
-      const mockVideos = [
-        { id: '1', title: 'Test Video', url: 'https://youtu.be/123' },
-      ];
+      const mockVideos = [{
+        id: '1',
+        title: 'Test Video',
+        url: 'https://youtu.be/123',
+        video_id: '123',
+        thumbnail_url: 'https://example.com/thumb.jpg',
+        created_at: new Date().toISOString(),
+        user_id: null,
+      }];
 
       (supabase.from as jest.Mock).mockImplementationOnce(() => ({
         select: jest.fn(() => ({
