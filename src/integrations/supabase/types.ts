@@ -9,36 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      achievements: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          earned_at: string | null
-          id: string
-          title: string
-          type: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          earned_at?: string | null
-          id?: string
-          title: string
-          type?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          earned_at?: string | null
-          id?: string
-          title?: string
-          type?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       content_items: {
         Row: {
           content: string
@@ -134,7 +104,7 @@ export type Database = {
           id: string
           is_starred: boolean | null
           title: string
-          type: Database["public"]["Enums"]["library_item_type"]
+          type: string
           user_id: string
         }
         Insert: {
@@ -144,7 +114,7 @@ export type Database = {
           id?: string
           is_starred?: boolean | null
           title: string
-          type: Database["public"]["Enums"]["library_item_type"]
+          type: string
           user_id: string
         }
         Update: {
@@ -154,40 +124,7 @@ export type Database = {
           id?: string
           is_starred?: boolean | null
           title?: string
-          type?: Database["public"]["Enums"]["library_item_type"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-      progress_tracking: {
-        Row: {
-          completed_sections: string[] | null
-          course_id: string
-          created_at: string | null
-          id: string
-          last_activity: string | null
-          total_sections: number
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completed_sections?: string[] | null
-          course_id: string
-          created_at?: string | null
-          id?: string
-          last_activity?: string | null
-          total_sections: number
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completed_sections?: string[] | null
-          course_id?: string
-          created_at?: string | null
-          id?: string
-          last_activity?: string | null
-          total_sections?: number
-          updated_at?: string | null
+          type?: string
           user_id?: string
         }
         Relationships: []
@@ -208,7 +145,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_answered?: boolean | null
-          type?: string
+          type: string
           user_id: string
         }
         Update: {
@@ -306,38 +243,119 @@ export type Database = {
         }
         Relationships: []
       }
-      user_stats: {
+      achievements: {
         Row: {
-          created_at: string | null
-          current_streak: number | null
           id: string
-          last_activity: string | null
-          longest_streak: number | null
-          total_points: number | null
-          updated_at: string | null
           user_id: string
+          title: string
+          description: string | null
+          type: 'badge' | 'trophy' | 'star'
+          earned_at: string
+          created_at: string
         }
         Insert: {
-          created_at?: string | null
-          current_streak?: number | null
           id?: string
-          last_activity?: string | null
-          longest_streak?: number | null
-          total_points?: number | null
-          updated_at?: string | null
           user_id: string
+          title: string
+          description?: string | null
+          type: 'badge' | 'trophy' | 'star'
+          earned_at?: string
+          created_at?: string
         }
         Update: {
-          created_at?: string | null
-          current_streak?: number | null
           id?: string
-          last_activity?: string | null
-          longest_streak?: number | null
-          total_points?: number | null
-          updated_at?: string | null
           user_id?: string
+          title?: string
+          description?: string | null
+          type?: 'badge' | 'trophy' | 'star'
+          earned_at?: string
+          created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_stats: {
+        Row: {
+          user_id: string
+          total_points: number
+          current_streak: number
+          longest_streak: number
+          last_activity: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          total_points?: number
+          current_streak?: number
+          longest_streak?: number
+          last_activity?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          total_points?: number
+          current_streak?: number
+          longest_streak?: number
+          last_activity?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      progress_tracking: {
+        Row: {
+          id: string
+          user_id: string
+          course_id: string
+          completed_sections: string[]
+          total_sections: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          course_id: string
+          completed_sections?: string[]
+          total_sections: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          course_id?: string
+          completed_sections?: string[]
+          total_sections?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_tracking_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
@@ -347,15 +365,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      library_item_type:
-        | "note"
-        | "link"
-        | "image"
-        | "video"
-        | "whatsapp"
-        | "pdf"
-        | "question"
-        | "youtube"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never

@@ -22,8 +22,7 @@ export function useCourseProgress() {
         .from('course_progress')
         .select('lesson_id')
         .eq('user_id', session?.user?.id)
-        .eq('completed', true)
-        .returns<{ lesson_id: string }[]>();
+        .eq('completed', true);
 
       if (error) throw error;
 

@@ -6,8 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { LibraryItem, LibraryItemType } from "@/types/library";
 import { Upload } from "lucide-react";
-import { getYouTubeVideoId } from "@/utils/youtube";
-import { toast } from "sonner";
 
 interface ItemDialogProps {
   isOpen: boolean;
@@ -17,7 +15,7 @@ interface ItemDialogProps {
 }
 
 export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialogProps) {
-  const { register, handleSubmit, reset, watch, setError } = useForm({
+  const { register, handleSubmit, reset, watch } = useForm({
     defaultValues: initialData || {
       title: "",
       content: "",
@@ -29,15 +27,6 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
 
   const onSubmitForm = (data: any) => {
-    if (selectedType === 'youtube') {
-      const videoId = getYouTubeVideoId(data.content);
-      if (!videoId) {
-        toast.error("כתובת URL לא תקינה של YouTube");
-        return;
-      }
-      data.videoId = videoId;
-    }
-
     const formData = {
       ...data,
       file: selectedFile,
@@ -76,7 +65,6 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
               <option value="link">קישור</option>
               <option value="image">תמונה</option>
               <option value="video">וידאו</option>
-              <option value="youtube">YouTube</option>
               <option value="whatsapp">וואטסאפ</option>
               <option value="pdf">PDF</option>
               <option value="question">שאלה</option>
@@ -84,13 +72,7 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
           </div>
           <div>
             <Textarea
-              placeholder={
-                selectedType === 'youtube' 
-                  ? 'הכנס קישור לסרטון YouTube' 
-                  : selectedType === 'question' 
-                  ? "מה השאלה שלך?" 
-                  : "תוכן"
-              }
+              placeholder={selectedType === 'question' ? "מה השאלה שלך?" : "תוכן"}
               {...register("content", { required: true })}
             />
           </div>

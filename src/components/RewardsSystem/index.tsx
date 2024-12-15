@@ -4,7 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Star, Award } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { UserStats, Achievement } from '@/integrations/supabase/types/progress';
+
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  type: 'badge' | 'trophy' | 'star';
+  earned_at: string;
+}
 
 interface RewardStats {
   total_points: number;
@@ -40,8 +47,7 @@ export const RewardsSystem: React.FC = () => {
       const { data: achievements, error: achievementsError } = await supabase
         .from('achievements')
         .select('*')
-        .eq('user_id', session.user.id)
-        .returns<{ id: string; title: string; description: string; type: Achievement['type']; earned_at: string; created_at: string; user_id: string; }[]>();
+        .eq('user_id', session.user.id);
 
       if (achievementsError) {
         console.error('Error fetching achievements:', achievementsError);
