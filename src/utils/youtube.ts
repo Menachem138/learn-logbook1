@@ -23,7 +23,7 @@ export function parseYouTubeUrl(url: string): string | null {
  */
 export async function getYouTubeVideoDetails(videoId: string) {
   const response = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${process.env.NEXT_PUBLIC_YOUTUBE_API_KEY}`
+    `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${import.meta.env.VITE_YOUTUBE_API_KEY}`
   );
   const data = await response.json();
 
