@@ -28,7 +28,8 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (response.error) {
-        throw response.error;
+        set({ error: response.error.message });
+        return;
       }
 
       set({ videos: response.data || [] });
@@ -57,6 +58,7 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         });
 
       if (response.error) {
+        set({ error: response.error.message });
         throw response.error;
       }
 
@@ -79,6 +81,7 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         .eq('id', id);
 
       if (response.error) {
+        set({ error: response.error.message });
         throw response.error;
       }
 
