@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
 import { parseYouTubeUrl, getYouTubeVideoDetails } from '../utils/youtube';
 import type { Database } from '../integrations/supabase/types';
@@ -9,6 +10,9 @@ interface YouTubeStore {
   videos: YouTubeVideo[];
   isLoading: boolean;
   error: string | null;
+  subscription: RealtimeChannel | null;
+  initializeSubscription: () => void;
+  cleanup: () => void;
   addVideo: (url: string) => Promise<void>;
   deleteVideo: (id: string) => Promise<void>;
   fetchVideos: () => Promise<void>;
@@ -37,6 +41,34 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
   videos: [],
   isLoading: false,
   error: null,
+  subscription: null,
+
+  initializeSubscription: () => {
+    const subscription = supabase
+      .channel('youtube_videos_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'youtube_videos'
+        },
+        async () => {
+          await get().fetchVideos();
+        }
+      )
+      .subscribe();
+
+    set({ subscription });
+  },
+
+  cleanup: () => {
+    const { subscription } = get();
+    if (subscription) {
+      subscription.unsubscribe();
+      set({ subscription: null });
+    }
+  },
 
   fetchVideos: async () => {
     set({ isLoading: true, error: null });
