@@ -357,6 +357,44 @@ export type Database = {
           }
         ]
       }
+      youtube_videos: {
+        Row: {
+          id: string
+          url: string
+          video_id: string
+          title: string
+          thumbnail_url: string
+          created_at: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          url: string
+          video_id: string
+          title: string
+          thumbnail_url: string
+          created_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          url?: string
+          video_id?: string
+          title?: string
+          thumbnail_url?: string
+          created_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youtube_videos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

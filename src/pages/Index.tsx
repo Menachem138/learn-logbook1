@@ -7,6 +7,7 @@ import Questions from "@/components/Questions";
 import ChatAssistant from "@/components/ChatAssistant";
 import CourseSchedule from "@/components/CourseSchedule";
 import LearningJournal from "@/components/LearningJournal";
+import { YouTubeLibrary } from "@/components/YouTubeLibrary";
 
 export default function Index() {
   return (
@@ -23,6 +24,7 @@ export default function Index() {
         <CourseContent />
         <CourseSchedule />
         <Library />
+        <YouTubeLibrary />
         <Questions />
         <LearningJournal />
       </div>
