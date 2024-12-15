@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useYouTubeStore } from "../../stores/youtube";
+import { Alert, AlertDescription } from "../ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface AddVideoDialogProps {
   isOpen: boolean;
@@ -10,14 +12,32 @@ interface AddVideoDialogProps {
 }
 
 export function AddVideoDialog({ isOpen, onClose }: AddVideoDialogProps) {
-  const addVideo = useYouTubeStore(state => state.addVideo);
+  const { addVideo, error, isLoading } = useYouTubeStore(state => ({
+    addVideo: state.addVideo,
+    error: state.error,
+    isLoading: state.isLoading
+  }));
   const [url, setUrl] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addVideo(url);
-    setUrl("");
-    onClose();
+    try {
+      await addVideo(url);
+      setUrl("");
+      onClose();
+    } catch (err) {
+      // Error will be handled by the store
+    }
+  };
+
+  const getHebrewError = (error: string) => {
+    if (error.includes('API key')) {
+      return 'מפתח ה-API של YouTube לא מוגדר';
+    }
+    if (error.includes('Invalid YouTube URL')) {
+      return 'פורמט כתובת URL לא חוקי של YouTube';
+    }
+    return 'שגיאה בהוספת הסרטון';
   };
 
   return (
@@ -32,9 +52,26 @@ export function AddVideoDialog({ isOpen, onClose }: AddVideoDialogProps) {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="הכנס קישור YouTube"
             className="w-full"
+            disabled={isLoading}
           />
-          <Button type="submit" className="w-full">
-            הוסף
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{getHebrewError(error)}</AlertDescription>
+            </Alert>
+          )}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                טוען...
+              </>
+            ) : (
+              'הוסף'
+            )}
           </Button>
         </form>
       </DialogContent>
