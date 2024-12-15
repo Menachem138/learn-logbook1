@@ -4,14 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Star, Award } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  type: 'badge' | 'trophy' | 'star';
-  earned_at: string;
-}
+import { UserStats, Achievement } from '@/integrations/supabase/types/progress';
 
 interface RewardStats {
   total_points: number;

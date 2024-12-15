@@ -3,10 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import type { Database } from '@/integrations/supabase/types';
-
-type TimerSession = Database['public']['Tables']['timer_sessions']['Row'];
-type ProgressTracking = Database['public']['Tables']['progress_tracking']['Row'];
+import { CourseProgress } from '@/integrations/supabase/types/progress';
 
 interface StudyStats {
   total_study_time: number;
@@ -37,8 +34,7 @@ export const StudyStatistics: React.FC = () => {
       const { data: timerSessions, error: timerError } = await supabase
         .from('timer_sessions')
         .select('*')
-        .eq('user_id', session.user.id)
-        .returns<TimerSession[]>();
+        .eq('user_id', session.user.id);
 
       if (timerError) {
         console.error('Error fetching timer sessions:', timerError);
@@ -60,8 +56,7 @@ export const StudyStatistics: React.FC = () => {
       const { data: progress, error: progressError } = await supabase
         .from('progress_tracking')
         .select('*')
-        .eq('user_id', session.user.id)
-        .returns<ProgressTracking[]>();
+        .eq('user_id', session.user.id);
 
       if (progressError) {
         console.error('Error fetching progress:', progressError);
@@ -69,9 +64,9 @@ export const StudyStatistics: React.FC = () => {
       }
 
       // Calculate completion rate
-      const completionRate = progress?.reduce((sum, p) => {
+      const completionRate = (progress as CourseProgress[] || []).reduce((sum, p) => {
         return sum + (p.completed_sections.length / p.total_sections);
-      }, 0) || 0;
+      }, 0);
 
       setStats({
         total_study_time: totalTime,

@@ -3,13 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-interface CourseProgress {
-  course_id: string;
-  completed_sections: string[];
-  total_sections: number;
-  last_activity: string;
-}
+import { CourseProgress } from '@/integrations/supabase/types/progress';
 
 export const ProgressTracker: React.FC = () => {
   const [progress, setProgress] = useState<CourseProgress[]>([]);
@@ -39,7 +33,7 @@ export const ProgressTracker: React.FC = () => {
     <div className="space-y-4 rtl">
       <h2 className="text-2xl font-bold mb-4">התקדמות בקורס</h2>
       {progress.map((courseProgress) => (
-        <Card key={courseProgress.course_id} className="p-4">
+        <Card key={courseProgress.id} className="p-4">
           <div className="flex flex-col space-y-2">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">

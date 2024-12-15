@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          earned_at: string | null
+          id: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          earned_at?: string | null
+          id?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_items: {
         Row: {
           content: string
@@ -129,6 +159,39 @@ export type Database = {
         }
         Relationships: []
       }
+      progress_tracking: {
+        Row: {
+          completed_sections: string[] | null
+          course_id: string
+          created_at: string | null
+          id: string
+          last_activity: string | null
+          total_sections: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_sections?: string[] | null
+          course_id: string
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          total_sections: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_sections?: string[] | null
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          total_sections?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           answer: string | null
@@ -239,6 +302,39 @@ export type Database = {
           id?: string
           started_at?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_activity: string | null
+          longest_streak: number | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity?: string | null
+          longest_streak?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity?: string | null
+          longest_streak?: number | null
+          total_points?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
