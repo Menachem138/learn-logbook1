@@ -7,13 +7,15 @@ import { YouTubePlayer } from "./YouTubePlayer";
 import { AddVideoDialog } from "./AddVideoDialog";
 
 export function YouTubeLibrary() {
-  const { videos, isLoading, fetchVideos } = useYouTubeStore();
+  const { videos, isLoading, fetchVideos, initializeSubscription, cleanup } = useYouTubeStore();
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
 
   useEffect(() => {
     fetchVideos();
-  }, [fetchVideos]);
+    initializeSubscription();
+    return () => cleanup();
+  }, [fetchVideos, initializeSubscription, cleanup]);
 
   return (
     <div className="space-y-6">
