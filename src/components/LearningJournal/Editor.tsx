@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
@@ -22,8 +22,11 @@ import {
   ChevronDown,
   ImageIcon,
   ListOrdered,
-  List
+  List,
+  Upload
 } from 'lucide-react'
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface EditorProps {
   content: string
@@ -32,6 +35,8 @@ interface EditorProps {
 }
 
 const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -69,10 +74,46 @@ const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
     }
   }, [editor, content])
 
-  const addImage = () => {
-    const url = window.prompt('הכנס את כתובת התמונה:');
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error("יש להתחבר כדי להעלות תמונות");
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${session.session.user.id}/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      if (editor) {
+        editor.chain().focus().setImage({ src: publicUrl }).run();
+      }
+
+      toast.success('התמונה הועלתה בהצלחה!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('שגיאה בהעלאת התמונה');
+    }
+
+    // Clear the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -158,14 +199,23 @@ const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
 
         <div className="h-4 w-[1px] bg-gray-200 mx-1" />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={addImage}
-          className="px-2"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
+        <div className="relative">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept="image/*"
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="px-2"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="w-full max-h-[60vh] overflow-y-auto">
