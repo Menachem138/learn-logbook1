@@ -28,14 +28,14 @@ export const useYouTubeStore = create<YouTubeStore>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) {
-        set({ error: error.message, isLoading: false });
+        set({ error: error.message, isLoading: false, videos: [] });
         return;
       }
 
-      set({ videos: data || [], isLoading: false });
+      set({ videos: data || [], isLoading: false, error: null });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
-      set({ error: errorMessage, isLoading: false });
+      set({ error: errorMessage, isLoading: false, videos: [] });
     }
   },
 
