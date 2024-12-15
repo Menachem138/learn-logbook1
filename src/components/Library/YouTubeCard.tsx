@@ -17,25 +17,33 @@ export function YouTubeCard({ videoId, title, onDelete }: YouTubeCardProps) {
   return (
     <>
       <Card className="overflow-hidden">
-        <div className="relative group cursor-pointer" onClick={() => setIsPlayerOpen(true)}>
+        <div 
+          className="relative group cursor-pointer" 
+          onClick={() => setIsPlayerOpen(true)}
+          role="button"
+          aria-label={`הפעל סרטון: ${title}`}
+        >
           <img 
             src={thumbnailUrl} 
             alt={title}
             className="w-full aspect-video object-cover transition-opacity group-hover:opacity-90"
           />
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
             <Button
               variant="secondary"
               size="icon"
-              className="w-12 h-12 rounded-full bg-black/50 hover:bg-black/70"
+              className="w-16 h-16 rounded-full bg-white/90 hover:bg-white"
             >
-              <Play className="h-6 w-6 text-white" />
+              <Play className="h-8 w-8 text-black" />
             </Button>
           </div>
         </div>
         <div className="p-4">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-lg line-clamp-2 hover:cursor-pointer" onClick={() => setIsPlayerOpen(true)}>
+            <h3 
+              className="font-medium text-lg line-clamp-2 hover:cursor-pointer" 
+              onClick={() => setIsPlayerOpen(true)}
+            >
               {title}
             </h3>
             <Button
