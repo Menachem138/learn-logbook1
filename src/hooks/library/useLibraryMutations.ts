@@ -67,7 +67,7 @@ export const useLibraryMutations = () => {
       id: string;
       title: string;
       content: string;
-      type: string;
+      type: LibraryItemType;
       file?: File;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,7 +95,9 @@ export const useLibraryMutations = () => {
           type,
           ...(fileDetails && { file_details: fileDetails }),
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
     },
