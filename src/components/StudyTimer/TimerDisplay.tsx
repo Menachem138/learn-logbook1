@@ -1,28 +1,23 @@
 import React from 'react';
+import { formatTime } from '@/utils/timeUtils';
+import { TimerState } from '@/hooks/useStudyTimer';
 
 interface TimerDisplayProps {
   time: number;
-  timerState: 'STOPPED' | 'STUDYING' | 'BREAK';
-  formatTime: (time: number) => string;
+  timerState: TimerState;
 }
 
-export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState, formatTime }) => {
-  const getBgColor = () => {
-    switch (timerState) {
-      case 'STUDYING':
-        return 'bg-[#E8F5E9]'; // Light green for study mode
-      case 'BREAK':
-        return 'bg-[#FFF8E1]'; // Light yellow for break mode
-      default:
-        return 'bg-[#F5F5F5]'; // Light gray for stopped state
-    }
-  };
-
+export const TimerDisplay: React.FC<TimerDisplayProps> = ({ time, timerState }) => {
   return (
-    <div className="text-center mb-8">
-      <h2 className="text-3xl font-bold mb-6">מעקב זמן למידה</h2>
-      <div className={`${getBgColor()} rounded-2xl p-8 transition-colors duration-300`}>
-        <div className="text-6xl font-bold tracking-wider font-mono" dir="ltr">
+    <div className="relative">
+      <div className={`w-full py-8 px-4 rounded-2xl ${
+        timerState === 'STUDYING' 
+          ? 'bg-green-100' 
+          : timerState === 'BREAK' 
+            ? 'bg-yellow-100' 
+            : 'bg-gray-100'
+      } transition-colors duration-300 ease-in-out shadow-inner`}>
+        <div className="relative z-10 text-7xl font-bold text-center tabular-nums" dir="ltr">
           {formatTime(time)}
         </div>
       </div>

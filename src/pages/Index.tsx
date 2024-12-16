@@ -12,13 +12,11 @@ import { YouTubeLibrary } from "@/components/YouTubeLibrary";
 export default function Index() {
   return (
     <div className="container py-6 space-y-6 text-right" dir="rtl">
-      {/* Timer and Chat Assistant in a row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <StudyTimer />
         <ChatAssistant />
       </div>
 
-      {/* Other components in full width */}
       <div className="space-y-6">
         <MotivationalQuotes />
         <CourseContent />
