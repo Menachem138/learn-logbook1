@@ -39,7 +39,7 @@ const getHebrewError = (error: string): string => {
 
 export const useYouTubeStore = create<YouTubeStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       videos: [],
       isLoading: false,
       error: null,
@@ -49,10 +49,11 @@ export const useYouTubeStore = create<YouTubeStore>()(
         set({ isLoading: true, error: null });
         try {
           const { data: { user } } = await supabase.auth.getUser();
+          console.log('Fetch videos - Auth state:', { isAuthenticated: !!user, userId: user?.id });
+
           if (!user) {
-            const hebrewError = getHebrewError('Unauthorized');
-            set({ error: hebrewError, isLoading: false });
-            return;
+            console.log('No authenticated user, cannot fetch videos');
+            throw new Error('Unauthorized');
           }
 
           const { data, error } = await supabase
@@ -60,18 +61,18 @@ export const useYouTubeStore = create<YouTubeStore>()(
             .select('*')
             .order('created_at', { ascending: false });
 
+          console.log('Supabase response:', { data, error });
+
           if (error) {
-            const hebrewError = getHebrewError('Failed to fetch videos');
-            set({ error: hebrewError, isLoading: false });
-            return;
+            console.error('Error fetching videos:', error);
+            throw error;
           }
 
-          console.log('Videos fetched successfully:', data);
           set({ videos: data || [], isLoading: false, error: null });
+          console.log('Videos updated in store:', data);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
-          const hebrewError = getHebrewError(errorMessage);
-          set({ error: hebrewError, isLoading: false });
+          console.error('Error in fetchVideos:', error);
+          set({ error: getHebrewError(error.message), isLoading: false });
         }
       },
 
@@ -152,16 +153,67 @@ export const useYouTubeStore = create<YouTubeStore>()(
       },
     }),
     {
-      name: 'youtube-videos-storage',
-      partialize: (state) => ({ videos: state.videos }),
+      name: 'youtube-videos',
+      storage: {
+        getItem: (name) => {
+          console.log('Getting item from storage:', name);
+          const str = localStorage.getItem(name);
+          if (!str) {
+            console.log('No data found in storage');
+            return null;
+          }
+          try {
+            const data = JSON.parse(str);
+            console.log('Retrieved from storage:', data);
+            return data;
+          } catch (error) {
+            console.error('Error parsing storage:', error);
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          console.log('Saving to storage:', { name, value });
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
+      partialize: (state: YouTubeStore) => {
+        console.log('Partializing state:', state);
+        return {
+          videos: state.videos,
+          isLoading: state.isLoading,
+          error: state.error
+        };
+      },
       version: 1,
-      onRehydrateStorage: () => (state) => {
-        console.log('Rehydrating store...', state);
-        if (state?.videos?.length) {
-          console.log('Setting persisted videos:', state.videos);
-          useYouTubeStore.setState({ videos: state.videos, isLoading: false });
-        }
-        return state;
+      onRehydrateStorage: () => {
+        console.log('Starting rehydration...');
+        return async (state) => {
+          console.log('Rehydrating store with state:', state);
+          if (state?.videos?.length) {
+            console.log('Setting videos from storage:', state.videos);
+            useYouTubeStore.setState({
+              videos: state.videos,
+              isLoading: false,
+              error: null
+            });
+          } else {
+            console.log('No videos found in storage state');
+          }
+
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              console.log('User authenticated during rehydration, fetching fresh data...');
+              const store = useYouTubeStore.getState();
+              await store.fetchVideos();
+            } else {
+              console.log('No authenticated user during rehydration');
+            }
+          } catch (error) {
+            console.error('Error during rehydration:', error);
+          }
+        };
       },
     }
   )

@@ -16,15 +16,30 @@ export function YouTubeLibrary() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('YouTubeLibrary useEffect - Auth state:', { user, authLoading });
-    if (!authLoading && !user) {
-      navigate('/login');
-      return;
-    }
-    if (!authLoading && user) {
-      console.log('Fetching videos for authenticated user');
-      fetchVideos();
-    }
+    const initializeVideos = async () => {
+      if (!authLoading) {
+        if (!user) {
+          console.log('No authenticated user, redirecting to login');
+          navigate('/login');
+          return;
+        }
+
+        console.log('Initializing videos with auth state:', {
+          isAuthenticated: !!user,
+          videosCount: videos.length,
+          isLoading
+        });
+
+        try {
+          console.log('Fetching videos from Supabase...');
+          await fetchVideos();
+        } catch (error) {
+          console.error('Error fetching videos:', error);
+        }
+      }
+    };
+
+    initializeVideos();
   }, [user, authLoading, navigate, fetchVideos]);
 
   if (authLoading) {
