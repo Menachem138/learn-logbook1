@@ -16,11 +16,13 @@ export function YouTubeLibrary() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('YouTubeLibrary useEffect - Auth state:', { user, authLoading });
     if (!authLoading && !user) {
       navigate('/login');
       return;
     }
-    if (user) {
+    if (!authLoading && user) {
+      console.log('Fetching videos for authenticated user');
       fetchVideos();
     }
   }, [user, authLoading, navigate, fetchVideos]);

@@ -45,6 +45,7 @@ export const useYouTubeStore = create<YouTubeStore>()(
       error: null,
 
       fetchVideos: async () => {
+        console.log('Fetching videos from Supabase...');
         set({ isLoading: true, error: null });
         try {
           const { data: { user } } = await supabase.auth.getUser();
@@ -65,6 +66,7 @@ export const useYouTubeStore = create<YouTubeStore>()(
             return;
           }
 
+          console.log('Videos fetched successfully:', data);
           set({ videos: data || [], isLoading: false, error: null });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
@@ -154,15 +156,11 @@ export const useYouTubeStore = create<YouTubeStore>()(
       partialize: (state) => ({ videos: state.videos }),
       version: 1,
       onRehydrateStorage: () => (state) => {
+        console.log('Rehydrating store...', state);
         if (state?.videos?.length) {
+          console.log('Setting persisted videos:', state.videos);
           useYouTubeStore.setState({ videos: state.videos, isLoading: false });
         }
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            const store = useYouTubeStore.getState();
-            store.fetchVideos();
-          }
-        });
         return state;
       },
     }
