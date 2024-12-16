@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Play as PlayIcon } from "lucide-react";
 import { useYouTubeStore } from "../../stores/youtube";
 import { YouTubePlayer } from "./YouTubePlayer";
 import { AddVideoDialog } from "./AddVideoDialog";
+import { useAuth } from "../../components/auth/AuthProvider";
 
 export function YouTubeLibrary() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
   const { videos, isLoading, fetchVideos } = useYouTubeStore();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  // Fetch videos when component mounts
   useEffect(() => {
-    fetchVideos();
-  }, []); // Remove fetchVideos from dependencies to prevent unnecessary re-fetches
+    if (!loading && !user) {
+      navigate('/login');
+      return;
+    }
+    if (user) {
+      fetchVideos();
+    }
+  }, [user, loading, navigate]);
 
   return (
     <div className="space-y-6">
