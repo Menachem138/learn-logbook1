@@ -7,15 +7,13 @@ import { YouTubePlayer } from "./YouTubePlayer";
 import { AddVideoDialog } from "./AddVideoDialog";
 
 export function YouTubeLibrary() {
-  const { videos, isLoading, fetchVideos, initializeSubscription, cleanup } = useYouTubeStore();
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
+  const { videos, isLoading, fetchVideos } = useYouTubeStore();
 
   useEffect(() => {
     fetchVideos();
-    initializeSubscription();
-    return () => cleanup();
-  }, [fetchVideos, initializeSubscription, cleanup]);
+  }, [fetchVideos]);
 
   return (
     <div className="space-y-6">
@@ -30,19 +28,19 @@ export function YouTubeLibrary() {
         {videos.map((video) => (
           <Card key={video.id} className="p-4">
             <div
-              className="relative aspect-video cursor-pointer"
+              className="relative aspect-video cursor-pointer group"
               onClick={() => setSelectedVideo(video.video_id)}
             >
               <img
                 src={video.thumbnail_url}
                 alt={video.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
                 <PlayIcon className="w-12 h-12 text-white" />
               </div>
             </div>
-            <h3 className="mt-2 font-medium">{video.title}</h3>
+            <h3 className="mt-2 font-medium line-clamp-2">{video.title}</h3>
           </Card>
         ))}
       </div>
