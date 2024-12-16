@@ -154,11 +154,15 @@ export const useYouTubeStore = create<YouTubeStore>()(
       partialize: (state) => ({ videos: state.videos }),
       version: 1,
       onRehydrateStorage: () => (state) => {
-        // Trigger video fetch after rehydration
-        setTimeout(() => {
-          const store = useYouTubeStore.getState();
-          store.fetchVideos();
-        }, 0);
+        if (state?.videos?.length) {
+          useYouTubeStore.setState({ videos: state.videos, isLoading: false });
+        }
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            const store = useYouTubeStore.getState();
+            store.fetchVideos();
+          }
+        });
         return state;
       },
     }
