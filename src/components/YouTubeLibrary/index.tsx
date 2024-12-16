@@ -20,10 +20,10 @@ export function YouTubeLibrary() {
       navigate('/login');
       return;
     }
-    if (user && videos.length === 0) {
+    if (user) {
       fetchVideos();
     }
-  }, [user, authLoading, navigate, videos.length, fetchVideos]);
+  }, [user, authLoading, navigate, fetchVideos]);
 
   if (authLoading) {
     return <div className="flex justify-center items-center h-screen">טוען...</div>;
