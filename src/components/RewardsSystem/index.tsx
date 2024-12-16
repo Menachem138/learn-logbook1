@@ -4,14 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Star, Award } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  type: 'badge' | 'trophy' | 'star';
-  earned_at: string;
-}
+import { Achievement } from './types';
 
 interface RewardStats {
   total_points: number;
@@ -54,11 +47,17 @@ export const RewardsSystem: React.FC = () => {
         return;
       }
 
+      // Type assertion to ensure achievements match the Achievement type
+      const typedAchievements = achievements?.map(achievement => ({
+        ...achievement,
+        type: achievement.type as Achievement['type']
+      })) || [];
+
       setRewardStats({
         total_points: stats?.total_points || 0,
         current_streak: stats?.current_streak || 0,
         longest_streak: stats?.longest_streak || 0,
-        achievements: achievements || []
+        achievements: typedAchievements
       });
     };
 

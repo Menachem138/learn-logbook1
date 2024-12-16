@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFileToStorage } from '@/utils/fileStorage';
+import { LibraryItemType } from '@/types/library';
 
 export const useLibraryMutations = () => {
   const { toast } = useToast();
@@ -11,7 +12,7 @@ export const useLibraryMutations = () => {
     mutationFn: async ({ title, content, type, file }: { 
       title: string;
       content: string;
-      type: string;
+      type: LibraryItemType;
       file?: File;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -64,7 +65,7 @@ export const useLibraryMutations = () => {
       id: string;
       title: string;
       content: string;
-      type: string;
+      type: LibraryItemType;
       file?: File;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
