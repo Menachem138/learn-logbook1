@@ -150,8 +150,15 @@ export const useYouTubeStore = create<YouTubeStore>()(
       },
     }),
     {
-      name: 'youtube-store',
-      partialize: (state) => ({ videos: state.videos }), // Only persist videos array
+      name: 'youtube-videos-storage',
+      partialize: (state) => ({ videos: state.videos }),
+      version: 1,
+      onRehydrateStorage: () => (state) => {
+        // Always fetch videos from Supabase when store is rehydrated
+        const store = useYouTubeStore.getState();
+        store.fetchVideos();
+        return state;
+      },
     }
   )
 );
