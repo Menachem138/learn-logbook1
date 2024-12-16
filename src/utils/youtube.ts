@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 /**
  * Parses a YouTube URL to extract the video ID
  * Supports both formats:
@@ -8,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
  */
 export function parseYouTubeUrl(url: string): string | null {
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu.be\/)([^&\n?#]+)/,
+    /(?:youtube\.com\/watch\?v=|youtu.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
   ];
 
   for (const pattern of patterns) {
@@ -22,9 +20,19 @@ export function parseYouTubeUrl(url: string): string | null {
  * Fetches video details from YouTube API
  */
 export async function getYouTubeVideoDetails(videoId: string) {
+  // Check if API key is configured
+  if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
+    throw new Error('YouTube API key is not configured');
+  }
+
   const response = await fetch(
     `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${import.meta.env.VITE_YOUTUBE_API_KEY}`
   );
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch video details');
+  }
+
   const data = await response.json();
 
   if (!data.items?.[0]) {
