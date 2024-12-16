@@ -19,7 +19,7 @@ const getHebrewError = (error: string): string => {
     return 'מפתח ה-API של YouTube לא מוגדר';
   }
   if (error.includes('Invalid YouTube URL')) {
-    return 'כתובת URL לא חוקית של YouTube';
+    return 'פורמט כתובת URL לא חוקי של YouTube';
   }
   if (error.includes('Failed to fetch')) {
     return 'שגיאה בטעינת הסרטונים';

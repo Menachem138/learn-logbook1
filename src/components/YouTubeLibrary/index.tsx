@@ -11,9 +11,10 @@ export function YouTubeLibrary() {
   const [isAddingVideo, setIsAddingVideo] = useState(false);
   const { videos, isLoading, fetchVideos } = useYouTubeStore();
 
+  // Fetch videos when component mounts
   useEffect(() => {
     fetchVideos();
-  }, [fetchVideos]);
+  }, []); // Remove fetchVideos from dependencies to prevent unnecessary re-fetches
 
   return (
     <div className="space-y-6">

@@ -4,9 +4,7 @@ import { AuthProvider, useAuth } from '@/components/auth/AuthProvider';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { YouTubeLibrary } from './components/YouTubeLibrary';
 
-// Create a client
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -38,14 +36,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/youtube-library"
-              element={
-                <ProtectedRoute>
-                  <YouTubeLibrary />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Toaster />
         </AuthProvider>
