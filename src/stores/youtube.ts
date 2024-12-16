@@ -62,7 +62,10 @@ export const useYouTubeStore = create<YouTubeStore>()(
           set({ videos: data || [], isLoading: false, error: null });
         } catch (error) {
           console.error('Error in fetchVideos:', error);
-          set({ error: getHebrewError(error.message), isLoading: false });
+          set({ 
+            error: getHebrewError(error instanceof Error ? error.message : 'Failed to fetch'), 
+            isLoading: false 
+          });
         }
       },
 
@@ -92,6 +95,7 @@ export const useYouTubeStore = create<YouTubeStore>()(
 
           if (error) throw error;
           await get().fetchVideos();
+          set({ isLoading: false, error: null });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Failed to add video';
           set({ error: getHebrewError(errorMessage), isLoading: false });
@@ -114,6 +118,7 @@ export const useYouTubeStore = create<YouTubeStore>()(
 
           if (error) throw error;
           await get().fetchVideos();
+          set({ isLoading: false, error: null });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Failed to delete video';
           set({ error: getHebrewError(errorMessage), isLoading: false });
@@ -139,8 +144,6 @@ export const useYouTubeStore = create<YouTubeStore>()(
       },
       partialize: (state) => ({
         videos: state.videos,
-        isLoading: state.isLoading,
-        error: state.error
       }),
     }
   )
