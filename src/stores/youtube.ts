@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { supabase } from '../integrations/supabase/client';
 import { parseYouTubeUrl, getYouTubeVideoDetails } from '../utils/youtube';
 import type { Database } from '../integrations/supabase/types';
@@ -36,113 +37,121 @@ const getHebrewError = (error: string): string => {
   return 'שגיאה לא צפויה';
 };
 
-export const useYouTubeStore = create<YouTubeStore>((set) => ({
-  videos: [],
-  isLoading: false,
-  error: null,
+export const useYouTubeStore = create<YouTubeStore>()(
+  persist(
+    (set) => ({
+      videos: [],
+      isLoading: false,
+      error: null,
 
-  fetchVideos: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        const hebrewError = getHebrewError('Unauthorized');
-        set({ error: hebrewError, isLoading: false });
-        return;
-      }
+      fetchVideos: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            const hebrewError = getHebrewError('Unauthorized');
+            set({ error: hebrewError, isLoading: false });
+            return;
+          }
 
-      const { data, error } = await supabase
-        .from('youtube_videos')
-        .select('*')
-        .order('created_at', { ascending: false });
+          const { data, error } = await supabase
+            .from('youtube_videos')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-      if (error) {
-        const hebrewError = getHebrewError('Failed to fetch videos');
-        set({ error: hebrewError, isLoading: false });
-        return;
-      }
+          if (error) {
+            const hebrewError = getHebrewError('Failed to fetch videos');
+            set({ error: hebrewError, isLoading: false });
+            return;
+          }
 
-      set({ videos: data || [], isLoading: false, error: null });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
-      const hebrewError = getHebrewError(errorMessage);
-      set({ error: hebrewError, isLoading: false });
+          set({ videos: data || [], isLoading: false, error: null });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch videos';
+          const hebrewError = getHebrewError(errorMessage);
+          set({ error: hebrewError, isLoading: false });
+        }
+      },
+
+      addVideo: async (url: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            const hebrewError = getHebrewError('Unauthorized');
+            set({ error: hebrewError, isLoading: false });
+            return;
+          }
+
+          if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
+            throw new Error('YouTube API key is not configured');
+          }
+
+          const videoId = parseYouTubeUrl(url);
+          if (!videoId) {
+            throw new Error('Invalid YouTube URL format');
+          }
+
+          const details = await getYouTubeVideoDetails(videoId);
+          const { error } = await supabase
+            .from('youtube_videos')
+            .insert({
+              url,
+              video_id: videoId,
+              title: details.title,
+              thumbnail_url: details.thumbnail,
+            });
+
+          if (error) {
+            const hebrewError = getHebrewError('Failed to add video');
+            set({ error: hebrewError, isLoading: false });
+            throw error;
+          }
+
+          const store = useYouTubeStore.getState();
+          await store.fetchVideos();
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to add video';
+          const hebrewError = getHebrewError(errorMessage);
+          set({ error: hebrewError, isLoading: false });
+          throw error;
+        }
+      },
+
+      deleteVideo: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            const hebrewError = getHebrewError('Unauthorized');
+            set({ error: hebrewError, isLoading: false });
+            return;
+          }
+
+          const { error } = await supabase
+            .from('youtube_videos')
+            .delete()
+            .eq('id', id);
+
+          if (error) {
+            const hebrewError = getHebrewError('Failed to delete video');
+            set({ error: hebrewError, isLoading: false });
+            throw error;
+          }
+
+          const store = useYouTubeStore.getState();
+          await store.fetchVideos();
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to delete video';
+          const hebrewError = getHebrewError(errorMessage);
+          set({ error: hebrewError, isLoading: false });
+          throw error;
+        }
+      },
+    }),
+    {
+      name: 'youtube-store',
+      partialize: (state) => ({ videos: state.videos }), // Only persist videos array
     }
-  },
-
-  addVideo: async (url: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        const hebrewError = getHebrewError('Unauthorized');
-        set({ error: hebrewError, isLoading: false });
-        return;
-      }
-
-      if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
-        throw new Error('YouTube API key is not configured');
-      }
-
-      const videoId = parseYouTubeUrl(url);
-      if (!videoId) {
-        throw new Error('Invalid YouTube URL format');
-      }
-
-      const details = await getYouTubeVideoDetails(videoId);
-      const { error } = await supabase
-        .from('youtube_videos')
-        .insert({
-          url,
-          video_id: videoId,
-          title: details.title,
-          thumbnail_url: details.thumbnail,
-        });
-
-      if (error) {
-        const hebrewError = getHebrewError('Failed to add video');
-        set({ error: hebrewError, isLoading: false });
-        throw error;
-      }
-
-      const store = useYouTubeStore.getState();
-      await store.fetchVideos();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add video';
-      const hebrewError = getHebrewError(errorMessage);
-      set({ error: hebrewError, isLoading: false });
-      throw error;
-    }
-  },
-
-  deleteVideo: async (id: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        const hebrewError = getHebrewError('Unauthorized');
-        set({ error: hebrewError, isLoading: false });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('youtube_videos')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        const hebrewError = getHebrewError('Failed to delete video');
-        set({ error: hebrewError, isLoading: false });
-        throw error;
-      }
-
-      const store = useYouTubeStore.getState();
-      await store.fetchVideos();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete video';
-      const hebrewError = getHebrewError(errorMessage);
-      set({ error: hebrewError, isLoading: false });
-      throw error;
-    }
-  },
-}));
+  )
+);

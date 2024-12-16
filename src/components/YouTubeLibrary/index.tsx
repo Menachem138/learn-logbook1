@@ -12,18 +12,22 @@ export function YouTubeLibrary() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
   const { videos, isLoading, fetchVideos } = useYouTubeStore();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       navigate('/login');
       return;
     }
-    if (user) {
+    if (user && videos.length === 0) {
       fetchVideos();
     }
-  }, [user, loading, navigate]);
+  }, [user, authLoading, navigate, videos.length, fetchVideos]);
+
+  if (authLoading) {
+    return <div className="flex justify-center items-center h-screen">טוען...</div>;
+  }
 
   return (
     <div className="space-y-6">
