@@ -3,13 +3,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { BookOpen, Coffee } from 'lucide-react';
 import { formatTotalTime } from '@/utils/timeUtils';
-import { TimerState } from './types';
 
 interface TimerStatsProps {
   totalStudyTime: number;
   totalBreakTime: number;
   currentTime: number;
-  timerState: TimerState;
+  timerState: 'STOPPED' | 'STUDYING' | 'BREAK';
 }
 
 export const TimerStats: React.FC<TimerStatsProps> = ({
@@ -18,9 +17,9 @@ export const TimerStats: React.FC<TimerStatsProps> = ({
   currentTime,
   timerState,
 }) => {
-  const totalTime = totalStudyTime + totalBreakTime + (timerState !== TimerState.STOPPED ? currentTime : 0);
+  const totalTime = totalStudyTime + totalBreakTime + (timerState !== 'STOPPED' ? currentTime : 0);
   const studyPercentage = totalTime > 0 
-    ? ((totalStudyTime + (timerState === TimerState.STUDYING ? currentTime : 0)) / totalTime) * 100 
+    ? ((totalStudyTime + (timerState === 'STUDYING' ? currentTime : 0)) / totalTime) * 100 
     : 0;
 
   return (
@@ -34,7 +33,7 @@ export const TimerStats: React.FC<TimerStatsProps> = ({
           <div className="flex justify-between items-center text-sm">
             <span>זמן למידה</span>
             <span className="font-semibold">
-              {formatTotalTime(totalStudyTime + (timerState === TimerState.STUDYING ? currentTime : 0))}
+              {formatTotalTime(totalStudyTime + (timerState === 'STUDYING' ? currentTime : 0))}
             </span>
           </div>
           <Progress value={studyPercentage} className="w-full h-2" />
@@ -52,7 +51,7 @@ export const TimerStats: React.FC<TimerStatsProps> = ({
               <BookOpen className="mr-2 h-5 w-5" /> זמן למידה
             </span>
             <span className="font-semibold text-green-800">
-              {formatTotalTime(totalStudyTime + (timerState === TimerState.STUDYING ? currentTime : 0))}
+              {formatTotalTime(totalStudyTime + (timerState === 'STUDYING' ? currentTime : 0))}
             </span>
           </div>
           <div className="flex justify-between items-center bg-yellow-100 p-3 rounded-lg transition-all duration-300 ease-in-out hover:shadow-md">
@@ -60,7 +59,7 @@ export const TimerStats: React.FC<TimerStatsProps> = ({
               <Coffee className="mr-2 h-5 w-5" /> זמן הפסקה
             </span>
             <span className="font-semibold text-yellow-800">
-              {formatTotalTime(totalBreakTime + (timerState === TimerState.BREAK ? currentTime : 0))}
+              {formatTotalTime(totalBreakTime + (timerState === 'BREAK' ? currentTime : 0))}
             </span>
           </div>
         </div>

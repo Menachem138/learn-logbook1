@@ -1,38 +1,69 @@
-'use client'
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { TimerDisplay } from './TimerDisplay';
 import { TimerControls } from './TimerControls';
 import { TimerStats } from './TimerStats';
-import { TimerState } from './types';
-import { useTimerData } from '@/hooks/useTimerData';
-import { supabase } from '@/integrations/supabase/client';
 
 export const StudyTimeTracker: React.FC = () => {
-  const [timerState, setTimerState] = useState<TimerState>(TimerState.STOPPED);
+  const [timerState, setTimerState] = useState<'STOPPED' | 'STUDYING' | 'BREAK'>('STOPPED');
   const [time, setTime] = useState<number>(0);
+  const [totalStudyTime, setTotalStudyTime] = useState<number>(0);
+  const [totalBreakTime, setTotalBreakTime] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const { session } = useAuth();
-  const { 
-    totalStudyTime, 
-    totalBreakTime,
-    loadLatestSessionData 
-  } = useTimerData();
 
   const startTimeRef = useRef<number>(0);
+  const studyTimeRef = useRef<number>(0);
+  const breakTimeRef = useRef<number>(0);
   const currentSessionRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+  const stopTimer = useCallback(async () => {
+    if (!session?.user?.id) return;
 
-  const startTimer = async (state: TimerState) => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    const elapsedTime = Date.now() - startTimeRef.current;
+    
+    if (timerState === 'STUDYING') {
+      studyTimeRef.current += elapsedTime;
+    } else if (timerState === 'BREAK') {
+      breakTimeRef.current += elapsedTime;
+    }
+
+    if (currentSessionRef.current) {
+      const { error } = await supabase
+        .from('timer_sessions')
+        .update({ 
+          ended_at: new Date().toISOString(),
+          duration: elapsedTime
+        })
+        .eq('id', currentSessionRef.current);
+
+      if (error) {
+        console.error('Error stopping timer session:', error);
+        toast({
+          title: "שגיאה בשמירת הנתונים",
+          description: "לא ניתן לשמור את זמני הלמידה כרגע",
+          variant: "destructive",
+        });
+      }
+    }
+
+    setTotalStudyTime(studyTimeRef.current);
+    setTotalBreakTime(breakTimeRef.current);
+    setTimerState('STOPPED');
+    setTime(0);
+    currentSessionRef.current = null;
+  }, [session?.user?.id, timerState, toast]);
+
+  const startTimer = useCallback(async (newState: 'STUDYING' | 'BREAK') => {
     if (!session?.user?.id) {
       toast({
         title: "התחברות נדרשת",
@@ -42,13 +73,17 @@ export const StudyTimeTracker: React.FC = () => {
       return;
     }
 
-    await cleanup();
+    // Stop current timer if running
+    if (timerState !== 'STOPPED') {
+      await stopTimer();
+    }
 
+    // Start new session
     const { data: newSession, error } = await supabase
       .from('timer_sessions')
       .insert({
         user_id: session.user.id,
-        type: state === TimerState.STUDYING ? 'study' : 'break',
+        type: newState.toLowerCase(),
         started_at: new Date().toISOString(),
       })
       .select()
@@ -65,50 +100,26 @@ export const StudyTimeTracker: React.FC = () => {
     }
 
     currentSessionRef.current = newSession.id;
-    setTimerState(state);
+    setTimerState(newState);
     startTimeRef.current = Date.now();
     setTime(0);
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     intervalRef.current = setInterval(() => {
       setTime(prevTime => prevTime + 10);
     }, 10);
+  }, [session?.user?.id, timerState, stopTimer, toast]);
 
-    await loadLatestSessionData();
-  };
-
-  const cleanup = async () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    if (currentSessionRef.current && timerState !== TimerState.STOPPED) {
-      const { error } = await supabase
-        .from('timer_sessions')
-        .update({ 
-          ended_at: new Date().toISOString()
-        })
-        .eq('id', currentSessionRef.current);
-
-      if (error) {
-        console.error('Error ending session:', error);
-        toast({
-          title: "שגיאה בשמירת הנתונים",
-          description: "לא ניתן לשמור את זמני הלמידה כרגע",
-          variant: "destructive",
-        });
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
-      
-      await loadLatestSessionData();
-    }
-  };
-
-  const stopTimer = async () => {
-    if (!session?.user?.id) return;
-    await cleanup();
-    setTimerState(TimerState.STOPPED);
-    setTime(0);
-    currentSessionRef.current = null;
-  };
+    };
+  }, []);
 
   return (
     <Card className="w-full max-w-md mx-auto bg-white/80 backdrop-blur-sm shadow-lg border border-gray-200">
@@ -117,12 +128,13 @@ export const StudyTimeTracker: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <TimerDisplay time={time} timerState={timerState} />
-        <TimerControls 
+        <TimerControls
           timerState={timerState}
-          onStart={startTimer}
+          onStartStudy={() => startTimer('STUDYING')}
+          onStartBreak={() => startTimer('BREAK')}
           onStop={stopTimer}
         />
-        <TimerStats 
+        <TimerStats
           totalStudyTime={totalStudyTime}
           totalBreakTime={totalBreakTime}
           currentTime={time}
