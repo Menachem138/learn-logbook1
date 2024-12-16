@@ -30,6 +30,9 @@ const getHebrewError = (error: string): string => {
   if (error.includes('Failed to delete')) {
     return 'שגיאה במחיקת הסרטון';
   }
+  if (error.includes('Unauthorized')) {
+    return 'נא להתחבר כדי לצפות בסרטונים';
+  }
   return 'שגיאה לא צפויה';
 };
 
@@ -41,6 +44,13 @@ export const useYouTubeStore = create<YouTubeStore>((set) => ({
   fetchVideos: async () => {
     set({ isLoading: true, error: null });
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        const hebrewError = getHebrewError('Unauthorized');
+        set({ error: hebrewError, isLoading: false });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('youtube_videos')
         .select('*')
@@ -63,6 +73,13 @@ export const useYouTubeStore = create<YouTubeStore>((set) => ({
   addVideo: async (url: string) => {
     set({ isLoading: true, error: null });
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        const hebrewError = getHebrewError('Unauthorized');
+        set({ error: hebrewError, isLoading: false });
+        return;
+      }
+
       if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
         throw new Error('YouTube API key is not configured');
       }
@@ -101,6 +118,13 @@ export const useYouTubeStore = create<YouTubeStore>((set) => ({
   deleteVideo: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        const hebrewError = getHebrewError('Unauthorized');
+        set({ error: hebrewError, isLoading: false });
+        return;
+      }
+
       const { error } = await supabase
         .from('youtube_videos')
         .delete()
