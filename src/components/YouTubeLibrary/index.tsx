@@ -2,18 +2,20 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { Play as PlayIcon } from "lucide-react";
+import { Play as PlayIcon, Trash2 } from "lucide-react";
 import { useYouTubeStore } from "../../stores/youtube";
 import { YouTubePlayer } from "./YouTubePlayer";
 import { AddVideoDialog } from "./AddVideoDialog";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 export function YouTubeLibrary() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { videos, isLoading, fetchVideos } = useYouTubeStore();
+  const [videoToDelete, setVideoToDelete] = useState<string | null>(null);
+  const { videos, isLoading, fetchVideos, deleteVideo } = useYouTubeStore();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -25,12 +27,6 @@ export function YouTubeLibrary() {
         navigate('/login', { replace: true });
         return;
       }
-
-      console.log('Initializing videos with auth state:', {
-        isAuthenticated: !!user,
-        videosCount: videos.length,
-        isLoading
-      });
 
       try {
         console.log('Fetching videos from Supabase...');
@@ -45,6 +41,17 @@ export function YouTubeLibrary() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login', { replace: true });
+  };
+
+  const handleDeleteVideo = async () => {
+    if (videoToDelete) {
+      try {
+        await deleteVideo(videoToDelete);
+        setVideoToDelete(null);
+      } catch (error) {
+        console.error('Error deleting video:', error);
+      }
+    }
   };
 
   if (authLoading) {
@@ -75,9 +82,9 @@ export function YouTubeLibrary() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {videos.map((video) => (
-          <Card key={video.id} className="p-4">
+          <Card key={video.id} className="p-4 group relative">
             <div
-              className="relative aspect-video cursor-pointer group"
+              className="relative aspect-video cursor-pointer"
               onClick={() => setSelectedVideo(video.video_id)}
             >
               <img
@@ -90,6 +97,17 @@ export function YouTubeLibrary() {
               </div>
             </div>
             <h3 className="mt-2 font-medium line-clamp-2">{video.title}</h3>
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                setVideoToDelete(video.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </Card>
         ))}
       </div>
@@ -105,6 +123,21 @@ export function YouTubeLibrary() {
         isOpen={isAddingVideo}
         onClose={() => setIsAddingVideo(false)}
       />
+
+      <AlertDialog open={!!videoToDelete} onOpenChange={() => setVideoToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>האם אתה בטוח שברצונך למחוק את הסרטון?</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו לא ניתנת לביטול
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse">
+            <AlertDialogAction onClick={handleDeleteVideo}>מחק</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setVideoToDelete(null)}>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
