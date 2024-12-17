@@ -133,7 +133,13 @@ export const useYouTubeStore = create<YouTubeStore>()(
           const str = localStorage.getItem(name);
           if (!str) return null;
           try {
-            return JSON.parse(str);
+            const state = JSON.parse(str);
+            // Initialize with default values for non-persisted fields
+            return {
+              ...state,
+              isLoading: false,
+              error: null,
+            };
           } catch (error) {
             console.error('Error parsing storage:', error);
             return null;
