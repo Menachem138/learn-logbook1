@@ -46,10 +46,12 @@ export function YouTubeLibrary() {
   const handleDeleteVideo = async () => {
     if (videoToDelete) {
       try {
+        console.log('YouTubeLibrary: Initiating video deletion for ID:', videoToDelete);
         await deleteVideo(videoToDelete);
+        console.log('YouTubeLibrary: Video deletion completed');
         setVideoToDelete(null);
       } catch (error) {
-        console.error('Error deleting video:', error);
+        console.error('YouTubeLibrary: Error deleting video:', error);
       }
     }
   };
@@ -133,8 +135,14 @@ export function YouTubeLibrary() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse">
-            <AlertDialogAction onClick={handleDeleteVideo}>מחק</AlertDialogAction>
-            <AlertDialogCancel onClick={() => setVideoToDelete(null)}>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              console.log('Delete button clicked in AlertDialog');
+              handleDeleteVideo();
+            }}>מחק</AlertDialogAction>
+            <AlertDialogCancel onClick={() => {
+              console.log('Cancel button clicked in AlertDialog');
+              setVideoToDelete(null);
+            }}>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

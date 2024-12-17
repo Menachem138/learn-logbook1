@@ -84,18 +84,32 @@ export const useYouTubeStore = create<YouTubeStore>()(
         set({ isLoading: true, error: null });
         try {
           const { data: { user } } = await supabase.auth.getUser();
+          console.log('Delete video - Auth state:', { isAuthenticated: !!user, userId: user?.id });
+          console.log('Attempting to delete video:', { videoId: id });
+
           if (!user) {
+            console.error('Delete video - No authenticated user');
             throw new Error('Unauthorized');
           }
 
-          const { error } = await supabase
+          const { error, data } = await supabase
             .from('youtube_videos')
             .delete()
             .eq('id', id)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .select();
 
-          if (error) throw error;
+          if (error) {
+            console.error('Delete video - Supabase error:', {
+              error,
+              message: error.message,
+              details: error.details,
+              hint: error.hint
+            });
+            throw error;
+          }
 
+          console.log('Delete video - Success:', { deletedData: data });
           await get().fetchVideos();
           set({ isLoading: false, error: null });
         } catch (error) {
