@@ -8,13 +8,11 @@ import { YouTubePlayer } from "./YouTubePlayer";
 import { AddVideoDialog } from "./AddVideoDialog";
 import { useAuth } from "../../components/auth/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 export function YouTubeLibrary() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [videoToDelete, setVideoToDelete] = useState<string | null>(null);
   const { videos, isLoading, fetchVideos, deleteVideo } = useYouTubeStore();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -43,14 +41,13 @@ export function YouTubeLibrary() {
     navigate('/login', { replace: true });
   };
 
-  const handleDeleteVideo = async () => {
-    if (videoToDelete) {
-      try {
-        await deleteVideo(videoToDelete);
-        setVideoToDelete(null);
-      } catch (error) {
-        console.error('Error deleting video:', error);
-      }
+  const handleDeleteVideo = async (id: string) => {
+    try {
+      console.log('YouTubeLibrary: Initiating video deletion for ID:', id);
+      await deleteVideo(id);
+      console.log('YouTubeLibrary: Video deletion completed');
+    } catch (error) {
+      console.error('YouTubeLibrary: Error deleting video:', error);
     }
   };
 
@@ -103,7 +100,7 @@ export function YouTubeLibrary() {
               className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => {
                 e.stopPropagation();
-                setVideoToDelete(video.id);
+                handleDeleteVideo(video.id);
               }}
             >
               <Trash2 className="h-4 w-4" />
@@ -123,21 +120,6 @@ export function YouTubeLibrary() {
         isOpen={isAddingVideo}
         onClose={() => setIsAddingVideo(false)}
       />
-
-      <AlertDialog open={!!videoToDelete} onOpenChange={() => setVideoToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>האם אתה בטוח שברצונך למחוק את הסרטון?</AlertDialogTitle>
-            <AlertDialogDescription>
-              פעולה זו לא ניתנת לביטול
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse">
-            <AlertDialogAction onClick={handleDeleteVideo}>מחק</AlertDialogAction>
-            <AlertDialogCancel onClick={() => setVideoToDelete(null)}>ביטול</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
