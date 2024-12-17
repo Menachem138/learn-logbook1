@@ -22,18 +22,21 @@ export function parseYouTubeUrl(url: string): string | null {
  * Fetches video details from YouTube API
  */
 export async function getYouTubeVideoDetails(videoId: string) {
-  const response = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${import.meta.env.VITE_YOUTUBE_API_KEY}`
-  );
-  const data = await response.json();
+  const { data, error } = await supabase.functions.invoke('get-youtube-video-details', {
+    body: { videoId }
+  });
 
-  if (!data.items?.[0]) {
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
     throw new Error('Video not found');
   }
 
   return {
-    title: data.items[0].snippet.title,
-    thumbnail: data.items[0].snippet.thumbnails.high.url,
+    title: data.title,
+    thumbnail: data.thumbnail,
   };
 }
 
