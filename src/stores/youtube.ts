@@ -27,6 +27,7 @@ export const useYouTubeStore = create<YouTubeStore>()(
           const { data, error } = await supabase
             .from('youtube_videos')
             .select('*')
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
           if (error) {
@@ -70,7 +71,9 @@ export const useYouTubeStore = create<YouTubeStore>()(
           if (error) throw error;
 
           await get().fetchVideos();
+          set({ isLoading: false, error: null });
         } catch (error) {
+          console.error('Error adding video:', error);
           const message = error instanceof Error ? error.message : 'Failed to add video';
           set({ error: getHebrewError(message), isLoading: false });
           throw error;
@@ -88,12 +91,15 @@ export const useYouTubeStore = create<YouTubeStore>()(
           const { error } = await supabase
             .from('youtube_videos')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', user.id);
 
           if (error) throw error;
 
           await get().fetchVideos();
+          set({ isLoading: false, error: null });
         } catch (error) {
+          console.error('Error deleting video:', error);
           const message = error instanceof Error ? error.message : 'Failed to delete video';
           set({ error: getHebrewError(message), isLoading: false });
           throw error;

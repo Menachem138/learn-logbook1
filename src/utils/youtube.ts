@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Parses a YouTube URL to extract the video ID
@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js';
  */
 export function parseYouTubeUrl(url: string): string | null {
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu.be\/)([^&\n?#]+)/,
+    /(?:youtube\.com\/watch\?v=|youtu.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/\?v=)([^&\n?#]+)/,
   ];
 
   for (const pattern of patterns) {
@@ -27,6 +27,7 @@ export async function getYouTubeVideoDetails(videoId: string) {
   });
 
   if (error) {
+    console.error('Error fetching video details:', error);
     throw new Error(error.message);
   }
 
