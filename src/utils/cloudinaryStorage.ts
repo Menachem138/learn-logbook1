@@ -1,6 +1,14 @@
 import { cloudinary } from '../integrations/cloudinary/client';
 
-export const uploadToCloudinary = async (file: File, folder: string = 'content_library') => {
+export interface CloudinaryResponse {
+  publicId: string;
+  url: string;
+  resourceType: string;
+  format: string;
+  size: number;
+}
+
+export const uploadToCloudinary = async (file: File, folder: string = 'content_library'): Promise<CloudinaryResponse> => {
   try {
     // Convert the file to base64
     const base64Data = await readFileAsBase64(file);
@@ -24,7 +32,7 @@ export const uploadToCloudinary = async (file: File, folder: string = 'content_l
   }
 };
 
-export const deleteFromCloudinary = async (publicId: string) => {
+export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
     return result.result === 'ok';
