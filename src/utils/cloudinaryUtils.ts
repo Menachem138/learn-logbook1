@@ -1,6 +1,8 @@
 import { CloudinaryResponse, CloudinaryData } from '@/types/cloudinary';
 import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
 
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+
 export const cloudinaryResponseToJson = (response: CloudinaryResponse | null): Json => {
   if (!response) return null;
   return {
