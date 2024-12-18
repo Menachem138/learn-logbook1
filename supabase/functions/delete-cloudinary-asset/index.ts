@@ -4,7 +4,6 @@ import { v2 as cloudinary } from "https://esm.sh/cloudinary@1.37.3"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -43,12 +42,19 @@ serve(async (req) => {
     
     const { publicId } = body
     if (!publicId) {
-      throw new Error('Public ID is required')
+      return new Response(
+        JSON.stringify({ error: 'Public ID is required' }),
+        { 
+          status: 400,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          }
+        }
+      )
     }
 
-    console.log('Attempting to delete asset with public ID:', publicId)
-
-    // Delete the asset from Cloudinary
+    console.log('Attempting to delete Cloudinary asset with public ID:', publicId)
     const result = await cloudinary.uploader.destroy(publicId)
     console.log('Cloudinary deletion result:', result)
 
