@@ -6,9 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+console.log("Starting Edge Function...")
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling CORS preflight request")
     return new Response(null, { headers: corsHeaders })
   }
 
@@ -30,6 +33,8 @@ serve(async (req) => {
       api_key: apiKey,
       api_secret: apiSecret,
     })
+
+    console.log('Cloudinary configured successfully')
 
     // Validate request method
     if (req.method !== 'POST') {
