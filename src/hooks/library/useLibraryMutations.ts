@@ -4,6 +4,14 @@ import { useToast } from '@/hooks/use-toast';
 import { uploadToCloudinary, deleteFromCloudinary } from '@/utils/cloudinaryStorage';
 import { LibraryItemType } from '@/types/library';
 
+interface CloudinaryData {
+  publicId: string;
+  url: string;
+  resourceType: string;
+  format: string;
+  size: number;
+}
+
 export const useLibraryMutations = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -74,7 +82,7 @@ export const useLibraryMutations = () => {
         .eq('id', id)
         .single();
 
-      let cloudinaryData = currentItem?.cloudinary_data;
+      let cloudinaryData = currentItem?.cloudinary_data as CloudinaryData | null;
 
       if (file) {
         // Delete old file if it exists
@@ -82,7 +90,7 @@ export const useLibraryMutations = () => {
           await deleteFromCloudinary(cloudinaryData.publicId);
         }
         // Upload new file
-        cloudinaryData = await uploadToCloudinary(file);
+        cloudinaryData = await uploadToCloudinary(file) as CloudinaryData;
       }
 
       const { error } = await supabase
@@ -122,8 +130,9 @@ export const useLibraryMutations = () => {
         .eq('id', id)
         .single();
 
-      if (item?.cloudinary_data?.publicId) {
-        await deleteFromCloudinary(item.cloudinary_data.publicId);
+      const cloudinaryData = item?.cloudinary_data as CloudinaryData | null;
+      if (cloudinaryData?.publicId) {
+        await deleteFromCloudinary(cloudinaryData.publicId);
       }
 
       const { error } = await supabase
