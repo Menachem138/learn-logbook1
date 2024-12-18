@@ -1,10 +1,11 @@
-import { useLibraryBaseMutations } from './mutations/useLibraryBaseMutations';
-import { useLibraryUpdateMutations } from './mutations/useLibraryUpdateMutations';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { deleteFromCloudinary } from '@/utils/cloudinaryUtils';
 import { CloudinaryResponse } from '@/types/cloudinary';
+import { isCloudinaryResponse } from '@/utils/cloudinaryTypeGuards';
+import { useLibraryBaseMutations } from './mutations/useLibraryBaseMutations';
+import { useLibraryUpdateMutations } from './mutations/useLibraryUpdateMutations';
 
 export const useLibraryMutations = () => {
   const { toast } = useToast();
@@ -20,10 +21,9 @@ export const useLibraryMutations = () => {
         .eq('id', id)
         .single();
 
-      // Add type assertion here to safely convert the JSON data
-      const cloudinaryData = item?.cloudinary_data as CloudinaryResponse | null;
+      const cloudinaryData = item?.cloudinary_data;
       
-      if (cloudinaryData?.publicId) {
+      if (cloudinaryData && isCloudinaryResponse(cloudinaryData)) {
         await deleteFromCloudinary(cloudinaryData.publicId);
       }
 
