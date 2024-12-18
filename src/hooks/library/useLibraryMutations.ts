@@ -1,16 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { uploadToCloudinary, deleteFromCloudinary } from '@/utils/cloudinaryStorage';
+import { uploadToCloudinary, deleteFromCloudinary, CloudinaryResponse } from '@/utils/cloudinaryStorage';
 import { LibraryItemType } from '@/types/library';
+import { Json } from '@/integrations/supabase/types';
 
-interface CloudinaryData {
-  publicId: string;
-  url: string;
-  resourceType: string;
-  format: string;
-  size: number;
-}
+// Define the CloudinaryData type to match the CloudinaryResponse
+type CloudinaryData = CloudinaryResponse;
 
 export const useLibraryMutations = () => {
   const { toast } = useToast();
@@ -28,7 +24,7 @@ export const useLibraryMutations = () => {
         throw new Error('User not authenticated');
       }
 
-      let cloudinaryData = null;
+      let cloudinaryData: CloudinaryData | null = null;
 
       if (file) {
         cloudinaryData = await uploadToCloudinary(file);
@@ -40,7 +36,7 @@ export const useLibraryMutations = () => {
           title,
           content,
           type,
-          cloudinary_data: cloudinaryData,
+          cloudinary_data: cloudinaryData as Json,
           user_id: user.id,
         });
 
@@ -82,7 +78,7 @@ export const useLibraryMutations = () => {
         .eq('id', id)
         .single();
 
-      let cloudinaryData = currentItem?.cloudinary_data as CloudinaryData | null;
+      let cloudinaryData = (currentItem?.cloudinary_data as CloudinaryData | null) ?? null;
 
       if (file) {
         // Delete old file if it exists
@@ -90,7 +86,7 @@ export const useLibraryMutations = () => {
           await deleteFromCloudinary(cloudinaryData.publicId);
         }
         // Upload new file
-        cloudinaryData = await uploadToCloudinary(file) as CloudinaryData;
+        cloudinaryData = await uploadToCloudinary(file);
       }
 
       const { error } = await supabase
@@ -99,7 +95,7 @@ export const useLibraryMutations = () => {
           title,
           content,
           type,
-          cloudinary_data: cloudinaryData,
+          cloudinary_data: cloudinaryData as Json,
         })
         .eq('id', id);
 
@@ -130,7 +126,7 @@ export const useLibraryMutations = () => {
         .eq('id', id)
         .single();
 
-      const cloudinaryData = item?.cloudinary_data as CloudinaryData | null;
+      const cloudinaryData = (item?.cloudinary_data as CloudinaryData | null) ?? null;
       if (cloudinaryData?.publicId) {
         await deleteFromCloudinary(cloudinaryData.publicId);
       }
