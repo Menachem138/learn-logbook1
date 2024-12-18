@@ -57,8 +57,7 @@ export const deleteFromCloudinary = async (publicId: string): Promise<boolean> =
       throw new Error('Authentication required');
     }
 
-    // Call the Edge Function with proper error handling
-    console.log('Calling Edge Function to delete asset...');
+    // Call the Edge Function
     const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
       body: { publicId },
       headers: {
