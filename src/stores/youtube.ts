@@ -89,6 +89,13 @@ export const useYouTubeStore = create<YouTubeStore>()((set, get) => ({
         throw new Error('Unauthorized');
       }
 
+      // עדכון מיידי של ה-state המקומי לפני המחיקה מהשרת
+      set(state => ({
+        videos: state.videos.filter(video => video.id !== id),
+        isLoading: false,
+        error: null
+      }));
+
       const { error } = await supabase
         .from('youtube_videos')
         .delete()
@@ -102,18 +109,10 @@ export const useYouTubeStore = create<YouTubeStore>()((set, get) => ({
           details: error.details,
           hint: error.hint
         });
+        // אם יש שגיאה במחיקה, נחזיר את המצב הקודם
+        await get().fetchVideos();
         throw error;
       }
-
-      // עדכון מיידי של ה-state המקומי
-      set(state => ({
-        videos: state.videos.filter(video => video.id !== id),
-        isLoading: false,
-        error: null
-      }));
-
-      // רענון הנתונים מהשרת
-      await get().fetchVideos();
       
       console.log('Delete video - Success, UI updated');
     } catch (error) {
