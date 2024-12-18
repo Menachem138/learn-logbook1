@@ -4,6 +4,8 @@ import { v2 as cloudinary } from "https://esm.sh/cloudinary@1.37.3"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Type': 'application/json'
 }
 
 console.log("Starting Edge Function...")
@@ -51,10 +53,7 @@ serve(async (req) => {
         JSON.stringify({ error: 'Public ID is required' }),
         { 
           status: 400,
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          }
+          headers: corsHeaders
         }
       )
     }
@@ -65,12 +64,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ result: 'ok', details: result }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        }
-      }
+      { headers: corsHeaders }
     )
 
   } catch (error) {
@@ -83,10 +77,7 @@ serve(async (req) => {
       }),
       { 
         status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        }
+        headers: corsHeaders
       }
     )
   }
