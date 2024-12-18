@@ -40,7 +40,6 @@ serve(async (req) => {
       );
     }
 
-    console.log('Attempting to delete from Cloudinary...');
     const result = await cloudinary.uploader.destroy(publicId);
     console.log('Cloudinary deletion result:', result);
 
@@ -53,7 +52,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500,
+        status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

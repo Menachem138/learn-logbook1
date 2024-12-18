@@ -60,7 +60,6 @@ export const deleteFromCloudinary = async (publicId: string): Promise<boolean> =
       body: { publicId },
       headers: {
         Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
       }
     });
 
