@@ -20,7 +20,9 @@ export const useLibraryMutations = () => {
         .eq('id', id)
         .single();
 
+      // Add type assertion here to safely convert the JSON data
       const cloudinaryData = item?.cloudinary_data as CloudinaryResponse | null;
+      
       if (cloudinaryData?.publicId) {
         await deleteFromCloudinary(cloudinaryData.publicId);
       }
