@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LibraryItemType } from '@/types/library';
-import { cloudinaryResponseToJson, uploadToCloudinary, deleteFromCloudinary } from '@/utils/cloudinaryUtils';
+import { cloudinaryResponseToJson, uploadToCloudinary } from '@/utils/cloudinaryUtils';
 import { CloudinaryResponse } from '@/types/cloudinary';
 
 export const useLibraryBaseMutations = () => {
@@ -24,7 +24,9 @@ export const useLibraryBaseMutations = () => {
       let cloudinaryResponse: CloudinaryResponse | null = null;
 
       if (file) {
+        console.log('Uploading file to Cloudinary:', file);
         cloudinaryResponse = await uploadToCloudinary(file);
+        console.log('Cloudinary upload response:', cloudinaryResponse);
       }
 
       const { error } = await supabase

@@ -46,6 +46,7 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
   }
 
   const data = await response.json();
+  console.log('Cloudinary response:', data);
   
   return {
     publicId: data.public_id,
