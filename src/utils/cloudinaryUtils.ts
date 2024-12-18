@@ -1,4 +1,4 @@
-import { CloudinaryResponse, CloudinaryData } from '@/types/cloudinary';
+import { CloudinaryResponse } from '@/types/cloudinary';
 import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -50,13 +50,14 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
 
 export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
-    console.log('Deleting from Cloudinary, public ID:', publicId);
+    console.log('Initiating Cloudinary deletion for public ID:', publicId);
     
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       throw new Error('No active session');
     }
 
+    console.log('Calling Edge Function to delete asset...');
     const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
       body: { publicId },
       headers: {
@@ -65,11 +66,11 @@ export const deleteFromCloudinary = async (publicId: string): Promise<boolean> =
     });
 
     if (error) {
-      console.error('Error deleting from Cloudinary:', error);
+      console.error('Error from Edge Function:', error);
       throw error;
     }
 
-    console.log('Cloudinary deletion response:', data);
+    console.log('Edge Function response:', data);
     return data?.result === 'ok';
   } catch (error) {
     console.error('Error deleting from Cloudinary:', error);
