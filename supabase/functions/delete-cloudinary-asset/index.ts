@@ -8,8 +8,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Received request to delete-cloudinary-asset');
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -31,9 +34,10 @@ serve(async (req) => {
     });
 
     const { publicId } = await req.json();
-    console.log('Received request to delete asset with public ID:', publicId);
+    console.log('Attempting to delete asset with public ID:', publicId);
 
     if (!publicId) {
+      console.error('No public_id provided');
       return new Response(
         JSON.stringify({ error: 'public_id is required' }),
         { 
@@ -51,7 +55,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in delete-cloudinary-asset function:', error);
+    console.error('Error in delete-cloudinary-asset:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
