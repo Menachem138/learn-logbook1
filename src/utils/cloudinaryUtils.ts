@@ -51,8 +51,13 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
 export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
     console.log('Deleting from Cloudinary, public ID:', publicId);
+    
+    // Add authorization header
     const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
       body: { publicId },
+      headers: {
+        Authorization: `Bearer ${supabase.auth.getSession()?.access_token}`
+      }
     });
 
     if (error) {
