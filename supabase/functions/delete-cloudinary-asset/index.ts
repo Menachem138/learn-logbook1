@@ -60,7 +60,15 @@ serve(async (req) => {
     }
 
     console.log('Attempting to delete Cloudinary asset with public ID:', publicId)
-    const result = await cloudinary.uploader.destroy(publicId)
+    
+    // Use Promise-based deletion
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.destroy(publicId, (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      });
+    });
+    
     console.log('Cloudinary deletion result:', result)
 
     return new Response(
