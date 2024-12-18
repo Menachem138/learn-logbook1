@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { uploadFileToStorage } from '@/utils/fileStorage';
+import { uploadToCloudinary, deleteFromCloudinary } from '@/utils/cloudinaryStorage';
 import { LibraryItemType } from '@/types/library';
 
 export const useLibraryMutations = () => {
@@ -20,16 +20,10 @@ export const useLibraryMutations = () => {
         throw new Error('User not authenticated');
       }
 
-      let fileDetails = null;
+      let cloudinaryData = null;
 
       if (file) {
-        const { publicUrl, filePath, fileName, fileSize, mimeType } = await uploadFileToStorage(file, user.id);
-        fileDetails = {
-          path: publicUrl,
-          name: fileName,
-          size: fileSize,
-          type: mimeType,
-        };
+        cloudinaryData = await uploadToCloudinary(file);
       }
 
       const { error } = await supabase
@@ -38,7 +32,7 @@ export const useLibraryMutations = () => {
           title,
           content,
           type,
-          file_details: fileDetails,
+          cloudinary_data: cloudinaryData,
           user_id: user.id,
         });
 
@@ -73,16 +67,22 @@ export const useLibraryMutations = () => {
         throw new Error('User not authenticated');
       }
 
-      let fileDetails = null;
+      // Get the current item to check if we need to delete old files
+      const { data: currentItem } = await supabase
+        .from('library_items')
+        .select('cloudinary_data')
+        .eq('id', id)
+        .single();
+
+      let cloudinaryData = currentItem?.cloudinary_data;
 
       if (file) {
-        const { publicUrl, filePath, fileName, fileSize, mimeType } = await uploadFileToStorage(file, user.id);
-        fileDetails = {
-          path: publicUrl,
-          name: fileName,
-          size: fileSize,
-          type: mimeType,
-        };
+        // Delete old file if it exists
+        if (cloudinaryData?.publicId) {
+          await deleteFromCloudinary(cloudinaryData.publicId);
+        }
+        // Upload new file
+        cloudinaryData = await uploadToCloudinary(file);
       }
 
       const { error } = await supabase
@@ -91,7 +91,7 @@ export const useLibraryMutations = () => {
           title,
           content,
           type,
-          ...(fileDetails && { file_details: fileDetails }),
+          cloudinary_data: cloudinaryData,
         })
         .eq('id', id);
 
@@ -115,6 +115,17 @@ export const useLibraryMutations = () => {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
+      // Get the item to delete its file if it exists
+      const { data: item } = await supabase
+        .from('library_items')
+        .select('cloudinary_data')
+        .eq('id', id)
+        .single();
+
+      if (item?.cloudinary_data?.publicId) {
+        await deleteFromCloudinary(item.cloudinary_data.publicId);
+      }
+
       const { error } = await supabase
         .from('library_items')
         .delete()

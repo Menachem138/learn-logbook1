@@ -55,6 +55,7 @@
     "@tiptap/starter-kit": "^2.10.3",
     "@types/recharts": "^1.8.29",
     "class-variance-authority": "^0.7.1",
+    "cloudinary": "^2.5.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",

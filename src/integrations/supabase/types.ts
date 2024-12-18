@@ -41,6 +41,8 @@ export type Database = {
       }
       content_items: {
         Row: {
+          cloudinary_public_id: string | null
+          cloudinary_url: string | null
           content: string
           created_at: string
           file_name: string | null
@@ -49,10 +51,13 @@ export type Database = {
           id: string
           mime_type: string | null
           starred: boolean | null
+          title: string
           type: string
           user_id: string
         }
         Insert: {
+          cloudinary_public_id?: string | null
+          cloudinary_url?: string | null
           content: string
           created_at?: string
           file_name?: string | null
@@ -61,10 +66,13 @@ export type Database = {
           id?: string
           mime_type?: string | null
           starred?: boolean | null
+          title?: string
           type: string
           user_id: string
         }
         Update: {
+          cloudinary_public_id?: string | null
+          cloudinary_url?: string | null
           content?: string
           created_at?: string
           file_name?: string | null
@@ -73,6 +81,7 @@ export type Database = {
           id?: string
           mime_type?: string | null
           starred?: boolean | null
+          title?: string
           type?: string
           user_id?: string
         }
@@ -131,6 +140,7 @@ export type Database = {
       }
       library_items: {
         Row: {
+          cloudinary_data: Json | null
           content: string
           created_at: string
           file_details: Json | null
@@ -141,6 +151,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cloudinary_data?: Json | null
           content: string
           created_at?: string
           file_details?: Json | null
@@ -151,6 +162,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cloudinary_data?: Json | null
           content?: string
           created_at?: string
           file_details?: Json | null

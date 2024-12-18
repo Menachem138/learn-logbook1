@@ -27,7 +27,12 @@ export function MediaCard({ type, src, title }: MediaCardProps) {
   if (type === "image") {
     return (
       <Card className="overflow-hidden">
-        <img src={src} alt={title} className="w-full h-auto" />
+        <img 
+          src={src} 
+          alt={title} 
+          className="w-full h-auto"
+          loading="lazy"
+        />
       </Card>
     );
   }
