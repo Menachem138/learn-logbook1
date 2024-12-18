@@ -1,5 +1,4 @@
 import { CloudinaryResponse, CloudinaryData } from '@/types/cloudinary';
-import { Json } from '@/integrations/supabase/types';
 import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
 
 export const cloudinaryResponseToJson = (response: CloudinaryResponse | null): Json => {
@@ -41,8 +40,9 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
   );
 
   if (!response.ok) {
-    console.error('Cloudinary upload failed:', await response.text());
-    throw new Error('Upload failed');
+    const errorText = await response.text();
+    console.error('Cloudinary upload failed:', errorText);
+    throw new Error(`Upload failed: ${errorText}`);
   }
 
   const data = await response.json();

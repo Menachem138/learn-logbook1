@@ -37,6 +37,12 @@ export const useLibraryBaseMutations = () => {
           type,
           cloudinary_data: cloudinaryResponseToJson(cloudinaryResponse),
           user_id: user.id,
+          file_details: cloudinaryResponse ? {
+            path: cloudinaryResponse.url,
+            type: file?.type,
+            name: file?.name,
+            size: file?.size,
+          } : null,
         });
 
       if (error) throw error;
