@@ -1,5 +1,6 @@
 import { CloudinaryResponse, CloudinaryData } from '@/types/cloudinary';
 import { Json } from '@/integrations/supabase/types';
+import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
 
 export const cloudinaryResponseToJson = (response: CloudinaryResponse | null): Json => {
   if (!response) return null;
@@ -25,12 +26,14 @@ export const jsonToCloudinaryResponse = (json: Json): CloudinaryResponse | null 
 };
 
 export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse> => {
+  console.log('Uploading to Cloudinary with cloud name:', CLOUDINARY_CLOUD_NAME);
+  
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', 'content_library');
 
   const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
     {
       method: 'POST',
       body: formData,
@@ -38,6 +41,7 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
   );
 
   if (!response.ok) {
+    console.error('Cloudinary upload failed:', await response.text());
     throw new Error('Upload failed');
   }
 
