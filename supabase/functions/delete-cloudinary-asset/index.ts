@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createHash } from "https://deno.land/std@0.168.0/hash/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,9 +40,7 @@ serve(async (req) => {
     }
 
     const timestamp = Math.round(new Date().getTime() / 1000);
-    const signature = createHash('sha1')
-      .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
-      .toString();
+    const signature = await generateSignature(publicId, timestamp, apiSecret);
 
     const formData = new FormData();
     formData.append('public_id', publicId);
@@ -61,6 +58,10 @@ serve(async (req) => {
 
     const result = await response.json();
     console.log('Cloudinary deletion result:', result);
+
+    if (!response.ok) {
+      throw new Error(`Cloudinary API error: ${JSON.stringify(result)}`);
+    }
 
     return new Response(
       JSON.stringify({ result: 'ok', details: result }),
@@ -89,3 +90,12 @@ serve(async (req) => {
     );
   }
 });
+
+async function generateSignature(publicId: string, timestamp: number, apiSecret: string): Promise<string> {
+  const str = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+  const msgUint8 = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
