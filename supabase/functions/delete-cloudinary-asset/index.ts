@@ -7,9 +7,9 @@ const corsHeaders = {
 };
 
 cloudinary.config({
-  cloud_name: Deno.env.get('CLOUDINARY_CLOUD_NAME'),
-  api_key: Deno.env.get('CLOUDINARY_API_KEY'),
-  api_secret: Deno.env.get('CLOUDINARY_API_SECRET'),
+  cloud_name: 'dxrl4mtlw',
+  api_key: '616227531379291',
+  api_secret: 'kS7wT7mHt_peNerzMEapZnSGhdI',
 });
 
 serve(async (req) => {
