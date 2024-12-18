@@ -51,7 +51,7 @@ serve(async (req) => {
     console.log('Cloudinary deletion result:', result);
 
     return new Response(
-      JSON.stringify({ result }),
+      JSON.stringify({ result: 'ok', details: result }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
