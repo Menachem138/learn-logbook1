@@ -29,11 +29,12 @@ serve(async (req) => {
       throw new Error('Cloudinary configuration is incomplete')
     }
 
-    // Configure Cloudinary
+    // Configure Cloudinary with explicit configuration object
     cloudinary.config({
       cloud_name: cloudName,
       api_key: apiKey,
       api_secret: apiSecret,
+      secure: true // Force HTTPS
     })
 
     console.log('Cloudinary configured successfully')
