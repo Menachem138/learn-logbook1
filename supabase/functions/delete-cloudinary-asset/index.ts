@@ -1,5 +1,5 @@
-import { serve } from 'https://deno.fresh.dev/std@v9.6.1/http/server.ts';
-import { v2 as cloudinary } from 'npm:cloudinary';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { v2 as cloudinary } from "https://esm.sh/cloudinary@1.37.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,9 +7,9 @@ const corsHeaders = {
 };
 
 cloudinary.config({
-  cloud_name: 'dxrl4mtlw',
-  api_key: '616227531379291',
-  api_secret: 'kS7wT7mHt_peNerzMEapZnSGhdI',
+  cloud_name: Deno.env.get('CLOUDINARY_CLOUD_NAME'),
+  api_key: Deno.env.get('CLOUDINARY_API_KEY'),
+  api_secret: Deno.env.get('CLOUDINARY_API_SECRET'),
 });
 
 serve(async (req) => {
@@ -27,7 +27,8 @@ serve(async (req) => {
 
   try {
     const { publicId } = await req.json();
-    
+    console.log('Attempting to delete Cloudinary asset with public ID:', publicId);
+
     if (!publicId) {
       return new Response(JSON.stringify({ error: 'Public ID is required' }), {
         status: 400,
@@ -35,7 +36,6 @@ serve(async (req) => {
       });
     }
 
-    console.log('Attempting to delete Cloudinary asset with public ID:', publicId);
     const result = await cloudinary.uploader.destroy(publicId);
     console.log('Cloudinary delete result:', result);
 
@@ -45,7 +45,7 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Error deleting Cloudinary asset:', error);
-    return new Response(JSON.stringify({ error: 'Failed to delete asset' }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
