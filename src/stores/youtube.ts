@@ -105,13 +105,16 @@ export const useYouTubeStore = create<YouTubeStore>()((set, get) => ({
         throw error;
       }
 
-      // Force immediate UI update instead of fetching
+      // עדכון מיידי של ה-state המקומי
       set(state => ({
         videos: state.videos.filter(video => video.id !== id),
         isLoading: false,
         error: null
       }));
 
+      // רענון הנתונים מהשרת
+      await get().fetchVideos();
+      
       console.log('Delete video - Success, UI updated');
     } catch (error) {
       console.error('Error deleting video:', error);
