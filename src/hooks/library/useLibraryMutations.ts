@@ -5,8 +5,30 @@ import { uploadToCloudinary, deleteFromCloudinary, CloudinaryResponse } from '@/
 import { LibraryItemType } from '@/types/library';
 import { Json } from '@/integrations/supabase/types';
 
-// Define the CloudinaryData type to match the CloudinaryResponse
-type CloudinaryData = CloudinaryResponse;
+// Helper function to convert CloudinaryResponse to Json
+const cloudinaryResponseToJson = (response: CloudinaryResponse | null): Json => {
+  if (!response) return null;
+  return {
+    publicId: response.publicId,
+    url: response.url,
+    resourceType: response.resourceType,
+    format: response.format,
+    size: response.size,
+  } as Json;
+};
+
+// Helper function to convert Json to CloudinaryResponse
+const jsonToCloudinaryResponse = (json: Json): CloudinaryResponse | null => {
+  if (!json || typeof json !== 'object') return null;
+  const data = json as Record<string, any>;
+  return {
+    publicId: data.publicId,
+    url: data.url,
+    resourceType: data.resourceType,
+    format: data.format,
+    size: data.size,
+  };
+};
 
 export const useLibraryMutations = () => {
   const { toast } = useToast();
@@ -24,10 +46,10 @@ export const useLibraryMutations = () => {
         throw new Error('User not authenticated');
       }
 
-      let cloudinaryData: CloudinaryData | null = null;
+      let cloudinaryResponse: CloudinaryResponse | null = null;
 
       if (file) {
-        cloudinaryData = await uploadToCloudinary(file);
+        cloudinaryResponse = await uploadToCloudinary(file);
       }
 
       const { error } = await supabase
@@ -36,7 +58,7 @@ export const useLibraryMutations = () => {
           title,
           content,
           type,
-          cloudinary_data: cloudinaryData as Json,
+          cloudinary_data: cloudinaryResponseToJson(cloudinaryResponse),
           user_id: user.id,
         });
 
@@ -71,22 +93,21 @@ export const useLibraryMutations = () => {
         throw new Error('User not authenticated');
       }
 
-      // Get the current item to check if we need to delete old files
       const { data: currentItem } = await supabase
         .from('library_items')
         .select('cloudinary_data')
         .eq('id', id)
         .single();
 
-      let cloudinaryData = (currentItem?.cloudinary_data as CloudinaryData | null) ?? null;
+      let cloudinaryResponse = currentItem?.cloudinary_data ? 
+        jsonToCloudinaryResponse(currentItem.cloudinary_data as Json) : 
+        null;
 
       if (file) {
-        // Delete old file if it exists
-        if (cloudinaryData?.publicId) {
-          await deleteFromCloudinary(cloudinaryData.publicId);
+        if (cloudinaryResponse?.publicId) {
+          await deleteFromCloudinary(cloudinaryResponse.publicId);
         }
-        // Upload new file
-        cloudinaryData = await uploadToCloudinary(file);
+        cloudinaryResponse = await uploadToCloudinary(file);
       }
 
       const { error } = await supabase
@@ -95,7 +116,7 @@ export const useLibraryMutations = () => {
           title,
           content,
           type,
-          cloudinary_data: cloudinaryData as Json,
+          cloudinary_data: cloudinaryResponseToJson(cloudinaryResponse),
         })
         .eq('id', id);
 

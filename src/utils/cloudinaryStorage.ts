@@ -1,4 +1,4 @@
-import { cloudinary } from '../integrations/cloudinary/client';
+import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
 
 export interface CloudinaryResponse {
   publicId: string;
@@ -10,21 +10,31 @@ export interface CloudinaryResponse {
 
 export const uploadToCloudinary = async (file: File, folder: string = 'content_library'): Promise<CloudinaryResponse> => {
   try {
-    // Convert the file to base64
-    const base64Data = await readFileAsBase64(file);
-    
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(base64Data, {
-      folder,
-      resource_type: "auto", // Automatically detect if it's an image or video
-    });
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'content_library'); // Make sure to create this unsigned upload preset in your Cloudinary settings
+    formData.append('folder', folder);
 
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+
+    const data = await response.json();
+    
     return {
-      publicId: result.public_id,
-      url: result.secure_url,
-      resourceType: result.resource_type,
-      format: result.format,
-      size: result.bytes,
+      publicId: data.public_id,
+      url: data.secure_url,
+      resourceType: data.resource_type,
+      format: data.format,
+      size: data.bytes,
     };
   } catch (error) {
     console.error('Error uploading to Cloudinary:', error);
@@ -34,19 +44,23 @@ export const uploadToCloudinary = async (file: File, folder: string = 'content_l
 
 export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
-    const result = await cloudinary.uploader.destroy(publicId);
+    const timestamp = new Date().getTime();
+    const response = await fetch('/.netlify/functions/delete-cloudinary-asset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ publicId, timestamp }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Delete failed');
+    }
+
+    const result = await response.json();
     return result.result === 'ok';
   } catch (error) {
     console.error('Error deleting from Cloudinary:', error);
     throw error;
   }
-};
-
-const readFileAsBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
 };

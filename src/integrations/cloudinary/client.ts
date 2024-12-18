@@ -1,10 +1,8 @@
-import { v2 as cloudinary } from 'cloudinary';
+// Instead of using the Node.js SDK, we'll use the Upload Widget
+export const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+export const CLOUDINARY_API_KEY = import.meta.env.VITE_CLOUDINARY_API_KEY;
 
-// Initialize the Cloudinary configuration using Supabase Edge Function
-cloudinary.config({
-  cloud_name: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
-  api_key: import.meta.env.VITE_CLOUDINARY_API_KEY,
-  api_secret: import.meta.env.VITE_CLOUDINARY_API_SECRET,
-});
-
-export { cloudinary };
+export const getCloudinarySignature = async () => {
+  const response = await fetch('/.netlify/functions/get-cloudinary-signature');
+  return response.json();
+};
