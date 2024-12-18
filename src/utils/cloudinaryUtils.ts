@@ -50,12 +50,14 @@ export const deleteFromCloudinary = async (publicId: string): Promise<boolean> =
   try {
     console.log('Initiating Cloudinary deletion for public ID:', publicId);
     
+    // Check for active session
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       console.error('No active session found');
       throw new Error('Authentication required');
     }
 
+    // Call the Edge Function with proper error handling
     console.log('Calling Edge Function to delete asset...');
     const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
       body: { publicId },

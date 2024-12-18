@@ -1,5 +1,5 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { v2 as cloudinary } from 'https://esm.sh/cloudinary@1.37.3'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { v2 as cloudinary } from "https://esm.sh/cloudinary@1.37.3"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,11 +14,22 @@ serve(async (req) => {
   }
 
   try {
+    // Log environment variables (without secrets)
+    console.log('Checking Cloudinary configuration...')
+    const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME')
+    const apiKey = Deno.env.get('CLOUDINARY_API_KEY')
+    const apiSecret = Deno.env.get('CLOUDINARY_API_SECRET')
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.error('Missing Cloudinary credentials')
+      throw new Error('Cloudinary configuration is incomplete')
+    }
+
     // Configure Cloudinary
     cloudinary.config({
-      cloud_name: Deno.env.get('CLOUDINARY_CLOUD_NAME'),
-      api_key: Deno.env.get('CLOUDINARY_API_KEY'),
-      api_secret: Deno.env.get('CLOUDINARY_API_SECRET'),
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
     })
 
     // Validate request method
@@ -26,9 +37,11 @@ serve(async (req) => {
       throw new Error('Method not allowed')
     }
 
-    // Parse request body
-    const { publicId } = await req.json()
+    // Parse and validate request body
+    const body = await req.json()
+    console.log('Received request body:', { ...body, apiKey: '[REDACTED]' })
     
+    const { publicId } = body
     if (!publicId) {
       throw new Error('Public ID is required')
     }
@@ -42,7 +55,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ result: 'ok', details: result }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     )
 
@@ -56,7 +72,10 @@ serve(async (req) => {
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     )
   }
