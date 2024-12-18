@@ -3,16 +3,14 @@ import { v2 as cloudinary } from "https://esm.sh/cloudinary@1.37.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders 
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -36,13 +34,9 @@ serve(async (req) => {
     console.log('Received request to delete asset with public ID:', publicId);
 
     if (!publicId) {
-      console.error('No public ID provided');
       return new Response(
-        JSON.stringify({ error: 'Public ID is required' }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
+        JSON.stringify({ error: 'public_id is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -51,10 +45,8 @@ serve(async (req) => {
     console.log('Cloudinary deletion result:', result);
 
     return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      JSON.stringify({ result }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error in delete-cloudinary-asset function:', error);
