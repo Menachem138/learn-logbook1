@@ -1,5 +1,6 @@
 import { CloudinaryResponse, CloudinaryData } from '@/types/cloudinary';
 import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
+import { supabase } from '@/integrations/supabase/client';
 
 type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
@@ -11,18 +12,6 @@ export const cloudinaryResponseToJson = (response: CloudinaryResponse | null): J
     resourceType: response.resourceType,
     format: response.format,
     size: response.size,
-  } as Json;
-};
-
-export const jsonToCloudinaryResponse = (json: Json): CloudinaryResponse | null => {
-  if (!json || typeof json !== 'object') return null;
-  const data = json as Record<string, any>;
-  return {
-    publicId: data.publicId,
-    url: data.url,
-    resourceType: data.resourceType,
-    format: data.format,
-    size: data.size,
   };
 };
 
@@ -61,20 +50,16 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
 
 export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
-    const response = await fetch('/.netlify/functions/delete-cloudinary-asset', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ publicId }),
+    const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
+      body: { publicId },
     });
 
-    if (!response.ok) {
-      throw new Error('Delete failed');
+    if (error) {
+      console.error('Error deleting from Cloudinary:', error);
+      throw error;
     }
 
-    const result = await response.json();
-    return result.result === 'ok';
+    return data?.result === 'ok';
   } catch (error) {
     console.error('Error deleting from Cloudinary:', error);
     throw error;
