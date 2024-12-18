@@ -2,19 +2,6 @@ import { CloudinaryResponse } from '@/types/cloudinary';
 import { CLOUDINARY_CLOUD_NAME } from '../integrations/cloudinary/client';
 import { supabase } from '@/integrations/supabase/client';
 
-type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
-
-export const cloudinaryResponseToJson = (response: CloudinaryResponse | null): Json => {
-  if (!response) return null;
-  return {
-    publicId: response.publicId,
-    url: response.url,
-    resourceType: response.resourceType,
-    format: response.format,
-    size: response.size,
-  };
-};
-
 export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse> => {
   console.log('Uploading to Cloudinary with cloud name:', CLOUDINARY_CLOUD_NAME);
   
@@ -48,6 +35,17 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
   };
 };
 
+export const cloudinaryResponseToJson = (response: CloudinaryResponse | null) => {
+  if (!response) return null;
+  return {
+    publicId: response.publicId,
+    url: response.url,
+    resourceType: response.resourceType,
+    format: response.format,
+    size: response.size,
+  };
+};
+
 export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
     console.log('Initiating Cloudinary deletion for public ID:', publicId);
@@ -61,7 +59,8 @@ export const deleteFromCloudinary = async (publicId: string): Promise<boolean> =
     const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
       body: { publicId },
       headers: {
-        Authorization: `Bearer ${session.access_token}`
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
       }
     });
 

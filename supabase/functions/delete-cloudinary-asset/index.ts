@@ -17,10 +17,19 @@ serve(async (req) => {
 
   try {
     // Configure Cloudinary
+    const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME');
+    const apiKey = Deno.env.get('CLOUDINARY_API_KEY');
+    const apiSecret = Deno.env.get('CLOUDINARY_API_SECRET');
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.error('Missing Cloudinary credentials');
+      throw new Error('Cloudinary configuration is incomplete');
+    }
+
     cloudinary.config({
-      cloud_name: Deno.env.get('CLOUDINARY_CLOUD_NAME'),
-      api_key: Deno.env.get('CLOUDINARY_API_KEY'),
-      api_secret: Deno.env.get('CLOUDINARY_API_SECRET'),
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
     });
 
     const { publicId } = await req.json();
