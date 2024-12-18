@@ -50,6 +50,7 @@ export const uploadToCloudinary = async (file: File): Promise<CloudinaryResponse
 
 export const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
   try {
+    console.log('Deleting from Cloudinary, public ID:', publicId);
     const { data, error } = await supabase.functions.invoke('delete-cloudinary-asset', {
       body: { publicId },
     });
@@ -59,6 +60,7 @@ export const deleteFromCloudinary = async (publicId: string): Promise<boolean> =
       throw error;
     }
 
+    console.log('Cloudinary deletion response:', data);
     return data?.result === 'ok';
   } catch (error) {
     console.error('Error deleting from Cloudinary:', error);
