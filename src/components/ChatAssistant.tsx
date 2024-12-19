@@ -39,16 +39,33 @@ export default function ChatAssistant() {
       }
 
       if (data.error) {
-        throw new Error(data.error);
+        // Handle rate limiting specifically
+        if (data.error === 'Rate limit exceeded') {
+          toast({
+            title: "נא להמתין",
+            description: "נא להמתין מעט לפני שליחת הודעה נוספת",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.error);
+        }
+        setMessages(prev => prev.slice(0, -1));
+        return;
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error: any) {
       console.error('Error sending message:', error);
       
+      // Determine the error message based on the type of error
+      let errorMessage = "אנא נסה שוב מאוחר יותר";
+      if (error.message?.includes('Rate limit exceeded') || error.status === 429) {
+        errorMessage = "נא להמתין מעט לפני שליחת הודעה נוספת";
+      }
+      
       toast({
         title: "שגיאה בשליחת ההודעה",
-        description: error.message || "אנא נסה שוב מאוחר יותר",
+        description: errorMessage,
         variant: "destructive",
       });
       
