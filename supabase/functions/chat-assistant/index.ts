@@ -60,7 +60,7 @@ serve(async (req) => {
     const model = initGemini()
     const prompt = generatePrompt(context, message)
 
-    console.log('Generating response with retry logic...')
+    console.log('Generating focused response...')
     const response = await fetchWithRetry(model, prompt)
     const text = response.text()
     

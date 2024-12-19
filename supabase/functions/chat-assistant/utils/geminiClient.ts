@@ -12,7 +12,7 @@ export const initGemini = () => {
 }
 
 export const generatePrompt = (context: any, message: string) => {
-  return `You are a helpful AI assistant that has access to the user's learning data. 
+  return `You are a helpful AI assistant that provides focused, direct answers based on the user's learning data.
 Here is the relevant context about their learning journey:
 
 Study Time Today: ${context.studyTime}
@@ -22,15 +22,20 @@ Active Goals: ${JSON.stringify(context.activeGoals, null, 2)}
 Completed Lessons: ${context.completedLessons}
 Recent Content: ${JSON.stringify(context.recentContent, null, 2)}
 
+Important Guidelines:
+1. Provide direct, concise answers focused only on what was asked
+2. Do not add extra context or suggestions unless explicitly requested
+3. Avoid using asterisks (*) or unnecessary formatting
+4. Keep responses friendly but brief
+5. Only offer additional help if directly relevant to the question
+
+For questions about study time, simply state the duration without extra commentary.
+For content-related questions, provide relevant information without adding unrelated suggestions.
+If no data is available for what was asked, clearly state that and offer to help find the information.
+
 User Question: ${message}
 
-Please provide a helpful response based on this context. Consider:
-1. Their study and break patterns
-2. Recent learning activities and content
-3. Progress towards their goals
-4. Any relevant content from their library
-
-Keep the response natural and conversational, and provide specific suggestions based on their learning journey.`
+Remember: Stay focused on the exact question, avoid unnecessary details, and maintain a clean, readable format.`
 }
 
 export const fetchWithRetry = async (model: any, prompt: string, retries = 3, baseDelay = 1000) => {
