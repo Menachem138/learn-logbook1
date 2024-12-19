@@ -1,89 +1,83 @@
-import React, { useRef } from 'react';
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { TextEditorToolbar } from './TextEditorToolbar';
+import { toast } from "sonner";
+import Editor from "./Editor";
+import { supabase } from "@/integrations/supabase/client";
+import { ImageUpload } from "./ImageUpload";
 
 interface JournalEntryFormProps {
-  newEntry: string;
-  setNewEntry: (value: string) => void;
-  addEntry: (isImportant: boolean) => void;
+  onEntryAdded: () => void;
 }
 
-export function JournalEntryForm({ newEntry, setNewEntry, addEntry }: JournalEntryFormProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+export function JournalEntryForm({ onEntryAdded }: JournalEntryFormProps) {
+  const [newEntry, setNewEntry] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const handleFormatText = (format: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = newEntry.substring(start, end);
-
-    let newText = newEntry;
-    let newCursorPos = start;
-
-    switch (format) {
-      case 'align-right':
-      case 'align-center':
-      case 'align-left':
-        // Add text-align class to the selected text
-        newText = `${newEntry.substring(0, start)}<div class="${format}">${selectedText}</div>${newEntry.substring(end)}`;
-        newCursorPos = start + format.length + 7;
-        break;
-      case 'quote':
-        newText = `${newEntry.substring(0, start)}> ${selectedText}${newEntry.substring(end)}`;
-        newCursorPos = start + 2;
-        break;
-      case 'bullet-list':
-        newText = `${newEntry.substring(0, start)}• ${selectedText}${newEntry.substring(end)}`;
-        newCursorPos = start + 2;
-        break;
-      case 'numbered-list':
-        newText = `${newEntry.substring(0, start)}1. ${selectedText}${newEntry.substring(end)}`;
-        newCursorPos = start + 3;
-        break;
-      default:
-        // For bold (**), italic (*), and underline (__)
-        newText = `${newEntry.substring(0, start)}${format}${selectedText}${format}${newEntry.substring(end)}`;
-        newCursorPos = start + format.length;
+  const addEntry = async (isImportant: boolean = false) => {
+    if (!newEntry.trim()) {
+      toast.error("אנא הכנס תוכן ליומן");
+      return;
     }
 
-    setNewEntry(newText);
-    
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newCursorPos, newCursorPos + selectedText.length);
-    }, 0);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user?.id) {
+        toast.error("יש להתחבר כדי להוסיף רשומה");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('learning_journal')
+        .insert([{
+          content: newEntry,
+          is_important: isImportant,
+          user_id: session.session.user.id,
+          image_url: imageUrl
+        }]);
+
+      if (error) throw error;
+
+      setNewEntry("");
+      setImageUrl(null);
+      onEntryAdded();
+      toast.success("הרשומה נוספה בהצלחה!");
+    } catch (error) {
+      console.error('Error adding entry:', error);
+      toast.error("שגיאה בהוספת רשומה");
+    }
   };
 
   return (
-    <div className="space-y-4 bg-white rounded-lg border shadow-sm">
-      <TextEditorToolbar onFormatText={handleFormatText} />
-      <div className="px-4 pb-4">
-        <Textarea
-          ref={textareaRef}
-          placeholder="מה למדת היום?"
-          value={newEntry}
-          onChange={(e) => setNewEntry(e.target.value)}
-          className="min-h-[150px] text-right bg-white resize-none"
-          dir="rtl"
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <h3 className="text-lg">מה למדת היום?</h3>
+        <Editor
+          content={newEntry}
+          onChange={setNewEntry}
         />
-        <div className="flex gap-2 justify-end mt-4">
-          <Button 
-            variant="outline" 
-            onClick={() => addEntry(true)}
-            className="bg-white hover:bg-gray-50"
-          >
-            הוסף כהערה חשובה
-          </Button>
-          <Button 
-            onClick={() => addEntry(false)}
-            className="bg-black hover:bg-black/90 text-white"
-          >
-            הוסף רשומה
-          </Button>
-        </div>
+        <ImageUpload
+          onUploadComplete={(url) => setImageUrl(url)}
+          uploading={uploading}
+          setUploading={setUploading}
+        />
+      </div>
+      <div className="flex space-x-2">
+        <Button 
+          onClick={() => addEntry(false)} 
+          className="flex-1"
+          disabled={uploading}
+        >
+          הוסף רשומה
+        </Button>
+        <Button 
+          onClick={() => addEntry(true)} 
+          variant="secondary" 
+          className="flex-1"
+          disabled={uploading}
+        >
+          הוסף כהערה חשובה
+        </Button>
       </div>
     </div>
   );

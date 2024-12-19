@@ -4,24 +4,27 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Editor from "./LearningJournal/Editor";
+import { JournalEntryForm } from "./LearningJournal/JournalEntryForm";
+import { ImageModal } from "@/components/ui/image-modal";
 
 interface JournalEntry {
   id: string;
   content: string;
-  created_at: string; // Changed from Date to string to match Supabase
+  created_at: string;
   is_important: boolean;
   user_id: string;
+  image_url?: string | null;
 }
 
 export default function LearningJournal() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [newEntry, setNewEntry] = useState("");
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     loadEntries();
@@ -51,50 +54,31 @@ export default function LearningJournal() {
     }
   };
 
-  const addEntry = async (isImportant: boolean = false) => {
-    if (!newEntry.trim()) {
-      toast.error("אנא הכנס תוכן ליומן");
-      return;
-    }
-
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        toast.error("יש להתחבר כדי להוסיף רשומה");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('learning_journal')
-        .insert([{
-          content: newEntry,
-          is_important: isImportant,
-          user_id: session.session.user.id
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setEntries([data, ...entries]);
-        setNewEntry("");
-        toast.success("הרשומה נוספה בהצלחה!");
-      }
-    } catch (error) {
-      console.error('Error adding entry:', error);
-      toast.error("שגיאה בהוספת רשומה");
-    }
-  };
-
   const deleteEntry = async (id: string) => {
     try {
+      const entry = entries.find(e => e.id === id);
+      
+      // Delete the entry from the database
       const { error } = await supabase
         .from('learning_journal')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+
+      // If there was an image, delete it from storage
+      if (entry?.image_url) {
+        const path = entry.image_url.split('/').pop();
+        if (path) {
+          const { error: storageError } = await supabase.storage
+            .from('content_library')
+            .remove([path]);
+          
+          if (storageError) {
+            console.error('Error deleting image:', storageError);
+          }
+        }
+      }
 
       setEntries(entries.filter(entry => entry.id !== id));
       toast.success("הרשומה נמחקה בהצלחה!");
@@ -134,23 +118,8 @@ export default function LearningJournal() {
   return (
     <Card className="p-6 w-full">
       <h2 className="text-2xl font-bold mb-4">יומן למידה</h2>
-      <div className="space-y-4 w-full">
-        <div className="space-y-2 w-full">
-          <h3 className="text-lg">מה למדת היום?</h3>
-          <Editor
-            content={newEntry}
-            onChange={setNewEntry}
-          />
-        </div>
-        <div className="flex space-x-2">
-          <Button onClick={() => addEntry(false)} className="flex-1">
-            הוסף רשומה
-          </Button>
-          <Button onClick={() => addEntry(true)} variant="secondary" className="flex-1">
-            הוסף כהערה חשובה
-          </Button>
-        </div>
-      </div>
+      
+      <JournalEntryForm onEntryAdded={loadEntries} />
 
       <div className="mt-6 space-y-4">
         {entries.map((entry) => (
@@ -182,6 +151,16 @@ export default function LearningJournal() {
               </div>
             </div>
             <div className="prose prose-sm rtl" dangerouslySetInnerHTML={{ __html: entry.content }} />
+            {entry.image_url && (
+              <div className="mt-4">
+                <img
+                  src={entry.image_url}
+                  alt="Entry image"
+                  className="max-w-sm rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setSelectedImage(entry.image_url)}
+                />
+              </div>
+            )}
             <p className="text-sm text-muted-foreground mt-2">
               {new Date(entry.created_at).toLocaleDateString()} {new Date(entry.created_at).toLocaleTimeString()}
             </p>
@@ -211,6 +190,12 @@ export default function LearningJournal() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ImageModal
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        imageUrl={selectedImage || ""}
+      />
     </Card>
   );
 }
