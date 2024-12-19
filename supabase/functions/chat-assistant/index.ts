@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,201 +8,95 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { message, userId } = await req.json();
-    console.log('Received request with message:', message, 'and userId:', userId);
+    const { message, userId } = await req.json()
 
-    if (!message || !userId) {
-      throw new Error('Message and userId are required');
-    }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase configuration');
+      throw new Error('Missing Supabase environment variables')
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Fetch relevant data from Supabase
+    console.log('Fetching user data from Supabase...')
+    const [journalEntries, libraryItems, tweets, youtubeVideos] = await Promise.all([
+      supabase.from('learning_journal').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+      supabase.from('library_items').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+      supabase.from('tweets').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
+      supabase.from('youtube_videos').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5)
+    ])
+
+    // Prepare context from fetched data
+    const context = {
+      journal: journalEntries.data || [],
+      library: libraryItems.data || [],
+      tweets: tweets.data || [],
+      videos: youtubeVideos.data || []
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Initialize Gemini
+    const apiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!apiKey) {
+      throw new Error('Missing Gemini API key')
+    }
 
-    // Fetch timer sessions for today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    console.log('Initializing Gemini model...')
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+
+    // Prepare the prompt with context
+    const prompt = `You are a helpful AI assistant that has access to the user's learning materials and content. 
+    Here is the relevant context from their data:
     
-    const { data: timerSessions } = await supabase
-      .from('timer_sessions')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('created_at', today.toISOString());
+    Journal Entries: ${JSON.stringify(context.journal)}
+    Library Items: ${JSON.stringify(context.library)}
+    Tweets: ${JSON.stringify(context.tweets)}
+    YouTube Videos: ${JSON.stringify(context.videos)}
+    
+    User Question: ${message}
+    
+    Please provide a helpful response based on this context. If the user asks about specific content, reference it directly.
+    If the user asks about media or files, provide information about their existence and content.
+    Keep the response natural and conversational.`
 
-    // Calculate total study and break times for today
-    let todayStudyTime = 0;
-    let todayBreakTime = 0;
+    console.log('Sending request to Gemini...')
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const text = response.text()
 
-    timerSessions?.forEach(session => {
-      if (session.type === 'study') {
-        todayStudyTime += session.duration || 0;
-      } else if (session.type === 'break') {
-        todayBreakTime += session.duration || 0;
-      }
-    });
-
-    // Format times for display
-    const formatMinutes = (ms: number) => {
-      const minutes = Math.floor(ms / (1000 * 60));
-      const hours = Math.floor(minutes / 60);
-      const remainingMinutes = minutes % 60;
-      return hours > 0 
-        ? `${hours} שעות ו-${remainingMinutes} דקות`
-        : `${remainingMinutes} דקות`;
-    };
-
-    // Fetch other user data
-    const [
-      progress, 
-      journalEntries, 
-      schedules
-    ] = await Promise.all([
-      supabase.from('course_progress').select('lesson_id').eq('user_id', userId).eq('completed', true),
-      supabase.from('learning_journal').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
-      supabase.from('schedules').select('*').eq('user_id', userId).order('created_at', { ascending: true })
-    ]);
-
-    const completedLessons = progress.data?.length || 0;
-    const totalLessons = 206;
-
-    // Format schedule data
-    const formattedSchedule = schedules.data?.map(schedule => {
-      return `${schedule.day_name}:\n${schedule.schedule.map((item: any) => 
-        `  - ${item.time}: ${item.activity}`
-      ).join('\n')}`;
-    }).join('\n\n') || 'לא נמצא לוח זמנים';
-
-    // Create context with all user data including timer sessions
-    const context = `
-      מידע על זמני הלמידה שלך להיום:
-      - זמן למידה: ${formatMinutes(todayStudyTime)}
-      - זמן הפסקות: ${formatMinutes(todayBreakTime)}
-      - סך הכל: ${formatMinutes(todayStudyTime + todayBreakTime)}
-      
-      ${timerSessions && timerSessions.length > 0 
-        ? `המשתמש למד היום ${formatMinutes(todayStudyTime)} ולקח ${formatMinutes(todayBreakTime)} הפסקה.`
-        : 'עדיין לא נרשמו זמני למידה להיום.'}
-      
-      מידע על ההתקדמות שלך:
-      - השלמת ${completedLessons} מתוך ${totalLessons} שיעורים (${((completedLessons / totalLessons) * 100).toFixed(1)}%).
-      
-      לוח הזמנים השבועי שלך:
-      ${formattedSchedule}
-
-      רשומות יומן אחרונות:
-      ${journalEntries.data?.map(entry => 
-        `- ${entry.content} ${entry.is_important ? '(חשוב)' : ''} - ${new Date(entry.created_at).toLocaleDateString('he-IL')}`
-      ).join('\n') || 'אין רשומות יומן אחרונות'}
-    `;
-
-    const openAiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAiKey) {
-      throw new Error('OpenAI API key is not configured');
-    }
-
-    console.log('Sending request to OpenAI with context');
-
-    // Call OpenAI API with retries
-    let retryCount = 0;
-    const maxRetries = 3;
-    let lastError = null;
-
-    while (retryCount < maxRetries) {
-      try {
-        const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o',
-            messages: [
-              {
-                role: 'system',
-                content: `אתה עוזר לימודי תומך לקורס מסחר בקריפטו. 
-                יש לך גישה לנתוני הלמידה של התלמיד ואתה יכול לספק משוב ותמיכה מותאמת אישית.
-                עליך להיות מעודד אך גם כנה לגבי תחומים הדורשים שיפור.
-                תמיד ענה בעברית ושמור על טון ידידותי ותומך.
-                
-                הנה ההקשר הנוכחי על התקדמות התלמיד ופעילויותיו:
-                ${context}`
-              },
-              {
-                role: 'user',
-                content: message
-              }
-            ],
-            temperature: 0.7,
-          }),
-        });
-
-        if (!openAiResponse.ok) {
-          const errorData = await openAiResponse.text();
-          console.error('OpenAI API Error:', errorData);
-          
-          if (errorData.includes('billing_not_active')) {
-            throw new Error('העוזר האישי אינו זמין כרגע עקב בעיית חיוב. אנא נסה שוב מאוחר יותר.');
-          }
-          
-          throw new Error(`שגיאה בשירות העוזר האישי: ${openAiResponse.status}`);
-        }
-
-        const data = await openAiResponse.json();
-        console.log('Received response from OpenAI:', data);
-
-        if (!data?.choices?.[0]?.message?.content) {
-          throw new Error('תשובה לא תקינה מהעוזר האישי');
-        }
-
-        return new Response(
-          JSON.stringify({ response: data.choices[0].message.content }),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            } 
-          },
-        );
-      } catch (error) {
-        console.error(`Attempt ${retryCount + 1} failed:`, error);
-        lastError = error;
-        retryCount++;
-        
-        if (error.message.includes('בעיית חיוב')) {
-          // Don't retry billing errors
-          break;
-        }
-        
-        // Wait before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-      }
-    }
-
-    // If we get here, all retries failed
-    throw lastError || new Error('שגיאה בלתי צפויה בשירות העוזר האישי');
-
-  } catch (error) {
-    console.error('Error:', error);
+    console.log('Successfully generated response')
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ response: text }),
       { 
-        status: 500,
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
-      },
-    );
+          'Content-Type': 'application/json' 
+        },
+        status: 200 
+      }
+    )
+
+  } catch (error) {
+    console.error('Error in chat-assistant function:', error)
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to process chat request',
+        details: error.message 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 500 
+      }
+    )
   }
-});
+})

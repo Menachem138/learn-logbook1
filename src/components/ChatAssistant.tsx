@@ -46,14 +46,12 @@ export default function ChatAssistant() {
     } catch (error: any) {
       console.error('Error sending message:', error);
       
-      // Display a user-friendly error message
       toast({
         title: "שגיאה בשליחת ההודעה",
         description: error.message || "אנא נסה שוב מאוחר יותר",
         variant: "destructive",
       });
       
-      // Remove the last user message if there was an error
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
