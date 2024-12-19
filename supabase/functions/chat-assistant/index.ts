@@ -113,7 +113,7 @@ serve(async (req) => {
 
     console.log('Initializing Gemini model...')
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }) // Updated to use 1.5-flash
 
     // Prepare the prompt with context
     const prompt = `You are a helpful AI assistant that has access to the user's learning materials and content. 
