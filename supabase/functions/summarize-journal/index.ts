@@ -1,5 +1,5 @@
-import { serve } from 'https://deno.fresh.run/std@v9.6.1/http/server.ts';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,21 +15,23 @@ serve(async (req) => {
   try {
     const { content } = await req.json();
     
-    // Initialize Gemini
+    // Initialize Gemini with the new model
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '');
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     // Create prompt for summarization
     const prompt = `Please summarize the following learning journal entry in Hebrew. Focus on the key points and main takeaways:
 
 ${content}
 
-Please format the summary in bullet points.`;
+Please format the summary in bullet points and keep it concise.`;
 
-    // Generate summary
+    // Generate summary with the new model
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const summary = response.text();
+
+    console.log('Successfully generated summary with Gemini 2.0 Flash');
 
     return new Response(
       JSON.stringify({ summary }),
@@ -41,7 +43,7 @@ Please format the summary in bullet points.`;
       }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in summarize-journal function:', error);
     return new Response(
       JSON.stringify({ error: 'Failed to generate summary' }),
       { 
