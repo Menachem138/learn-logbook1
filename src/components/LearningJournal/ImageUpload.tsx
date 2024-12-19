@@ -1,8 +1,8 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Image } from 'lucide-react';
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
@@ -11,17 +11,20 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ onUploadComplete, uploading, setUploading }: ImageUploadProps) {
-  const uploadImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+
+    const file = acceptedFiles[0];
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File size must be less than 2MB");
+      return;
+    }
+
     try {
       setUploading(true);
-      
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
-      }
-
-      const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('content_library')
@@ -36,34 +39,40 @@ export function ImageUpload({ onUploadComplete, uploading, setUploading }: Image
         .getPublicUrl(filePath);
 
       onUploadComplete(publicUrl);
-      toast.success('התמונה הועלתה בהצלחה!');
+      toast.success("Image uploaded successfully!");
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('שגיאה בהעלאת התמונה');
+      toast.error("Error uploading image");
     } finally {
       setUploading(false);
     }
-  };
+  }, [onUploadComplete, setUploading]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+    },
+    maxFiles: 1
+  });
 
   return (
-    <div>
-      <Button
-        variant="outline"
-        className="w-full"
-        disabled={uploading}
-      >
-        <label className="cursor-pointer flex items-center justify-center w-full">
-          <Upload className="h-4 w-4 mr-2" />
-          {uploading ? 'מעלה תמונה...' : 'העלה תמונה'}
-          <input
-            type="file"
-            className="hidden"
-            accept="image/*"
-            onChange={uploadImage}
-            disabled={uploading}
-          />
-        </label>
-      </Button>
+    <div 
+      {...getRootProps()} 
+      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
+        ${isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-primary'}
+        ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+      <input {...getInputProps()} disabled={uploading} />
+      <div className="flex flex-col items-center gap-2">
+        <Image className="w-8 h-8 text-gray-400" />
+        {isDragActive ? (
+          <p>Drop the image here...</p>
+        ) : (
+          <p>Drag & drop an image here, or click to select</p>
+        )}
+        <p className="text-sm text-gray-500">Max file size: 2MB</p>
+      </div>
     </div>
   );
 }
