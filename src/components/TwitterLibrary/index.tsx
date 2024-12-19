@@ -1,5 +1,5 @@
 import React from 'react';
-import { TwitterTweetEmbed } from 'react-twitter-widgets';
+import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useTwitterLibrary } from '@/hooks/useTwitterLibrary';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

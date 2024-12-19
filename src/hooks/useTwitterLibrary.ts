@@ -42,11 +42,15 @@ export function useTwitterLibrary() {
 
   const addTweet = useMutation({
     mutationFn: async ({ tweetId, url }: AddTweetParams) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { error } = await supabase
         .from('tweets')
         .insert({
           tweet_id: tweetId,
           url: url,
+          user_id: user.id,
         });
 
       if (error) throw error;
