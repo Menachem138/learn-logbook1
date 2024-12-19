@@ -24,6 +24,8 @@ import {
   ListOrdered,
   List
 } from 'lucide-react'
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
 
 interface EditorProps {
   content: string
@@ -42,7 +44,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
       Underline,
       Image.configure({
         HTMLAttributes: {
-          class: 'max-w-full rounded-lg',
+          class: 'max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity',
         },
       }),
     ],
@@ -63,20 +65,50 @@ const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
     },
   })
 
-  React.useEffect(() => {
-    if (editor && !content) {
-      editor.commands.setContent('')
-    }
-  }, [editor, content])
+  const handleImageUpload = async () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    
+    input.onchange = async () => {
+      if (!input.files?.length) return
+      
+      const file = input.files[0]
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("גודל הקובץ חייב להיות קטן מ-2MB")
+        return
+      }
 
-  const addImage = () => {
-    const url = window.prompt('הכנס את כתובת התמונה:');
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
+      try {
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Math.random()}.${fileExt}`
+        const filePath = `${fileName}`
 
-  if (!editor) return null;
+        const { error: uploadError } = await supabase.storage
+          .from('content_library')
+          .upload(filePath, file)
+
+        if (uploadError) throw uploadError
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('content_library')
+          .getPublicUrl(filePath)
+
+        if (editor) {
+          editor.chain().focus().setImage({ src: publicUrl }).run()
+        }
+        
+        toast.success("התמונה הועלתה בהצלחה!")
+      } catch (error) {
+        console.error('Error uploading image:', error)
+        toast.error("שגיאה בהעלאת התמונה")
+      }
+    }
+
+    input.click()
+  }
+
+  if (!editor) return null
 
   return (
     <div className="border rounded-lg w-full">
@@ -161,7 +193,7 @@ const Editor: React.FC<EditorProps> = ({ content, onChange, onClear }) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={addImage}
+          onClick={handleImageUpload}
           className="px-2"
         >
           <ImageIcon className="h-4 w-4" />

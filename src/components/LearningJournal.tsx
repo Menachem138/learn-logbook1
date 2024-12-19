@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Image } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Editor from "./LearningJournal/Editor";
 import { JournalEntryForm } from "./LearningJournal/JournalEntryForm";
@@ -16,7 +16,6 @@ interface JournalEntry {
   created_at: string;
   is_important: boolean;
   user_id: string;
-  image_url?: string | null;
 }
 
 export default function LearningJournal() {
@@ -56,29 +55,12 @@ export default function LearningJournal() {
 
   const deleteEntry = async (id: string) => {
     try {
-      const entry = entries.find(e => e.id === id);
-      
-      // Delete the entry from the database
       const { error } = await supabase
         .from('learning_journal')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-
-      // If there was an image, delete it from storage
-      if (entry?.image_url) {
-        const path = entry.image_url.split('/').pop();
-        if (path) {
-          const { error: storageError } = await supabase.storage
-            .from('content_library')
-            .remove([path]);
-          
-          if (storageError) {
-            console.error('Error deleting image:', storageError);
-          }
-        }
-      }
 
       setEntries(entries.filter(entry => entry.id !== id));
       toast.success("הרשומה נמחקה בהצלחה!");
@@ -109,6 +91,14 @@ export default function LearningJournal() {
       console.error('Error updating entry:', error);
       toast.error("שגיאה בעדכון רשומה");
     }
+  };
+
+  // Extract image URLs from HTML content
+  const extractImageUrls = (htmlContent: string): string[] => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const images = doc.getElementsByTagName('img');
+    return Array.from(images).map(img => img.src);
   };
 
   if (loading) {
@@ -150,17 +140,16 @@ export default function LearningJournal() {
                 </Button>
               </div>
             </div>
-            <div className="prose prose-sm rtl" dangerouslySetInnerHTML={{ __html: entry.content }} />
-            {entry.image_url && (
-              <div className="mt-4">
-                <img
-                  src={entry.image_url}
-                  alt="Entry image"
-                  className="max-w-sm rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setSelectedImage(entry.image_url)}
-                />
-              </div>
-            )}
+            <div 
+              className="prose prose-sm rtl" 
+              dangerouslySetInnerHTML={{ __html: entry.content }}
+              onClick={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'IMG') {
+                  setSelectedImage((target as HTMLImageElement).src);
+                }
+              }}
+            />
             <p className="text-sm text-muted-foreground mt-2">
               {new Date(entry.created_at).toLocaleDateString()} {new Date(entry.created_at).toLocaleTimeString()}
             </p>
