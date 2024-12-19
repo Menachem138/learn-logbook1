@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Editor from "./LearningJournal/Editor";
 import { JournalEntryForm } from "./LearningJournal/JournalEntryForm";
@@ -24,6 +24,9 @@ export default function LearningJournal() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
     loadEntries();
@@ -101,6 +104,25 @@ export default function LearningJournal() {
     return Array.from(images).map(img => img.src);
   };
 
+  const generateSummary = async (entry: JournalEntry) => {
+    try {
+      setSummarizing(true);
+      const { data, error } = await supabase.functions.invoke('summarize-journal', {
+        body: { content: entry.content }
+      });
+
+      if (error) throw error;
+
+      setSummary(data.summary);
+      setShowSummary(true);
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      toast.error("שגיאה בהפקת סיכום");
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
   if (loading) {
     return <div>טוען...</div>;
   }
@@ -121,6 +143,14 @@ export default function LearningJournal() {
                 )}
               </div>
               <div className="flex space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => generateSummary(entry)}
+                  disabled={summarizing}
+                >
+                  <BookOpen className="h-4 w-4" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -177,6 +207,23 @@ export default function LearningJournal() {
               ביטול
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>סיכום רשומה</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 whitespace-pre-wrap rtl">
+            {summary}
+          </div>
+          <Button 
+            onClick={() => setShowSummary(false)} 
+            className="mt-4"
+          >
+            סגור
+          </Button>
         </DialogContent>
       </Dialog>
 
