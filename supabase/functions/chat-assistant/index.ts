@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai"
 
 const corsHeaders = {
@@ -79,6 +80,61 @@ serve(async (req) => {
       )
     }
 
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase environment variables')
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Fetch relevant data from Supabase
+    console.log('Fetching user data from Supabase...')
+    const [journalEntries, timerSessions, studyGoals, courseProgress] = await Promise.all([
+      supabase.from('learning_journal')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      supabase.from('timer_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('type', 'study')
+        .gte('started_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('started_at', { ascending: false }),
+      supabase.from('study_goals')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('completed', false)
+        .limit(3),
+      supabase.from('course_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('completed', true)
+    ])
+
+    // Calculate total study time for today
+    const totalStudyTime = timerSessions.data?.reduce((acc, session) => {
+      return acc + (session.duration || 0)
+    }, 0) || 0
+    const studyHours = Math.floor(totalStudyTime / (1000 * 60 * 60))
+    const studyMinutes = Math.floor((totalStudyTime % (1000 * 60 * 60)) / (1000 * 60))
+
+    // Prepare context from fetched data
+    const context = {
+      studyTime: `${studyHours} hours and ${studyMinutes} minutes today`,
+      recentJournalEntries: journalEntries.data?.map(entry => ({
+        content: entry.content,
+        date: new Date(entry.created_at).toLocaleDateString()
+      })) || [],
+      activeGoals: studyGoals.data?.map(goal => ({
+        title: goal.title,
+        description: goal.description,
+        deadline: goal.deadline ? new Date(goal.deadline).toLocaleDateString() : 'No deadline'
+      })) || [],
+      completedLessons: courseProgress.data?.length || 0
+    }
+
     // Initialize Gemini
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
@@ -89,9 +145,23 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
+    // Prepare the prompt with context
+    const prompt = `You are a helpful AI assistant that has access to the user's learning data. 
+    Here is the relevant context about their learning journey:
+    
+    Study Time: ${context.studyTime}
+    Recent Journal Entries: ${JSON.stringify(context.recentJournalEntries, null, 2)}
+    Active Goals: ${JSON.stringify(context.activeGoals, null, 2)}
+    Completed Lessons: ${context.completedLessons}
+    
+    User Question: ${message}
+    
+    Please provide a helpful response based on this context. Reference their study time, goals, or journal entries when relevant.
+    Keep the response natural and conversational, and provide specific suggestions based on their learning journey.`
+
     // Use retry logic for the Gemini API call
     console.log('Generating response with retry logic...')
-    const response = await fetchWithRetry(model, message)
+    const response = await fetchWithRetry(model, prompt)
     const text = response.text()
     
     console.log('Successfully generated response')
