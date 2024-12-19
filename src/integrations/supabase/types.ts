@@ -375,39 +375,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          id: string
-          learning_goals: Json | null
-          preferences: Json | null
-          theme: string | null
-          updated_at: string | null
-          username: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          id: string
-          learning_goals?: Json | null
-          preferences?: Json | null
-          theme?: string | null
-          updated_at?: string | null
-          username?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          id?: string
-          learning_goals?: Json | null
-          preferences?: Json | null
-          theme?: string | null
-          updated_at?: string | null
-          username?: string | null
-        }
-        Relationships: []
-      }
       user_stats: {
         Row: {
           created_at: string | null
