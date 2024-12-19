@@ -31,8 +31,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
-        <AuthProvider>
+      <AuthProvider>
+        <Router>
           <div className="min-h-screen bg-white">
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -48,8 +48,8 @@ function App() {
             </Routes>
             <Toaster />
           </div>
-        </AuthProvider>
-      </Router>
+        </Router>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

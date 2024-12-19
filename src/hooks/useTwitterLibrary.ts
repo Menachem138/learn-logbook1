@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Tweet {
   id: string;
   tweet_id: string;
   url: string;
+  user_id: string;
   created_at: string;
 }
 
@@ -27,9 +28,8 @@ export function useTwitterLibrary() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching tweets:', error);
         toast({
-          title: "שגיאה בטעינת ציוצים",
+          title: "Error loading tweets",
           description: error.message,
           variant: "destructive",
         });
@@ -58,13 +58,13 @@ export function useTwitterLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tweets'] });
       toast({
-        title: "הציוץ נוסף בהצלחה",
+        title: "Tweet added",
+        description: "The tweet has been added to your library",
       });
     },
     onError: (error: Error) => {
-      console.error('Error adding tweet:', error);
       toast({
-        title: "שגיאה בהוספת הציוץ",
+        title: "Error adding tweet",
         description: error.message,
         variant: "destructive",
       });
@@ -83,13 +83,13 @@ export function useTwitterLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tweets'] });
       toast({
-        title: "הציוץ נמחק בהצלחה",
+        title: "Tweet deleted",
+        description: "The tweet has been removed from your library",
       });
     },
     onError: (error: Error) => {
-      console.error('Error deleting tweet:', error);
       toast({
-        title: "שגיאה במחיקת הציוץ",
+        title: "Error deleting tweet",
         description: error.message,
         variant: "destructive",
       });
