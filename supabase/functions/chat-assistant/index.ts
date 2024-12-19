@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai"
 
 const corsHeaders = {
@@ -10,7 +9,7 @@ const corsHeaders = {
 // In-memory rate limiting
 const requestTimestamps: { [key: string]: number[] } = {};
 const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
-const MAX_REQUESTS_PER_MINUTE = 5; // Reduced from 10 to stay within Gemini limits
+const MAX_REQUESTS_PER_MINUTE = 5;
 
 function isRateLimited(userId: string): boolean {
   const now = Date.now();
@@ -80,31 +79,6 @@ serve(async (req) => {
       )
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables')
-    }
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Fetch relevant data from Supabase
-    console.log('Fetching user data from Supabase...')
-    const [journalEntries, libraryItems, tweets, youtubeVideos] = await Promise.all([
-      supabase.from('learning_journal').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
-      supabase.from('library_items').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
-      supabase.from('tweets').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
-      supabase.from('youtube_videos').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5)
-    ])
-
-    // Prepare context from fetched data
-    const context = {
-      journal: journalEntries.data || [],
-      library: libraryItems.data || [],
-      tweets: tweets.data || [],
-      videos: youtubeVideos.data || []
-    }
-
     // Initialize Gemini
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
@@ -113,26 +87,11 @@ serve(async (req) => {
 
     console.log('Initializing Gemini model...')
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }) // Updated to use 1.5-flash
-
-    // Prepare the prompt with context
-    const prompt = `You are a helpful AI assistant that has access to the user's learning materials and content. 
-    Here is the relevant context from their data:
-    
-    Journal Entries: ${JSON.stringify(context.journal)}
-    Library Items: ${JSON.stringify(context.library)}
-    Tweets: ${JSON.stringify(context.tweets)}
-    YouTube Videos: ${JSON.stringify(context.videos)}
-    
-    User Question: ${message}
-    
-    Please provide a helpful response based on this context. If the user asks about specific content, reference it directly.
-    If the user asks about media or files, provide information about their existence and content.
-    Keep the response natural and conversational.`
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
     // Use retry logic for the Gemini API call
     console.log('Generating response with retry logic...')
-    const response = await fetchWithRetry(model, prompt)
+    const response = await fetchWithRetry(model, message)
     const text = response.text()
     
     console.log('Successfully generated response')
