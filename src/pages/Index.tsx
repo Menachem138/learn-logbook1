@@ -8,6 +8,7 @@ import ChatAssistant from "@/components/ChatAssistant";
 import CourseSchedule from "@/components/CourseSchedule";
 import LearningJournal from "@/components/LearningJournal";
 import { YouTubeLibrary } from "@/components/YouTubeLibrary";
+import { TwitterLibrary } from "@/components/TwitterLibrary";
 
 export default function Index() {
   return (
@@ -25,6 +26,7 @@ export default function Index() {
         <CourseSchedule />
         <Library />
         <YouTubeLibrary />
+        <TwitterLibrary />
         <Questions />
         <LearningJournal />
       </div>

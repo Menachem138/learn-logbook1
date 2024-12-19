@@ -351,6 +351,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tweets: {
+        Row: {
+          created_at: string
+          id: string
+          tweet_id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tweet_id: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tweet_id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_stats: {
         Row: {
           created_at: string | null
