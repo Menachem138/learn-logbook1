@@ -17,7 +17,6 @@ interface JournalEntryType {
 }
 
 export default function LearningJournal() {
-  const [newEntry, setNewEntry] = React.useState('');
   const [editingEntry, setEditingEntry] = React.useState<JournalEntryType | null>(null);
   const [isEditing, setIsEditing] = React.useState(false);
   const queryClient = useQueryClient();
@@ -38,30 +37,6 @@ export default function LearningJournal() {
 
       if (error) throw error;
       return data;
-    },
-  });
-
-  const addEntryMutation = useMutation({
-    mutationFn: async ({ content, isImportant }: { content: string; isImportant: boolean }) => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user?.id) {
-        throw new Error('יש להתחבר כדי להוסיף רשומה');
-      }
-
-      const { error } = await supabase
-        .from('learning_journal')
-        .insert([{
-          content,
-          is_important: isImportant,
-          user_id: session.session.user.id
-        }]);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['journal-entries'] });
-      setNewEntry('');
-      toast.success('הרשומה נוספה בהצלחה');
     },
   });
 
@@ -97,14 +72,6 @@ export default function LearningJournal() {
     },
   });
 
-  const handleAddEntry = (isImportant: boolean) => {
-    if (!newEntry.trim()) {
-      toast.error('אנא הכנס תוכן ליומן');
-      return;
-    }
-    addEntryMutation.mutate({ content: newEntry, isImportant });
-  };
-
   if (isLoading) {
     return <div>טוען...</div>;
   }
@@ -116,11 +83,7 @@ export default function LearningJournal() {
         <h3 className="text-lg text-muted-foreground mb-4">מה למדת היום?</h3>
       </div>
       
-      <JournalEntryForm
-        newEntry={newEntry}
-        setNewEntry={setNewEntry}
-        addEntry={handleAddEntry}
-      />
+      <JournalEntryForm onEntryAdded={() => queryClient.invalidateQueries({ queryKey: ['journal-entries'] })} />
 
       <div className="space-y-4 mt-8">
         {entries.map((entry) => (
