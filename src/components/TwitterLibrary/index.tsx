@@ -58,9 +58,9 @@ export function TwitterLibrary() {
           </Button>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tweets.map((tweet) => (
-            <div key={tweet.id} className="relative">
+            <div key={tweet.id} className="relative bg-white rounded-lg shadow-sm">
               <Button
                 variant="ghost"
                 size="icon"
