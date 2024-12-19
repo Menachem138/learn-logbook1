@@ -7,10 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Simple in-memory rate limiting
+// In-memory rate limiting
 const requestTimestamps: { [key: string]: number[] } = {};
 const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
-const MAX_REQUESTS_PER_MINUTE = 10; // Adjust based on your quota
+const MAX_REQUESTS_PER_MINUTE = 5; // Reduced from 10 to stay within Gemini limits
 
 function isRateLimited(userId: string): boolean {
   const now = Date.now();
@@ -27,6 +27,30 @@ function isRateLimited(userId: string): boolean {
   
   requestTimestamps[userId].push(now);
   return false;
+}
+
+// Retry logic with exponential backoff
+async function fetchWithRetry(model: any, prompt: string, retries = 3, baseDelay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const result = await model.generateContent(prompt);
+      return await result.response;
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error);
+      
+      if (error.message?.includes('429') || error.message?.includes('RATE_LIMIT_EXCEEDED')) {
+        if (i === retries - 1) throw error; // Last retry, propagate the error
+        
+        // Exponential backoff
+        const delay = baseDelay * Math.pow(2, i);
+        console.log(`Rate limit hit. Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      throw error; // For non-rate-limit errors, propagate immediately
+    }
+  }
 }
 
 serve(async (req) => {
@@ -81,7 +105,7 @@ serve(async (req) => {
       videos: youtubeVideos.data || []
     }
 
-    // Initialize Gemini with retries
+    // Initialize Gemini
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) {
       throw new Error('Missing Gemini API key')
@@ -106,43 +130,22 @@ serve(async (req) => {
     If the user asks about media or files, provide information about their existence and content.
     Keep the response natural and conversational.`
 
-    let attempts = 0;
-    const maxAttempts = 3;
-    let lastError = null;
-
-    while (attempts < maxAttempts) {
-      try {
-        console.log(`Attempt ${attempts + 1} of ${maxAttempts} to generate response...`)
-        const result = await model.generateContent(prompt)
-        const response = await result.response
-        const text = response.text()
-        
-        console.log('Successfully generated response')
-        return new Response(
-          JSON.stringify({ response: text }),
-          { 
-            headers: { 
-              ...corsHeaders,
-              'Content-Type': 'application/json' 
-            },
-            status: 200 
-          }
-        )
-      } catch (error) {
-        console.error(`Attempt ${attempts + 1} failed:`, error)
-        lastError = error
-        attempts++
-        
-        if (attempts < maxAttempts) {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000))
-        }
+    // Use retry logic for the Gemini API call
+    console.log('Generating response with retry logic...')
+    const response = await fetchWithRetry(model, prompt)
+    const text = response.text()
+    
+    console.log('Successfully generated response')
+    return new Response(
+      JSON.stringify({ response: text }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json' 
+        },
+        status: 200 
       }
-    }
-
-    // If we get here, all attempts failed
-    console.error('All attempts to generate response failed')
-    throw lastError || new Error('Failed to generate response after multiple attempts')
+    )
 
   } catch (error) {
     console.error('Error in chat-assistant function:', error)

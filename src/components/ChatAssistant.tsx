@@ -59,7 +59,9 @@ export default function ChatAssistant() {
       
       // Determine the error message based on the type of error
       let errorMessage = "אנא נסה שוב מאוחר יותר";
-      if (error.message?.includes('Rate limit exceeded') || error.status === 429) {
+      if (error.message?.includes('Rate limit exceeded') || 
+          error.status === 429 || 
+          error.message?.includes('RATE_LIMIT_EXCEEDED')) {
         errorMessage = "נא להמתין מעט לפני שליחת הודעה נוספת";
       }
       
