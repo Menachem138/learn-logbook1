@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 interface UserData {
   timerData?: {
     totalStudyTime: number;
+    totalBreakTime: number;
     recentSessions: any[];
   };
   journalEntries?: any[];
@@ -16,6 +17,8 @@ export const fetchUserData = async (
   context: string[]
 ): Promise<UserData> => {
   const data: UserData = {};
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   
   // Only fetch timer data if requested
   if (context.includes('timer')) {
@@ -23,16 +26,19 @@ export const fetchUserData = async (
       .from('timer_sessions')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .gte('started_at', today.toISOString())
+      .order('started_at', { ascending: false });
 
     if (timerSessions) {
-      const totalStudyTime = timerSessions
-        .filter(session => session.type === 'study')
-        .reduce((acc, session) => acc + (session.duration || 0), 0);
+      const studySessions = timerSessions.filter(session => session.type === 'study');
+      const breakSessions = timerSessions.filter(session => session.type === 'break');
+
+      const totalStudyTime = studySessions.reduce((acc, session) => acc + (session.duration || 0), 0);
+      const totalBreakTime = breakSessions.reduce((acc, session) => acc + (session.duration || 0), 0);
 
       data.timerData = {
         totalStudyTime,
+        totalBreakTime,
         recentSessions: timerSessions
       };
     }
@@ -62,54 +68,46 @@ export const fetchUserData = async (
     data.libraryItems = libraryItems;
   }
 
-  // Only fetch course progress if requested
-  if (context.includes('course')) {
-    const { data: courseProgress } = await supabase
-      .from('course_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    data.courseProgress = courseProgress;
-  }
-
   return data;
 };
 
 export const determineContext = (message: string): string[] => {
   const context: string[] = [];
+  const lowerMessage = message.toLowerCase();
 
   // Timer-related keywords
-  if (message.toLowerCase().includes('time') || 
-      message.toLowerCase().includes('study') ||
-      message.toLowerCase().includes('break') ||
-      message.toLowerCase().includes('timer')) {
+  if (lowerMessage.includes('time') || 
+      lowerMessage.includes('study') ||
+      lowerMessage.includes('break') ||
+      lowerMessage.includes('timer') ||
+      lowerMessage.includes('למדתי') ||
+      lowerMessage.includes('הפסקה') ||
+      lowerMessage.includes('זמן')) {
     context.push('timer');
   }
 
   // Journal-related keywords
-  if (message.toLowerCase().includes('learn') ||
-      message.toLowerCase().includes('journal') ||
-      message.toLowerCase().includes('note') ||
-      message.toLowerCase().includes('wrote')) {
+  if (lowerMessage.includes('learn') ||
+      lowerMessage.includes('journal') ||
+      lowerMessage.includes('note') ||
+      lowerMessage.includes('wrote') ||
+      lowerMessage.includes('יומן') ||
+      lowerMessage.includes('למידה') ||
+      lowerMessage.includes('רשמתי')) {
     context.push('journal');
   }
 
   // Library-related keywords
-  if (message.toLowerCase().includes('content') ||
-      message.toLowerCase().includes('library') ||
-      message.toLowerCase().includes('video') ||
-      message.toLowerCase().includes('image') ||
-      message.toLowerCase().includes('trading') ||
-      message.toLowerCase().includes('pattern')) {
+  if (lowerMessage.includes('content') ||
+      lowerMessage.includes('library') ||
+      lowerMessage.includes('video') ||
+      lowerMessage.includes('image') ||
+      lowerMessage.includes('trading') ||
+      lowerMessage.includes('pattern') ||
+      lowerMessage.includes('ספרייה') ||
+      lowerMessage.includes('תוכן') ||
+      lowerMessage.includes('סרטון')) {
     context.push('library');
-  }
-
-  // Course-related keywords
-  if (message.toLowerCase().includes('course') ||
-      message.toLowerCase().includes('progress') ||
-      message.toLowerCase().includes('lesson')) {
-    context.push('course');
   }
 
   return context;
@@ -119,29 +117,45 @@ export const buildPrompt = (message: string, userData: UserData): string => {
   let contextInfo = '';
 
   if (userData.timerData) {
-    contextInfo += `\nUser's study time today: ${Math.round(userData.timerData.totalStudyTime / 60)} minutes\n`;
+    const studyMinutes = Math.round(userData.timerData.totalStudyTime / 60);
+    const breakMinutes = Math.round(userData.timerData.totalBreakTime / 60);
+    
+    if (studyMinutes > 0 || breakMinutes > 0) {
+      contextInfo += `\nToday's learning activity:\n`;
+      if (studyMinutes > 0) {
+        contextInfo += `- Study time: ${studyMinutes} minutes\n`;
+      }
+      if (breakMinutes > 0) {
+        contextInfo += `- Break time: ${breakMinutes} minutes\n`;
+      }
+    } else {
+      contextInfo += `\nNo learning activity recorded today.\n`;
+    }
   }
 
   if (userData.journalEntries?.length) {
-    contextInfo += `\nRecent journal entries: ${userData.journalEntries.map(entry => entry.content).join('\n')}\n`;
+    contextInfo += `\nRecent journal entries:\n${userData.journalEntries.map(entry => 
+      `- ${entry.content.substring(0, 100)}${entry.content.length > 100 ? '...' : ''}`
+    ).join('\n')}\n`;
   }
 
   if (userData.libraryItems?.length) {
-    contextInfo += `\nRelevant library items: ${userData.libraryItems.map(item => item.title).join(', ')}\n`;
+    contextInfo += `\nRelevant library items:\n${userData.libraryItems.map(item => 
+      `- ${item.title}`
+    ).join('\n')}\n`;
   }
 
-  if (userData.courseProgress?.length) {
-    contextInfo += `\nCourse progress available: ${userData.courseProgress.length} lessons completed\n`;
-  }
+  return `You are a focused learning assistant that helps users track their study progress and access learning materials. 
+You should be friendly and supportive while staying relevant to the user's questions.
 
-  return `You are a focused learning assistant. Answer questions directly and concisely, using only the relevant information provided.
-User context:${contextInfo}
+Available context:${contextInfo}
 
 User question: ${message}
 
-Remember:
-1. Only use the context information if it's directly relevant to the question
-2. Keep responses focused and avoid unnecessary explanations
-3. Use clear formatting without excessive symbols
-4. Only provide additional details if explicitly requested`;
+Guidelines:
+1. If the user asks about study time or breaks, provide the information from the timer data
+2. If no data is available for what the user asked, explain this politely
+3. Be friendly but focused - only include information that's relevant to the question
+4. Use the context information only if it directly relates to the user's question
+5. Respond in the same language as the user's question (Hebrew or English)`;
 };

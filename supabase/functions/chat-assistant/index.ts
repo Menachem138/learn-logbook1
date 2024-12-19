@@ -62,12 +62,15 @@ serve(async (req) => {
 
     // Determine which context we need based on the message
     const requiredContext = determineContext(message)
+    console.log('Required context:', requiredContext)
     
     // Fetch only the required data
     const userData = await fetchUserData(supabase, userId, requiredContext)
+    console.log('Fetched user data:', JSON.stringify(userData))
     
     // Build the prompt with relevant context
     const prompt = buildPrompt(message, userData)
+    console.log('Generated prompt:', prompt)
 
     // Call Gemini API
     const response = await fetch(
