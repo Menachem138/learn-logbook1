@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           .from('user_profiles')
           .select('theme')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         
         if (data?.theme) {
           setTheme(data.theme as Theme);
