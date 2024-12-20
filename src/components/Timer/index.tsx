@@ -7,19 +7,12 @@ import { TimerDisplay } from "./TimerDisplay";
 import { TimerControls } from "./TimerControls";
 import { TimerHistory } from "./TimerHistory";
 
-interface TimerSession {
-  id: string;
-  type: string;
-  duration: number;
-  started_at: string;
-}
-
 export default function Timer() {
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [time, setTime] = useState(0);
   const [timerType, setTimerType] = useState<"study" | "break">("study");
-  const [timerLog, setTimerLog] = useState<TimerSession[]>([]);
+  const [timerLog, setTimerLog] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const { session } = useAuth();
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -58,7 +51,7 @@ export default function Timer() {
     calculateTotalTimes(data || []);
   };
 
-  const calculateTotalTimes = (sessions: TimerSession[]) => {
+  const calculateTotalTimes = (sessions: any[]) => {
     let studyTime = 0;
     let breakTime = 0;
 

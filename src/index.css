@@ -43,10 +43,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Add new variables for components that need dark mode fixes */
-    --card-background: 0 0% 100%;
-    --twitter-embed-background: 0 0% 100%;
-    --journal-text: 222.2 84% 4.9%;
+    /* Timer specific variables */
     --timer-background: 0 0% 100%;
     --timer-text: 222.2 84% 4.9%;
     --timer-card-background: 0 0% 98%;
@@ -94,10 +91,7 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Override the new variables for dark mode */
-    --card-background: 222.2 84% 4.9%;
-    --twitter-embed-background: 222.2 84% 4.9%;
-    --journal-text: 210 40% 98%;
+    /* Timer specific variables for dark mode */
     --timer-background: 222.2 84% 4.9%;
     --timer-text: 210 40% 98%;
     --timer-card-background: 217.2 32.6% 17.5%;
@@ -152,14 +146,41 @@
     color: hsl(var(--foreground));
   }
 
-  /* Dialog/Modal overrides */
-  .dialog-content {
-    @apply bg-background text-foreground;
+  /* Timer specific styles */
+  .timer-container {
+    background-color: #2b2b2b; /* צבע רקע כהה */
+    color: #ffffff; /* טקסט בצבע לבן */
+    border: 1px solid #444444; /* מסגרת עדינה */
   }
 
-  /* Input fields in dark mode */
-  input, textarea {
-    @apply bg-background text-foreground;
+  .timer-button {
+    background-color: #444444; /* צבע כהה לכפתור */
+    color: #ffffff; /* טקסט בצבע לבן */
+    border: none;
+    border-radius: 5px; /* פינות מעוגלות */
+    padding: 10px;
+  }
+
+  .timer-button:hover {
+    background-color: #555555; /* גוון כהה יותר בעת ריחוף */
+  }
+
+  .timer-display {
+    color: #ffffff; /* טקסט לבן */
+    font-size: 2rem; /* גודל פונט גדול וברור */
+    font-weight: bold; /* עיצוב ברור לטקסט */
+  }
+
+  .timer-button.active {
+    background-color: #f05454; /* צבע אדום לכפתור עצירה פעיל */
+    color: #ffffff; /* טקסט לבן */
+  }
+
+  .timer-wrapper {
+    background-color: #1e1e1e; /* רקע כהה */
+    padding: 15px;
+    border-radius: 10px; /* פינות מעוגלות */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* צל לעיצוב יפה */
   }
 }
 
