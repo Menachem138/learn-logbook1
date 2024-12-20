@@ -66,7 +66,7 @@ export function TwitterLibrary() {
 
   if (isLoading) {
     return (
-      <Card className="p-6">
+      <Card className="p-6 bg-background text-foreground transition-colors duration-300">
         <div className="flex justify-center items-center h-32">
           <Loader2 className="h-6 w-6 animate-spin" />
         </div>
@@ -75,7 +75,7 @@ export function TwitterLibrary() {
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-background text-foreground transition-colors duration-300">
       <div className="space-y-6">
         <div className="flex gap-2">
           <Input
@@ -98,7 +98,7 @@ export function TwitterLibrary() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tweets.map((tweet) => (
-            <div key={tweet.id} className="relative bg-white rounded-lg shadow-sm">
+            <div key={tweet.id} className="relative bg-background rounded-lg shadow-sm transition-colors duration-300">
               <Button
                 variant="ghost"
                 size="icon"

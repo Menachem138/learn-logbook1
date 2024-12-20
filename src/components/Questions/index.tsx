@@ -140,7 +140,7 @@ const Questions = () => {
     return (
       <div className="space-y-4">
         {filteredQuestions.map((question) => (
-          <Card key={question.id}>
+          <Card key={question.id} className="bg-background text-foreground transition-colors duration-300">
             <CardHeader>
               <CardTitle className="text-lg">{question.content}</CardTitle>
               <CardDescription>
@@ -173,9 +173,9 @@ const Questions = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-background text-foreground transition-colors duration-300 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-foreground">
           <MessageCircle className="h-6 w-6" />
           שאלות
         </h2>

@@ -42,6 +42,12 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Add new variables for components that need dark mode fixes */
+    --card-background: 0 0% 100%;
+    --twitter-embed-background: 0 0% 100%;
+    --journal-text: 222.2 84% 4.9%;
+    --timer-background: 0 0% 100%;
   }
 
   .dark {
@@ -81,6 +87,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Override the new variables for dark mode */
+    --card-background: 222.2 84% 4.9%;
+    --twitter-embed-background: 222.2 84% 4.9%;
+    --journal-text: 210 40% 98%;
+    --timer-background: 222.2 84% 4.9%;
   }
 }
 
@@ -98,4 +110,48 @@
     direction: rtl;
     text-align: right;
   }
+}
+
+/* Dark mode specific overrides */
+.dark {
+  /* Questions section */
+  .questions-section {
+    @apply bg-background text-foreground;
+  }
+
+  /* Learning Journal */
+  .prose {
+    @apply text-foreground;
+  }
+
+  /* Twitter embeds */
+  iframe[id^='twitter-widget'] {
+    background-color: hsl(var(--twitter-embed-background)) !important;
+  }
+
+  /* Timer/Stopwatch section */
+  .timer-section {
+    @apply bg-background text-foreground;
+  }
+
+  /* Card overrides for dark mode */
+  .card {
+    background-color: hsl(var(--card-background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Dialog/Modal overrides */
+  .dialog-content {
+    @apply bg-background text-foreground;
+  }
+
+  /* Input fields in dark mode */
+  input, textarea {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Transition utilities */
+.theme-transition {
+  @apply transition-colors duration-300;
 }

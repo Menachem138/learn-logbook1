@@ -128,7 +128,7 @@ export default function LearningJournal() {
   }
 
   return (
-    <Card className="p-6 w-full">
+    <Card className="p-6 w-full bg-background text-foreground transition-colors duration-300">
       <h2 className="text-2xl font-bold mb-4">יומן למידה</h2>
       
       <JournalEntryForm onEntryAdded={loadEntries} />
@@ -171,7 +171,7 @@ export default function LearningJournal() {
               </div>
             </div>
             <div 
-              className="prose prose-sm rtl" 
+              className="prose prose-sm rtl dark:prose-invert" 
               dangerouslySetInnerHTML={{ __html: entry.content }}
               onClick={(e) => {
                 const target = e.target as HTMLElement;
@@ -215,7 +215,7 @@ export default function LearningJournal() {
           <DialogHeader>
             <DialogTitle>סיכום רשומה</DialogTitle>
           </DialogHeader>
-          <div className="mt-4 whitespace-pre-wrap rtl">
+          <div className="mt-4 whitespace-pre-wrap">
             {summary}
           </div>
           <Button 

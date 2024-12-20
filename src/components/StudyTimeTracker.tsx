@@ -142,9 +142,9 @@ export const StudyTimeTracker: React.FC = () => {
   const studyPercentage = totalTime > 0 ? ((totalStudyTime + (timerState === TimerState.STUDYING ? time : 0)) / totalTime) * 100 : 0;
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white/80 backdrop-blur-sm shadow-lg border border-gray-200">
+    <Card className="w-full max-w-md mx-auto bg-background/80 backdrop-blur-sm shadow-lg border border-gray-200">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-center text-3xl font-bold text-gray-800">מעקב זמן למידה</CardTitle>
+        <CardTitle className="text-center text-3xl font-bold text-foreground">מעקב זמן למידה</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="relative">
