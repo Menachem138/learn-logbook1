@@ -1,9 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Accordion } from "@/components/ui/accordion";
-import { initialCourseData } from "./CourseContent/courseData";  // Updated import
+import { initialCourseData } from "./CourseContent/courseData";
 import { CourseSection } from "./CourseContent/CourseSection";
 import { useCourseProgress } from "@/hooks/useCourseProgress";
+import { triggerConfetti } from "@/utils/confetti";
 
 export default function CourseContent() {
   const { completedLessons, loading, toggleLesson } = useCourseProgress();
@@ -14,6 +15,16 @@ export default function CourseContent() {
   );
 
   const progress = (completedLessons.size / totalLessons) * 100;
+
+  const handleToggleLesson = async (lessonId: string) => {
+    const wasCompleted = completedLessons.has(lessonId);
+    await toggleLesson(lessonId);
+    
+    // Only trigger confetti when completing a lesson, not when unchecking
+    if (!wasCompleted) {
+      triggerConfetti();
+    }
+  };
 
   if (loading) {
     return (
@@ -41,7 +52,7 @@ export default function CourseContent() {
             title={section.title}
             lessons={section.lessons}
             completedLessons={completedLessons}
-            onToggleLesson={toggleLesson}
+            onToggleLesson={handleToggleLesson}
           />
         ))}
       </Accordion>

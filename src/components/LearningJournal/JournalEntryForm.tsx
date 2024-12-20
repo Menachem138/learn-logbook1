@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Editor from "./Editor";
 import { supabase } from "@/integrations/supabase/client";
+import { triggerConfetti } from "@/utils/confetti";
 
 interface JournalEntryFormProps {
   onEntryAdded: () => void;
@@ -39,6 +40,7 @@ export function JournalEntryForm({ onEntryAdded }: JournalEntryFormProps) {
       setContent("");
       onEntryAdded();
       toast.success("הרשומה נוספה בהצלחה!");
+      triggerConfetti(); // Trigger confetti after successful entry
     } catch (error) {
       console.error('Error adding entry:', error);
       toast.error("שגיאה בהוספת רשומה");
