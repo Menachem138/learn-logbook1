@@ -15,8 +15,8 @@ export default function Index() {
   return (
     <div className="container py-6 space-y-6 text-right" dir="rtl">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">ברוך הבא</h1>
         <ThemeToggle />
+        <h1 className="text-2xl font-bold">ברוך הבא</h1>
       </div>
 
       {/* Timer and Chat Assistant in a row */}
