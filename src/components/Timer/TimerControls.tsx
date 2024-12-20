@@ -25,21 +25,31 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       <Button
         onClick={onStartStudy}
         variant={timerType === "study" && isRunning ? "secondary" : "default"}
+        className="bg-[hsl(var(--timer-button-background))] text-[hsl(var(--timer-button-text))] hover:bg-[hsl(var(--timer-button-background))] hover:brightness-90 transition-all"
       >
         זמן למידה
       </Button>
       <Button
         onClick={onStartBreak}
         variant={timerType === "break" && isRunning ? "secondary" : "default"}
+        className="bg-[hsl(var(--timer-button-background))] text-[hsl(var(--timer-button-text))] hover:bg-[hsl(var(--timer-button-background))] hover:brightness-90 transition-all"
       >
         זמן הפסקה
       </Button>
       {isRunning && (
-        <Button onClick={onPause} variant="outline">
+        <Button 
+          onClick={onPause} 
+          variant="outline"
+          className="border-[hsl(var(--timer-button-text))] text-[hsl(var(--timer-button-text))] hover:bg-[hsl(var(--timer-button-background))] hover:brightness-90"
+        >
           {isPaused ? "המשך" : "השהה"}
         </Button>
       )}
-      <Button onClick={onStop} variant="destructive">
+      <Button 
+        onClick={onStop} 
+        variant="destructive"
+        className="hover:brightness-90"
+      >
         עצור
       </Button>
     </div>

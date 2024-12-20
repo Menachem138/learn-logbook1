@@ -163,7 +163,7 @@ export default function Timer() {
   };
 
   return (
-    <Card className="p-6 space-y-4 w-full">
+    <Card className="p-6 space-y-4 w-full bg-[hsl(var(--timer-background))] text-[hsl(var(--timer-text))] border-[hsl(var(--timer-button-background))] transition-colors duration-300">
       <TimerDisplay time={time} formatTime={formatTime} />
       
       <TimerControls

@@ -48,6 +48,12 @@
     --twitter-embed-background: 0 0% 100%;
     --journal-text: 222.2 84% 4.9%;
     --timer-background: 0 0% 100%;
+    --timer-text: 222.2 84% 4.9%;
+    --timer-card-background: 0 0% 98%;
+    --timer-button-background: 210 40% 96.1%;
+    --timer-button-text: 222.2 47.4% 11.2%;
+    --timer-stats-background: 210 40% 96.1%;
+    --timer-stats-text: 215.4 16.3% 46.9%;
   }
 
   .dark {
@@ -93,6 +99,12 @@
     --twitter-embed-background: 222.2 84% 4.9%;
     --journal-text: 210 40% 98%;
     --timer-background: 222.2 84% 4.9%;
+    --timer-text: 210 40% 98%;
+    --timer-card-background: 217.2 32.6% 17.5%;
+    --timer-button-background: 217.2 32.6% 17.5%;
+    --timer-button-text: 210 40% 98%;
+    --timer-stats-background: 217.2 32.6% 17.5%;
+    --timer-stats-text: 215 20.2% 65.1%;
   }
 }
 
