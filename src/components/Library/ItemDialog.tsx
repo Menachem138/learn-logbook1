@@ -24,22 +24,26 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
   });
 
   const selectedType = watch("type");
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
 
   const onSubmitForm = (data: any) => {
     const formData = {
       ...data,
-      file: selectedFile,
+      files: selectedType === 'image_gallery' ? selectedFiles : selectedFiles[0],
     };
     onSubmit(formData);
-    setSelectedFile(null);
+    setSelectedFiles([]);
     reset();
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = event.target.files;
+    if (files) {
+      if (selectedType === 'image_gallery') {
+        setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+      } else {
+        setSelectedFiles([files[0]]);
+      }
     }
   };
 
@@ -64,6 +68,7 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
               <option value="note">הערה</option>
               <option value="link">קישור</option>
               <option value="image">תמונה</option>
+              <option value="image_gallery">אלבום תמונות</option>
               <option value="video">וידאו</option>
               <option value="whatsapp">וואטסאפ</option>
               <option value="pdf">PDF</option>
@@ -77,16 +82,19 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
             />
           </div>
 
-          {(selectedType === 'image' || selectedType === 'video' || selectedType === 'pdf') && (
+          {(selectedType === 'image' || selectedType === 'image_gallery' || selectedType === 'video' || selectedType === 'pdf') && (
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                {selectedType === 'image' ? 'העלה תמונה' : selectedType === 'video' ? 'העלה וידאו' : 'העלה PDF'}
+                {selectedType === 'image' ? 'העלה תמונה' : 
+                 selectedType === 'image_gallery' ? 'העלה תמונות' :
+                 selectedType === 'video' ? 'העלה וידאו' : 'העלה PDF'}
               </label>
               <div className="flex items-center gap-2">
                 <Input
                   type="file"
+                  multiple={selectedType === 'image_gallery'}
                   accept={
-                    selectedType === 'image' 
+                    selectedType === 'image' || selectedType === 'image_gallery'
                       ? "image/*" 
                       : selectedType === 'video' 
                       ? "video/*" 
@@ -95,12 +103,32 @@ export function ItemDialog({ isOpen, onClose, onSubmit, initialData }: ItemDialo
                   onChange={handleFileChange}
                   className="flex-1"
                 />
-                {selectedFile && (
+                {selectedFiles.length > 0 && (
                   <span className="text-sm text-gray-500">
-                    {selectedFile.name}
+                    {selectedFiles.length} {selectedFiles.length === 1 ? 'קובץ' : 'קבצים'} נבחרו
                   </span>
                 )}
               </div>
+              {selectedType === 'image_gallery' && selectedFiles.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="relative aspect-square">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`תמונה ${index + 1}`}
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== index))}
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-black/80"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
