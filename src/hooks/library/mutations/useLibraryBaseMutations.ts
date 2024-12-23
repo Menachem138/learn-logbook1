@@ -10,23 +10,27 @@ export const useLibraryBaseMutations = () => {
   const queryClient = useQueryClient();
 
   const addItem = useMutation({
-    mutationFn: async ({ title, content, type, file }: { 
+    mutationFn: async ({ title, content, type, files }: { 
       title: string;
       content: string;
       type: LibraryItemType;
-      file?: File;
+      files?: File | File[];
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      let cloudinaryResponse: CloudinaryResponse | null = null;
+      let cloudinaryResponses: CloudinaryResponse[] = [];
 
-      if (file) {
-        console.log('Uploading file to Cloudinary:', file);
-        cloudinaryResponse = await uploadToCloudinary(file);
-        console.log('Cloudinary upload response:', cloudinaryResponse);
+      if (files) {
+        const filesToUpload = Array.isArray(files) ? files : [files];
+        console.log('Uploading files to Cloudinary:', filesToUpload);
+        
+        const uploadPromises = filesToUpload.map(file => uploadToCloudinary(file));
+        cloudinaryResponses = await Promise.all(uploadPromises);
+        
+        console.log('Cloudinary upload responses:', cloudinaryResponses);
       }
 
       const { error } = await supabase
@@ -35,14 +39,25 @@ export const useLibraryBaseMutations = () => {
           title,
           content,
           type,
-          cloudinary_data: cloudinaryResponseToJson(cloudinaryResponse),
+          cloudinary_data: type === 'image_gallery' 
+            ? cloudinaryResponses.map(cloudinaryResponseToJson)
+            : cloudinaryResponseToJson(cloudinaryResponses[0]),
           user_id: user.id,
-          file_details: cloudinaryResponse ? {
-            path: cloudinaryResponse.url,
-            type: file?.type,
-            name: file?.name,
-            size: file?.size,
-          } : null,
+          file_details: cloudinaryResponses.length > 0 
+            ? type === 'image_gallery'
+              ? {
+                  paths: cloudinaryResponses.map(r => r.url),
+                  types: Array.isArray(files) ? files.map(f => f.type) : [files.type],
+                  names: Array.isArray(files) ? files.map(f => f.name) : [files.name],
+                  sizes: Array.isArray(files) ? files.map(f => f.size) : [files.size],
+                }
+              : {
+                  path: cloudinaryResponses[0].url,
+                  type: Array.isArray(files) ? files[0].type : files.type,
+                  name: Array.isArray(files) ? files[0].name : files.name,
+                  size: Array.isArray(files) ? files[0].size : files.size,
+                }
+            : null,
         });
 
       if (error) throw error;
