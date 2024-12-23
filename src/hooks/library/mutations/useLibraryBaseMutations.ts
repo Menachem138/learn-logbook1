@@ -39,9 +39,11 @@ export const useLibraryBaseMutations = () => {
           title,
           content,
           type,
-          cloudinary_data: type === 'image_gallery' 
-            ? cloudinaryResponses.map(cloudinaryResponseToJson)
-            : cloudinaryResponseToJson(cloudinaryResponses[0]),
+          cloudinary_data: cloudinaryResponses.length > 0
+            ? type === 'image_gallery' 
+              ? cloudinaryResponses.map(cloudinaryResponseToJson)
+              : cloudinaryResponseToJson(cloudinaryResponses[0])
+            : null,
           user_id: user.id,
           file_details: cloudinaryResponses.length > 0 
             ? type === 'image_gallery'
