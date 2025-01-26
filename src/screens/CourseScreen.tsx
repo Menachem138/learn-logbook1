@@ -10,6 +10,8 @@ import { Section } from '../components/CourseContent/Section';
 import { courseService } from '../services/CourseService';
 import { useAuth } from '../components/auth/AuthProvider';
 import type { Section as SectionType, Lesson, CourseProgress } from '../components/CourseContent/types';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 export default function CourseScreen() {
   const { user } = useAuth();
@@ -96,10 +98,10 @@ export default function CourseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   content: {
-    padding: 15,
+    padding: theme.spacing.md,
   },
   loadingContainer: {
     flex: 1,

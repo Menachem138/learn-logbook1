@@ -13,6 +13,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as DocumentPicker from 'expo-document-picker';
 import { documentService } from '../services/DocumentService';
 import type { Document } from '../components/Documents/types';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 // Force RTL
 I18nManager.allowRTL(true);
@@ -151,7 +153,7 @@ export default function DocumentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -162,46 +164,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#ffffff',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontSize: theme.typography.fontSize.heading3,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   uploadButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    padding: theme.spacing.sm,
   },
   uploadButtonText: {
-    marginLeft: 8,
-    color: '#4285F4',
-    fontSize: 16,
-    fontWeight: '600',
+    marginLeft: theme.spacing.sm,
+    color: theme.colors.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
   },
   list: {
-    padding: 15,
+    padding: theme.spacing.md,
   },
   documentItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    backgroundColor: theme.colors.surface.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.sm,
+    ...theme.shadow.small,
   },
   documentInfo: {
     flexDirection: 'row',
@@ -209,32 +204,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   documentIcon: {
-    marginRight: 10,
+    marginRight: theme.spacing.sm,
   },
   documentDetails: {
     flex: 1,
   },
   documentTitle: {
-    fontSize: 16,
-    color: '#333333',
-    marginBottom: 4,
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
   },
   documentDate: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: theme.typography.fontSize.caption,
+    color: theme.colors.text.secondary,
   },
   deleteButton: {
-    padding: 8,
+    padding: theme.spacing.sm,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 30,
+    padding: theme.spacing.lg,
   },
   emptyText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666666',
+    marginTop: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
 });

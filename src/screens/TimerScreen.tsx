@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { StudyTimer } from '../components/StudyTimer';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 export default function TimerScreen() {
   return (
@@ -15,11 +17,11 @@ export default function TimerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: theme.spacing.lg,
     justifyContent: 'center',
   },
 });

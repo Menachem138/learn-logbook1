@@ -12,6 +12,8 @@ import { JournalEntry } from '../components/LearningJournal/JournalEntry';
 import { JournalForm } from '../components/LearningJournal/JournalForm';
 import { journalService } from '../services/JournalService';
 import type { JournalEntry as JournalEntryType, JournalFormData } from '../components/LearningJournal/types';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 export default function JournalScreen() {
   const [entries, setEntries] = useState<JournalEntryType[]>([]);
@@ -123,7 +125,7 @@ export default function JournalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -134,26 +136,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: 'white',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.border,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: theme.typography.fontSize.heading3,
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
     flex: 1,
   },
   headerButton: {
-    padding: 8,
+    padding: theme.spacing.sm,
   },
   headerButtonText: {
-    color: '#4285F4',
-    fontSize: 16,
-    fontWeight: '600',
+    color: theme.colors.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
   },
   list: {
-    padding: 15,
+    padding: theme.spacing.md,
   },
 });
