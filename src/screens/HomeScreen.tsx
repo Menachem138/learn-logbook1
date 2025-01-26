@@ -50,6 +50,22 @@ export default function HomeScreen() {
 
           <TouchableOpacity 
             style={styles.menuItem}
+            onPress={() => navigation.navigate('WeeklySchedule')}
+          >
+            <Icon name="calendar-clock" size={32} color="#4285F4" />
+            <Text style={styles.menuText}>לוח זמנים</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Documents')}
+          >
+            <Icon name="file-document-outline" size={32} color="#4285F4" />
+            <Text style={styles.menuText}>מסמכים</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.menuItem}
             onPress={() => navigation.navigate('NotificationTest')}
           >
             <Icon name="bell-outline" size={32} color="#4285F4" />

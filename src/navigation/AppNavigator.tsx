@@ -8,6 +8,8 @@ import NotificationTestScreen from '../screens/NotificationTestScreen';
 import TimerScreen from '../screens/TimerScreen';
 import JournalScreen from '../screens/JournalScreen';
 import CourseScreen from '../screens/CourseScreen';
+import WeeklyScheduleScreen from '../screens/WeeklyScheduleScreen';
+import DocumentsScreen from '../screens/DocumentsScreen';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -31,6 +33,8 @@ export function AppNavigator() {
             <Stack.Screen name="Timer" component={TimerScreen} />
             <Stack.Screen name="Journal" component={JournalScreen} />
             <Stack.Screen name="Course" component={CourseScreen} />
+            <Stack.Screen name="WeeklySchedule" component={WeeklyScheduleScreen} />
+            <Stack.Screen name="Documents" component={DocumentsScreen} />
           </>
         )}
       </Stack.Navigator>

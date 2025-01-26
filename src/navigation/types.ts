@@ -5,4 +5,6 @@ export type RootStackParamList = {
   Timer: undefined;
   Journal: undefined;
   Course: undefined;
+  WeeklySchedule: undefined;
+  Documents: undefined;
 };
