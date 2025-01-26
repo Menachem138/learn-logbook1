@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from './src/config/supabase';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './src/components/auth/AuthProvider';
+import { AppNavigator } from './src/navigation/AppNavigator';
 import { configurePushNotifications, registerForPushNotificationsAsync } from './src/utils/notifications';
-import { ConfigTest } from './src/components/ConfigTest';
 
 export default function App() {
   useEffect(() => {
@@ -15,25 +14,10 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Learn Logbook Mobile</Text>
-        <ConfigTest />
+      <AuthProvider>
+        <AppNavigator />
         <StatusBar style="auto" />
-      </SafeAreaView>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    paddingTop: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-});
