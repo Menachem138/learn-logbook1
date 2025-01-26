@@ -30,16 +30,17 @@ const styles = StyleSheet.create({
   },
   type: {
     fontSize: theme.typography.fontSize.heading3,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
     marginBottom: theme.spacing.sm,
     color: theme.colors.text.primary,
     textAlign: 'center',
   },
   time: {
-    fontSize: theme.typography.fontSize.display,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: 64, // Increased size to match web version
+    fontWeight: '700',
     color: theme.colors.text.primary,
     fontVariant: ['tabular-nums'],
     textAlign: 'center',
+    letterSpacing: 2, // Added letter spacing for better readability
   },
 });

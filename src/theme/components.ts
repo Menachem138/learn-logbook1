@@ -21,7 +21,7 @@ export const commonStyles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: theme.typography.fontSize.heading2,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
     color: theme.colors.text.primary,
   },
   button: {
@@ -35,14 +35,17 @@ export const commonStyles = StyleSheet.create({
   buttonText: {
     color: theme.colors.surface.primary,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
   },
   input: {
     backgroundColor: theme.colors.surface.secondary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.md,
     fontSize: theme.typography.fontSize.body,
     color: theme.colors.text.primary,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    textAlign: 'right',
   },
   card: {
     backgroundColor: theme.colors.surface.primary,

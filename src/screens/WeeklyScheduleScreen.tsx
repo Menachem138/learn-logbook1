@@ -83,30 +83,34 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    padding: theme.spacing.md,
+    padding: theme.spacing.lg,
     backgroundColor: theme.colors.surface.primary,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: theme.typography.fontSize.heading3,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: theme.typography.fontSize.heading2,
+    fontWeight: '700',
     color: theme.colors.text.primary,
-    textAlign: 'right',
+    letterSpacing: 0.5,
   },
   daysContainer: {
     backgroundColor: theme.colors.surface.secondary,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderColor: theme.colors.border,
   },
   dayButton: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
     marginHorizontal: theme.spacing.xs,
     borderRadius: theme.borderRadius.xl,
     backgroundColor: theme.colors.surface.primary,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    ...theme.shadow.small,
   },
   selectedDayButton: {
     backgroundColor: theme.colors.primary,
@@ -115,7 +119,7 @@ const styles = StyleSheet.create({
   dayButtonText: {
     fontSize: theme.typography.fontSize.body,
     color: theme.colors.text.primary,
-    fontWeight: theme.typography.fontWeight.medium,
+    fontWeight: '500',
     textAlign: 'center',
   },
   selectedDayButtonText: {
@@ -129,45 +133,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse', // RTL support
     marginBottom: theme.spacing.md,
     backgroundColor: theme.colors.surface.primary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     ...theme.shadow.small,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   timeContainer: {
     backgroundColor: theme.colors.surface.secondary,
     padding: theme.spacing.md,
-    borderTopLeftRadius: theme.borderRadius.md, // RTL support
-    borderBottomLeftRadius: theme.borderRadius.md, // RTL support
-    width: 120,
+    borderTopLeftRadius: theme.borderRadius.lg, // RTL support
+    borderBottomLeftRadius: theme.borderRadius.lg, // RTL support
+    width: 130,
     justifyContent: 'center',
   },
   timeText: {
-    fontSize: theme.typography.fontSize.caption,
+    fontSize: theme.typography.fontSize.body,
     color: theme.colors.text.secondary,
     textAlign: 'center',
+    fontWeight: theme.typography.fontWeight.medium,
   },
   activityContainer: {
     flex: 1,
-    padding: theme.spacing.md,
+    padding: theme.spacing.lg,
     justifyContent: 'center',
   },
   activityText: {
     fontSize: theme.typography.fontSize.body,
     color: theme.colors.text.primary,
     textAlign: 'right',
+    lineHeight: 24,
+    letterSpacing: 0.3,
   },
   addButton: {
     flexDirection: 'row-reverse', // RTL support
     backgroundColor: theme.colors.primary,
     padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+    ...theme.shadow.medium,
   },
   addButtonText: {
     color: theme.colors.surface.primary,
     fontSize: theme.typography.fontSize.body,
     fontWeight: theme.typography.fontWeight.semiBold,
-    marginRight: theme.spacing.sm, // RTL support
+    marginRight: theme.spacing.md, // RTL support
+    letterSpacing: 0.5,
   },
 });

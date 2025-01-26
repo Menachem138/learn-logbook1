@@ -117,11 +117,11 @@ class NotificationService {
         content: {
           title: type === 'study' ? 'זמן למידה הסתיים' : 'זמן הפסקה הסתיים',
           body: `${duration} דקות ${type === 'study' ? 'של למידה' : 'של הפסקה'} הושלמו`,
-          data: { type: 'timer_complete', duration, type },
+          data: { type: 'timer_complete', duration },
         },
         trigger: {
           seconds: duration * 60,
-        },
+        } as any, // TODO: Fix notification trigger type
       });
     } catch (error) {
       console.error('Error scheduling timer notification:', error);

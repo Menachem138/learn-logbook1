@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   welcome: {
     fontSize: theme.typography.fontSize.heading1,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs,
     textAlign: 'right',
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   menuText: {
     marginTop: theme.spacing.sm,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
     color: theme.colors.text.primary,
     textAlign: 'center',
   },
@@ -161,6 +161,6 @@ const styles = StyleSheet.create({
   signOutText: {
     color: theme.colors.surface.primary,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
   },
 });

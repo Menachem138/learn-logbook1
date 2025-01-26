@@ -55,13 +55,14 @@ export default function DocumentsScreen() {
         copyToCacheDirectory: true,
       });
 
-      if (result.type === 'success') {
+      if ('assets' in result && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
         const formData = {
-          title: result.name,
+          title: asset.name || 'Untitled Document',
           file: {
-            uri: result.uri,
-            type: result.mimeType || 'application/octet-stream',
-            name: result.name,
+            uri: asset.uri,
+            type: asset.mimeType || 'application/octet-stream',
+            name: asset.name || 'document',
           },
         };
 
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: theme.typography.fontSize.heading3,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
     color: theme.colors.text.primary,
   },
   uploadButton: {
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.sm,
     color: theme.colors.primary,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
   },
   list: {
     padding: theme.spacing.md,

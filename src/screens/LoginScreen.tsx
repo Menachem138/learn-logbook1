@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: theme.typography.fontSize.heading1,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
     textAlign: 'center',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: theme.colors.surface.primary,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
   },
   googleIcon: {
     marginRight: theme.spacing.sm,

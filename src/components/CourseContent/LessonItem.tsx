@@ -30,7 +30,7 @@ export function LessonItem({ lesson, onPress, progress }: LessonItemProps) {
             <View 
               style={[
                 styles.progressFill, 
-                { width: `${progress.progress}%` }
+                { width: progress?.progress ? `${progress.progress}%` : '0%' }
               ]} 
             />
           </View>

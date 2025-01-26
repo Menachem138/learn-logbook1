@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: theme.typography.fontSize.heading3,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
     color: theme.colors.text.primary,
   },
   messagesContainer: {
@@ -150,26 +150,33 @@ const styles = StyleSheet.create({
   messageBubble: {
     maxWidth: '80%',
     padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    ...theme.shadow.small,
+    borderRadius: theme.borderRadius.lg,
+    ...theme.shadow.medium,
   },
   userMessageBubble: {
     backgroundColor: theme.colors.primary,
+    borderTopRightRadius: theme.borderRadius.sm, // RTL: user messages appear on right
   },
   assistantMessageBubble: {
     backgroundColor: theme.colors.surface.secondary,
+    borderTopLeftRadius: theme.borderRadius.sm, // RTL: assistant messages appear on left
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   messageText: {
     fontSize: theme.typography.fontSize.body,
-    lineHeight: 20,
+    lineHeight: 24,
+    letterSpacing: 0.3,
   },
   userMessageText: {
     color: theme.colors.surface.primary,
     textAlign: 'left',
+    fontWeight: '500',
   },
   assistantMessageText: {
     color: theme.colors.text.primary,
     textAlign: 'right',
+    fontWeight: '400',
   },
   inputContainer: {
     flexDirection: 'row-reverse',
@@ -182,7 +189,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: theme.colors.surface.secondary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     marginLeft: theme.spacing.sm,
@@ -190,6 +197,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     maxHeight: 100,
     textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   sendButton: {
     padding: theme.spacing.sm,

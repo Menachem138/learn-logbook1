@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: theme.typography.fontSize.heading2,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
     color: theme.colors.text.primary,
   },
   content: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: theme.colors.surface.primary,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.semiBold,
+    fontWeight: '600',
   },
   statusContainer: {
     backgroundColor: theme.colors.surface.secondary,

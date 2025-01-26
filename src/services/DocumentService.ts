@@ -27,7 +27,7 @@ class DocumentService {
   async uploadDocument(formData: DocumentFormData): Promise<Document> {
     try {
       // Upload file to Cloudinary
-      const fileUrl = await uploadToCloudinary(formData.file);
+      const fileUrl = await uploadToCloudinary(formData.file.uri);
 
       // Save document metadata to Supabase
       const { data, error } = await supabase

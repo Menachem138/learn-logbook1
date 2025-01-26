@@ -95,9 +95,10 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.full,
     backgroundColor: theme.colors.primary,
-    minWidth: 120,
+    minWidth: 140, // Increased width to match web version
     alignItems: 'center',
-    ...theme.shadow.small,
+    ...theme.shadow.medium, // Enhanced shadow to match web version
+    marginHorizontal: theme.spacing.sm, // Added spacing between buttons
   },
   startButton: {
     backgroundColor: theme.colors.success,
@@ -108,6 +109,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: theme.colors.surface.primary,
     fontSize: theme.typography.fontSize.body,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontWeight: '700',
   },
 });
