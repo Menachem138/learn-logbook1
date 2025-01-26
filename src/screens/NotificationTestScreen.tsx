@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, I18nManager } from 'react-native';
 import { notificationService } from '../services/NotificationService';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
+
+// Force RTL
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 export default function NotificationTestScreen() {
   const [testStatus, setTestStatus] = useState<string>('');
@@ -34,58 +40,85 @@ export default function NotificationTestScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>בדיקת התראות</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>בדיקת התראות</Text>
+      </View>
       
-      <TouchableOpacity 
-        style={styles.button}
-        onPress={testTimerNotification}
-      >
-        <Text style={styles.buttonText}>בדוק התראת טיימר</Text>
-      </TouchableOpacity>
+      <View style={styles.content}>
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={testTimerNotification}
+        >
+          <Text style={styles.buttonText}>בדוק התראת טיימר</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.button}
-        onPress={testAchievementNotification}
-      >
-        <Text style={styles.buttonText}>בדוק התראת הישג</Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={testAchievementNotification}
+        >
+          <Text style={styles.buttonText}>בדוק התראת הישג</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.status}>{testStatus}</Text>
-    </View>
+        {testStatus ? (
+          <View style={styles.statusContainer}>
+            <Text style={styles.status}>{testStatus}</Text>
+          </View>
+        ) : null}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: theme.colors.background,
+  },
+  header: {
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surface.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    alignItems: 'flex-end',
+  },
+  title: {
+    fontSize: theme.typography.fontSize.heading2,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+  },
+  content: {
+    flex: 1,
+    padding: theme.spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
   button: {
-    backgroundColor: '#4285F4',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     width: '100%',
     maxWidth: 300,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: theme.spacing.md,
+    ...theme.shadow.small,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: theme.colors.surface.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
+  },
+  statusContainer: {
+    backgroundColor: theme.colors.surface.secondary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    marginTop: theme.spacing.lg,
+    width: '100%',
+    maxWidth: 300,
   },
   status: {
-    marginTop: 20,
-    fontSize: 16,
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.primary,
     textAlign: 'center',
   },
 });
