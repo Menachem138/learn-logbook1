@@ -16,6 +16,24 @@ export default function HomeScreen() {
       <ConfigTest />
       <TouchableOpacity 
         style={styles.button}
+        onPress={() => navigation.navigate('Timer')}
+      >
+        <Text style={styles.buttonText}>טיימר למידה</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={() => navigation.navigate('Journal')}
+      >
+        <Text style={styles.buttonText}>יומן למידה</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.button}
+        onPress={() => navigation.navigate('Course')}
+      >
+        <Text style={styles.buttonText}>תוכן הקורס</Text>
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.button}
         onPress={() => navigation.navigate('NotificationTest')}
       >
         <Text style={styles.buttonText}>בדיקת התראות</Text>
