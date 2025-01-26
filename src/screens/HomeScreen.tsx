@@ -68,6 +68,14 @@ export default function HomeScreen() {
 
           <TouchableOpacity 
             style={styles.menuItem}
+            onPress={() => navigation.navigate('Assistant')}
+          >
+            <Icon name="robot" size={32} color="#4285F4" />
+            <Text style={styles.menuText}>עוזר אישי</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.menuItem}
             onPress={() => navigation.navigate('NotificationTest')}
           >
             <Icon name="bell-outline" size={32} color="#4285F4" />

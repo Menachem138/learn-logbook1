@@ -7,4 +7,5 @@ export type RootStackParamList = {
   Course: undefined;
   WeeklySchedule: undefined;
   Documents: undefined;
+  Assistant: undefined;
 };
