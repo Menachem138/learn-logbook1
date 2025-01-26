@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { theme } from '../../theme';
 
 interface TimerDisplayProps {
   timeLeft: number;
@@ -25,18 +26,20 @@ export function TimerDisplay({ timeLeft, type }: TimerDisplayProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: theme.spacing.lg,
   },
   type: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 10,
-    color: '#333',
+    fontSize: theme.typography.fontSize.heading3,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    marginBottom: theme.spacing.sm,
+    color: theme.colors.text.primary,
+    textAlign: 'center',
   },
   time: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: theme.typography.fontSize.display,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
     fontVariant: ['tabular-nums'],
+    textAlign: 'center',
   },
 });

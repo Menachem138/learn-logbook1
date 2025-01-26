@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { theme } from '../../theme';
 
 interface TimerControlsProps {
   isRunning: boolean;
@@ -59,52 +60,54 @@ export function TimerControls({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 20,
+    marginVertical: theme.spacing.lg,
+    width: '100%',
   },
   typeButtons: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL support
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: theme.spacing.lg,
   },
   typeButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    marginHorizontal: theme.spacing.xs,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.surface.secondary,
   },
   activeType: {
-    backgroundColor: '#4285F4',
+    backgroundColor: theme.colors.primary,
   },
   typeText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.secondary,
   },
   activeTypeText: {
-    color: 'white',
+    color: theme.colors.surface.primary,
   },
   mainControls: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL support
     justifyContent: 'center',
-    gap: 10,
+    gap: theme.spacing.sm,
   },
   button: {
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    backgroundColor: '#4285F4',
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.full,
+    backgroundColor: theme.colors.primary,
     minWidth: 120,
     alignItems: 'center',
+    ...theme.shadow.small,
   },
   startButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: theme.colors.success,
   },
   stopButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: theme.colors.error,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: theme.colors.surface.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.bold,
   },
 });

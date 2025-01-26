@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { TimerDisplay } from './TimerDisplay';
 import { TimerControls } from './TimerControls';
 import { useTimer } from '../../hooks/useTimer';
+import { theme } from '../../theme';
 
 export function StudyTimer() {
   const { state, startTimer, pauseTimer, stopTimer, switchType } = useTimer();
@@ -27,16 +28,11 @@ export function StudyTimer() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surface.primary,
+    borderRadius: theme.borderRadius.lg,
+    ...theme.shadow.medium,
+    width: '100%',
+    alignItems: 'center',
   },
 });
