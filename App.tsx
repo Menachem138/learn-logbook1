@@ -3,12 +3,11 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/components/auth/AuthProvider';
 import { AppNavigator } from './src/navigation/AppNavigator';
-import { configurePushNotifications, registerForPushNotificationsAsync } from './src/utils/notifications';
+import { registerForPushNotificationsAsync } from './src/utils/notifications';
 
 export default function App() {
   useEffect(() => {
-    // Configure notifications when app starts
-    configurePushNotifications();
+    // Initialize notifications when app starts
     registerForPushNotificationsAsync();
   }, []);
 
