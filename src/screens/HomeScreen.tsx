@@ -6,6 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 // Force RTL
 I18nManager.allowRTL(true);
@@ -88,83 +90,69 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: theme.spacing.xl,
     alignItems: 'flex-end',
   },
   welcome: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    fontSize: theme.typography.fontSize.heading1,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
     textAlign: 'right',
   },
   email: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.secondary,
     textAlign: 'right',
   },
   menuContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: theme.spacing.lg,
   },
   menuItem: {
     width: '48%',
     aspectRatio: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 15,
+    backgroundColor: theme.colors.surface.secondary,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...theme.shadow.small,
   },
   menuText: {
-    marginTop: 10,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    marginTop: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    color: theme.colors.text.primary,
     textAlign: 'center',
   },
   signOutButton: {
-    backgroundColor: '#f44336',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: theme.colors.error,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 'auto',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...theme.shadow.medium,
   },
   signOutIcon: {
-    marginRight: 10,
+    marginRight: theme.spacing.sm,
   },
   signOutText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
+    color: theme.colors.surface.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
   },
 });

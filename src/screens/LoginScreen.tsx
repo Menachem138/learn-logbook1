@@ -4,6 +4,8 @@ import { supabase } from '../config/supabase';
 import * as WebBrowser from 'expo-web-browser';
 import { makeRedirectUri } from 'expo-auth-session';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 // Force RTL
 I18nManager.allowRTL(true);
@@ -131,29 +133,29 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
     justifyContent: 'flex-start',
-    padding: 20,
-    backgroundColor: '#ffffff',
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
   },
   header: {
     alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 40,
+    marginTop: theme.spacing.xl * 2,
+    marginBottom: theme.spacing.xl,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontSize: theme.typography.fontSize.heading1,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 24,
-    color: '#666',
+    fontSize: theme.typography.fontSize.heading2,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   form: {
@@ -164,64 +166,57 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 15,
+    backgroundColor: theme.colors.surface.secondary,
+    borderRadius: theme.borderRadius.md,
+    marginBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     height: 55,
   },
   inputIcon: {
-    marginLeft: 10,
+    marginLeft: theme.spacing.sm,
   },
   input: {
     flex: 1,
     height: '100%',
-    fontSize: 16,
+    fontSize: theme.typography.fontSize.body,
     textAlign: 'right',
-    color: '#333',
+    color: theme.colors.text.primary,
   },
   button: {
-    backgroundColor: '#4285F4',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: theme.spacing.md,
     flexDirection: 'row',
     justifyContent: 'center',
     height: 55,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...theme.shadow.medium,
   },
   googleButton: {
     backgroundColor: '#DB4437',
   },
   buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
+    color: theme.colors.surface.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
   },
   googleIcon: {
-    marginRight: 10,
+    marginRight: theme.spacing.sm,
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: theme.spacing.lg,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#ddd',
+    backgroundColor: theme.colors.border,
   },
   dividerText: {
-    color: '#666',
-    paddingHorizontal: 10,
-    fontSize: 16,
+    color: theme.colors.text.secondary,
+    paddingHorizontal: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.body,
   },
 });
