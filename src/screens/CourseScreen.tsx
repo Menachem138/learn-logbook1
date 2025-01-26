@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  I18nManager,
 } from 'react-native';
 import { Section } from '../components/CourseContent/Section';
 import { courseService } from '../services/CourseService';
@@ -12,6 +13,10 @@ import { useAuth } from '../components/auth/AuthProvider';
 import type { Section as SectionType, Lesson, CourseProgress } from '../components/CourseContent/types';
 import { theme } from '../theme';
 import { commonStyles } from '../theme/components';
+
+// Force RTL
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 export default function CourseScreen() {
   const { user } = useAuth();

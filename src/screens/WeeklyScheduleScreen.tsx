@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, I18nManager } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { theme } from '../theme';
+import { commonStyles } from '../theme/components';
 
 // Force RTL
 I18nManager.allowRTL(true);
@@ -78,99 +80,94 @@ export default function WeeklyScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background,
   },
   header: {
-    padding: 15,
-    backgroundColor: '#ffffff',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.border,
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontSize: theme.typography.fontSize.heading3,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    textAlign: 'right',
   },
   daysContainer: {
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 10,
+    backgroundColor: theme.colors.surface.secondary,
+    paddingVertical: theme.spacing.sm,
   },
   dayButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginHorizontal: 5,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    marginHorizontal: theme.spacing.xs,
+    borderRadius: theme.borderRadius.xl,
+    backgroundColor: theme.colors.surface.primary,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.colors.border,
   },
   selectedDayButton: {
-    backgroundColor: '#4285F4',
-    borderColor: '#4285F4',
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   dayButtonText: {
-    fontSize: 16,
-    color: '#333333',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.primary,
+    fontWeight: theme.typography.fontWeight.medium,
+    textAlign: 'center',
   },
   selectedDayButtonText: {
-    color: '#ffffff',
+    color: theme.colors.surface.primary,
   },
   scheduleContainer: {
     flex: 1,
-    padding: 15,
+    padding: theme.spacing.md,
   },
   scheduleItem: {
-    flexDirection: 'row',
-    marginBottom: 15,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    flexDirection: 'row-reverse', // RTL support
+    marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.surface.primary,
+    borderRadius: theme.borderRadius.md,
+    ...theme.shadow.small,
   },
   timeContainer: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
+    backgroundColor: theme.colors.surface.secondary,
+    padding: theme.spacing.md,
+    borderTopLeftRadius: theme.borderRadius.md, // RTL support
+    borderBottomLeftRadius: theme.borderRadius.md, // RTL support
     width: 120,
     justifyContent: 'center',
   },
   timeText: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: theme.typography.fontSize.caption,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   activityContainer: {
     flex: 1,
-    padding: 15,
+    padding: theme.spacing.md,
     justifyContent: 'center',
   },
   activityText: {
-    fontSize: 16,
-    color: '#333333',
+    fontSize: theme.typography.fontSize.body,
+    color: theme.colors.text.primary,
     textAlign: 'right',
   },
   addButton: {
-    flexDirection: 'row',
-    backgroundColor: '#4285F4',
-    padding: 15,
-    borderRadius: 10,
+    flexDirection: 'row-reverse', // RTL support
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 15,
+    marginTop: theme.spacing.md,
   },
   addButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
+    color: theme.colors.surface.primary,
+    fontSize: theme.typography.fontSize.body,
+    fontWeight: theme.typography.fontWeight.semiBold,
+    marginRight: theme.spacing.sm, // RTL support
   },
 });

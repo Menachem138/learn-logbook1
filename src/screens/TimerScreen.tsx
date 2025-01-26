@@ -1,8 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView, I18nManager } from 'react-native';
 import { StudyTimer } from '../components/StudyTimer';
 import { theme } from '../theme';
 import { commonStyles } from '../theme/components';
+
+// Force RTL
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 export default function TimerScreen() {
   return (

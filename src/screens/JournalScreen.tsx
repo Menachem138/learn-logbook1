@@ -7,6 +7,7 @@ import {
   Text,
   ActivityIndicator,
   RefreshControl,
+  I18nManager,
 } from 'react-native';
 import { JournalEntry } from '../components/LearningJournal/JournalEntry';
 import { JournalForm } from '../components/LearningJournal/JournalForm';
@@ -14,6 +15,10 @@ import { journalService } from '../services/JournalService';
 import type { JournalEntry as JournalEntryType, JournalFormData } from '../components/LearningJournal/types';
 import { theme } from '../theme';
 import { commonStyles } from '../theme/components';
+
+// Force RTL
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 export default function JournalScreen() {
   const [entries, setEntries] = useState<JournalEntryType[]>([]);
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse', // RTL support
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: theme.spacing.md,
@@ -144,18 +149,23 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: theme.typography.fontSize.heading3,
     fontWeight: theme.typography.fontWeight.bold,
-    textAlign: 'center',
+    textAlign: 'right', // RTL support
     flex: 1,
+    marginRight: theme.spacing.md, // RTL support
   },
   headerButton: {
     padding: theme.spacing.sm,
+    flexDirection: 'row-reverse', // RTL support
+    alignItems: 'center',
   },
   headerButtonText: {
     color: theme.colors.primary,
     fontSize: theme.typography.fontSize.body,
     fontWeight: theme.typography.fontWeight.semiBold,
+    marginRight: theme.spacing.xs, // RTL support
   },
   list: {
     padding: theme.spacing.md,
+    alignItems: 'flex-end', // RTL support
   },
 });
