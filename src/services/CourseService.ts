@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { sections } from '../data/courseData';
 import type { Section, Lesson, CourseProgress } from '../components/CourseContent/types';
 
 class CourseService {
@@ -14,29 +15,19 @@ class CourseService {
   }
 
   async getSections(): Promise<Section[]> {
-    const { data, error } = await supabase
-      .from('course_sections')
-      .select('*')
-      .order('order');
-
-    if (error) throw error;
-    return data || [];
+    // Return static sections data from courseData
+    return sections;
   }
 
   async getLessons(sectionId: string): Promise<Lesson[]> {
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*')
-      .eq('section_id', sectionId)
-      .order('order');
-
-    if (error) throw error;
-    return data || [];
+    // Find section and return its lessons
+    const section = sections.find(s => s.id === sectionId);
+    return section?.lessons || [];
   }
 
   async getProgress(userId: string): Promise<Record<string, CourseProgress>> {
     const { data, error } = await supabase
-      .from('lesson_progress')
+      .from('course_progress')
       .select('*')
       .eq('user_id', userId);
 
@@ -47,9 +38,9 @@ class CourseService {
       progressMap[progress.lesson_id] = {
         userId: progress.user_id,
         lessonId: progress.lesson_id,
-        completed: progress.completed,
-        lastViewedAt: progress.last_viewed_at,
-        progress: progress.progress,
+        completed: progress.completed || false,
+        lastViewedAt: progress.created_at,
+        progress: 0, // Not tracked in current schema
       };
     });
 
@@ -62,16 +53,40 @@ class CourseService {
     progress: Partial<CourseProgress>
   ): Promise<void> {
     const { error } = await supabase
-      .from('lesson_progress')
+      .from('course_progress')
       .upsert({
         user_id: userId,
         lesson_id: lessonId,
         completed: progress.completed,
-        last_viewed_at: new Date().toISOString(),
-        progress: progress.progress,
+        created_at: new Date().toISOString(),
       });
 
     if (error) throw error;
+
+    // Update overall progress tracking
+    const { data: trackingData, error: trackingError } = await supabase
+      .from('progress_tracking')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (!trackingError && trackingData) {
+      const completedSections = new Set(trackingData.completed_sections || []);
+      if (progress.completed) {
+        completedSections.add(lessonId);
+      } else {
+        completedSections.delete(lessonId);
+      }
+
+      await supabase
+        .from('progress_tracking')
+        .update({
+          completed_sections: Array.from(completedSections),
+          last_activity: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+    }
   }
 }
 

@@ -27,15 +27,8 @@ export default function CourseScreen() {
         courseService.getProgress(user.id),
       ]);
 
-      // Load lessons for each section
-      const sectionsWithLessons = await Promise.all(
-        sectionsData.map(async section => ({
-          ...section,
-          lessons: await courseService.getLessons(section.id),
-        }))
-      );
-
-      setSections(sectionsWithLessons);
+      // Sections already include lessons
+      setSections(sectionsData);
       setProgress(progressData);
     } catch (error) {
       console.error('Error loading course data:', error);
